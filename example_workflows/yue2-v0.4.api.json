@@ -1,0 +1,349 @@
+{
+  "32:1": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM"
+    },
+    "_meta": {
+      "title": "Style"
+    }
+  },
+  "32:2": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "[Verse]\nNeon fades along the lane\nFootsteps keep the time of rain\nFold the night and leave it here\nMorning has a sky to clear\n\n[Chorus]\nLet the day come into view\nEvery road begins with you\nHold a little room for light\nWe will sing beyond the night"
+    },
+    "_meta": {
+      "title": "Lyrics — still supplied separately"
+    }
+  },
+  "3": {
+    "class_type": "PrimitiveInt",
+    "inputs": {
+      "value": 831001
+    },
+    "_meta": {
+      "title": "Seed — shared across all stages"
+    }
+  },
+  "33:13": {
+    "class_type": "PrimitiveBoolean",
+    "inputs": {
+      "value": false
+    },
+    "_meta": {
+      "title": "Use SheetSage2 transcription"
+    }
+  },
+  "33:17": {
+    "class_type": "PrimitiveBoolean",
+    "inputs": {
+      "value": false
+    },
+    "_meta": {
+      "title": "Extend transcribed ABC through planner"
+    }
+  },
+  "34:4": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+      "ckpt_name": "yue2_3b_bf16.safetensors"
+    },
+    "_meta": {
+      "title": "YuE2 3B — model, language model, VAE"
+    }
+  },
+  "30:5": {
+    "class_type": "YuE2GenerateABC",
+    "inputs": {
+      "clip": [
+        "34:4",
+        1
+      ],
+      "style": [
+        "32:1",
+        0
+      ],
+      "lyrics": [
+        "32:2",
+        0
+      ],
+      "seed": [
+        "3",
+        0
+      ],
+      "mode": "full",
+      "max_abc_tokens": 8192,
+      "temperature": 0.7,
+      "top_p": 0.9,
+      "top_k": 30,
+      "repetition_penalty": 1.005,
+      "penalty_window": 100
+    },
+    "_meta": {
+      "title": "Text-only · Generate fresh ABC"
+    }
+  },
+  "33:14": {
+    "class_type": "bno84.YuE2OptionalLoadAudio",
+    "inputs": {
+      "audio": "(none)"
+    },
+    "_meta": {
+      "title": "Optional source audio"
+    }
+  },
+  "34:15": {
+    "class_type": "bno84.YuE2SheetSage2Loader",
+    "inputs": {
+      "audio_encoder_name": "SheetSage2_MERT2_bf16.safetensors"
+    },
+    "_meta": {
+      "title": "SheetSage2 + MERT2 · restore shared output weights"
+    }
+  },
+  "30:16": {
+    "class_type": "SheetSage2AudioToABC",
+    "inputs": {
+      "audio_encoder": [
+        "34:15",
+        0
+      ],
+      "audio": [
+        "33:14",
+        0
+      ],
+      "mode": "full"
+    },
+    "_meta": {
+      "title": "Audio → ABC · match mode to YuE2"
+    }
+  },
+  "30:18": {
+    "class_type": "bno84.YuE2ExtendABC",
+    "inputs": {
+      "abc": [
+        "30:16",
+        0
+      ],
+      "clip": [
+        "34:4",
+        1
+      ],
+      "style": [
+        "32:1",
+        0
+      ],
+      "lyrics": [
+        "32:2",
+        0
+      ],
+      "seed": [
+        "3",
+        0
+      ],
+      "mode": "full",
+      "max_abc_tokens": 8192,
+      "temperature": 0.7,
+      "top_p": 0.9,
+      "top_k": 30,
+      "repetition_penalty": 1.005,
+      "penalty_window": 100
+    },
+    "_meta": {
+      "title": "Extend · Source ABC becomes planner prefix"
+    }
+  },
+  "30:19": {
+    "class_type": "ComfySwitchNode",
+    "inputs": {
+      "switch": [
+        "33:17",
+        0
+      ],
+      "on_false": [
+        "30:16",
+        0
+      ],
+      "on_true": [
+        "30:18",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Extend ON: continued · OFF: ABC as-is"
+    }
+  },
+  "30:20": {
+    "class_type": "ComfySwitchNode",
+    "inputs": {
+      "switch": [
+        "33:13",
+        0
+      ],
+      "on_false": [
+        "30:5",
+        0
+      ],
+      "on_true": [
+        "30:19",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Choose text-only or transcribed score"
+    }
+  },
+  "31:6": {
+    "class_type": "YuE2GenerateMusic",
+    "inputs": {
+      "clip": [
+        "34:4",
+        1
+      ],
+      "style": [
+        "32:1",
+        0
+      ],
+      "lyrics": [
+        "32:2",
+        0
+      ],
+      "abc": [
+        "30:20",
+        0
+      ],
+      "seed": [
+        "3",
+        0
+      ],
+      "mode": [
+        "30:29",
+        0
+      ],
+      "max_duration": 120.0,
+      "temperature": 1.0,
+      "top_p": 0.95,
+      "top_k": 100,
+      "repetition_penalty": 1.2,
+      "cfg_scale": 1.0
+    },
+    "_meta": {
+      "title": "ABC → music · match transcription mode"
+    }
+  },
+  "31:7": {
+    "class_type": "EmptyYuE2LatentAudio",
+    "inputs": {
+      "seconds": [
+        "31:6",
+        1
+      ],
+      "batch_size": 1
+    },
+    "_meta": {
+      "title": "Audio length from generated tokens"
+    }
+  },
+  "31:8": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "31:6",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Unconditional conditioning"
+    }
+  },
+  "31:9": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "34:4",
+        0
+      ],
+      "seed": [
+        "3",
+        0
+      ],
+      "steps": 32,
+      "cfg": 1.0,
+      "sampler_name": "dpm_2",
+      "scheduler": "sgm_uniform",
+      "positive": [
+        "31:6",
+        0
+      ],
+      "negative": [
+        "31:8",
+        0
+      ],
+      "latent_image": [
+        "31:7",
+        0
+      ],
+      "denoise": 1.0
+    },
+    "_meta": {
+      "title": "Acoustic synthesis"
+    }
+  },
+  "31:10": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "31:9",
+        0
+      ],
+      "vae": [
+        "34:4",
+        2
+      ]
+    },
+    "_meta": {
+      "title": "Decode stereo audio"
+    }
+  },
+  "11": {
+    "class_type": "bno84.SaveYuE2Bundle",
+    "inputs": {
+      "audio": [
+        "31:10",
+        0
+      ],
+      "abc": [
+        "30:20",
+        0
+      ],
+      "filename_prefix": "audio/yue2/song"
+    },
+    "_meta": {
+      "title": "Save FLAC + selected ABC — shared counter"
+    }
+  },
+  "30:29": {
+    "class_type": "ComfySwitchNode",
+    "inputs": {
+      "switch": false,
+      "on_false": "full"
+    },
+    "_meta": {
+      "title": "Shared score mode"
+    }
+  },
+  "22": {
+    "class_type": "bno84.ABCPreview",
+    "inputs": {
+      "abc": [
+        "30:20",
+        0
+      ],
+      "soundfont": "(none)"
+    },
+    "_meta": {
+      "title": "ABC · sheet music, source, preview playback"
+    }
+  }
+}
