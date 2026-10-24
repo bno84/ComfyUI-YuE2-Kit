@@ -12,5 +12,5 @@ Repository = "https://github.com/bno84/ComfyUI-YuE2-Kit"
 [tool.comfy]
 PublisherId = "bno84"
 DisplayName = "YuE2-Kit"
-Icon = ""
+Icon = "https://raw.githubusercontent.com/bno84/ComfyUI-YuE2-Kit/main/docs/icon.png"
 "requires-comfyui" = ">=0.38.0"  # Tested with 0.38.0.
