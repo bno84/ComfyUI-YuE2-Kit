@@ -105,7 +105,9 @@
       ],
       "title": "Seed — shared",
       "properties": {
-        "Node name for S&R": "PrimitiveInt"
+        "Node name for S&R": "PrimitiveInt",
+        "cnr_id": "comfy-core",
+        "ver": "0.38.0"
       },
       "widgets_values": [
         831001,
@@ -747,7 +749,9 @@
       ],
       "title": "Final outputs · ABC + FLAC",
       "properties": {
-        "Node name for S&R": "bno84.SaveYuE2Bundle"
+        "Node name for S&R": "bno84.SaveYuE2Bundle",
+        "cnr_id": "comfyui-yue2-kit",
+        "ver": "0.1.0"
       },
       "widgets_values": [
         "audio/yue2/song"
@@ -808,7 +812,9 @@
       ],
       "outputs": [],
       "properties": {
-        "Node name for S&R": "bno84.ABCPreview"
+        "Node name for S&R": "bno84.ABCPreview",
+        "cnr_id": "comfyui-abcpreview",
+        "ver": "0.1.0"
       },
       "widgets_values": [
         "(none)"
@@ -1116,7 +1122,9 @@
             ],
             "title": "Lyrics — still supplied separately",
             "properties": {
-              "Node name for S&R": "PrimitiveStringMultiline"
+              "Node name for S&R": "PrimitiveStringMultiline",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
             },
             "widgets_values": [
               "[Verse]\nNeon fades along the lane\nFootsteps keep the time of rain\nFold the night and leave it here\nMorning has a sky to clear\n\n[Chorus]\nLet the day come into view\nEvery road begins with you\nHold a little room for light\nWe will sing beyond the night"
@@ -1157,7 +1165,9 @@
             ],
             "title": "Style",
             "properties": {
-              "Node name for S&R": "PrimitiveStringMultiline"
+              "Node name for S&R": "PrimitiveStringMultiline",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
             },
             "widgets_values": [
               "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM"
@@ -1347,7 +1357,9 @@
             ],
             "title": "Optional source audio",
             "properties": {
-              "Node name for S&R": "bno84.OptionalLoadAudio"
+              "Node name for S&R": "bno84.OptionalLoadAudio",
+              "cnr_id": "comfyui-yue2-kit",
+              "ver": "0.1.0"
             },
             "widgets_values": [
               "(none)"
@@ -1388,7 +1400,9 @@
             ],
             "title": "Use SheetSage2 transcription",
             "properties": {
-              "Node name for S&R": "PrimitiveBoolean"
+              "Node name for S&R": "PrimitiveBoolean",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
             },
             "widgets_values": [
               false
@@ -1429,7 +1443,9 @@
             ],
             "title": "Extend transcribed ABC through planner",
             "properties": {
-              "Node name for S&R": "PrimitiveBoolean"
+              "Node name for S&R": "PrimitiveBoolean",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
             },
             "widgets_values": [
               false
@@ -1648,7 +1664,9 @@
             ],
             "title": "YuE2 3B — model, language model, VAE",
             "properties": {
-              "Node name for S&R": "CheckpointLoaderSimple"
+              "Node name for S&R": "CheckpointLoaderSimple",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
             },
             "widgets_values": [
               "yue2_3b_bf16.safetensors"
@@ -1689,7 +1707,9 @@
             ],
             "title": "SheetSage2 + MERT2 · restore shared output weights",
             "properties": {
-              "Node name for S&R": "bno84.SheetSage2Loader"
+              "Node name for S&R": "bno84.SheetSage2Loader",
+              "cnr_id": "comfyui-yue2-kit",
+              "ver": "0.1.0"
             },
             "widgets_values": [
               "SheetSage2_MERT2_bf16.safetensors"
@@ -2129,7 +2149,9 @@
             ],
             "title": "Fresh ABC planner",
             "properties": {
-              "Node name for S&R": "YuE2GenerateABC"
+              "Node name for S&R": "YuE2GenerateABC",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
             },
             "widgets_values": [
               "",
@@ -2191,7 +2213,9 @@
             ],
             "title": "SheetSage2 transcription",
             "properties": {
-              "Node name for S&R": "SheetSage2AudioToABC"
+              "Node name for S&R": "SheetSage2AudioToABC",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
             },
             "widgets_values": [
               "full"
@@ -2314,7 +2338,9 @@
             ],
             "title": "Extend source ABC",
             "properties": {
-              "Node name for S&R": "bno84.YuE2ExtendABC"
+              "Node name for S&R": "bno84.YuE2ExtendABC",
+              "cnr_id": "comfyui-yue2-kit",
+              "ver": "0.1.0"
             },
             "widgets_values": [
               "",
@@ -2375,7 +2401,9 @@
             ],
             "title": "Extend or use ABC as-is",
             "properties": {
-              "Node name for S&R": "ComfySwitchNode"
+              "Node name for S&R": "ComfySwitchNode",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
             },
             "widgets_values": [
               ""
@@ -2426,7 +2454,9 @@
             ],
             "title": "Select text or reference score",
             "properties": {
-              "Node name for S&R": "ComfySwitchNode"
+              "Node name for S&R": "ComfySwitchNode",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
             },
             "widgets_values": [
               ""
@@ -2477,7 +2507,9 @@
             ],
             "title": "Shared score mode",
             "properties": {
-              "Node name for S&R": "ComfySwitchNode"
+              "Node name for S&R": "ComfySwitchNode",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
             },
             "widgets_values": [
               false
@@ -3193,7 +3225,9 @@
             ],
             "title": "Music tokens from ABC",
             "properties": {
-              "Node name for S&R": "YuE2GenerateMusic"
+              "Node name for S&R": "YuE2GenerateMusic",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
             },
             "widgets_values": [
               "",
@@ -3253,7 +3287,9 @@
             ],
             "title": "Audio length from generated tokens",
             "properties": {
-              "Node name for S&R": "EmptyYuE2LatentAudio"
+              "Node name for S&R": "EmptyYuE2LatentAudio",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
             },
             "widgets_values": [
               120.0,
@@ -3292,7 +3328,9 @@
             ],
             "title": "Unconditional conditioning",
             "properties": {
-              "Node name for S&R": "ConditioningZeroOut"
+              "Node name for S&R": "ConditioningZeroOut",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
             },
             "widgets_values": []
           },
@@ -3391,7 +3429,9 @@
             ],
             "title": "Acoustic synthesis",
             "properties": {
-              "Node name for S&R": "KSampler"
+              "Node name for S&R": "KSampler",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
             },
             "widgets_values": [
               0,
@@ -3440,7 +3480,9 @@
             ],
             "title": "Decode stereo audio",
             "properties": {
-              "Node name for S&R": "VAEDecodeAudio"
+              "Node name for S&R": "VAEDecodeAudio",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
             },
             "widgets_values": []
           }
