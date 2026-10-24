@@ -1,0 +1,341 @@
+{
+  "3": {
+    "_meta": {
+      "title": "Seed — shared"
+    },
+    "class_type": "PrimitiveInt",
+    "inputs": {
+      "value": 831001
+    }
+  },
+  "11": {
+    "_meta": {
+      "title": "Final outputs · ABC + FLAC"
+    },
+    "class_type": "bno84.SaveYuE2Bundle",
+    "inputs": {
+      "abc": [
+        "30:36:20",
+        0
+      ],
+      "audio": [
+        "31:10",
+        0
+      ],
+      "filename_prefix": "audio/yue2/song"
+    }
+  },
+  "22": {
+    "_meta": {
+      "title": "ABC · sheet music, source, preview playback"
+    },
+    "class_type": "bno84.ABCPreview",
+    "inputs": {
+      "abc": [
+        "30:36:20",
+        0
+      ],
+      "soundfont": "(none)"
+    }
+  },
+  "38": {
+    "_meta": {
+      "title": "Reference ABC — paste score here"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": ""
+    }
+  },
+  "30:29": {
+    "_meta": {
+      "title": "Shared score mode"
+    },
+    "class_type": "ComfySwitchNode",
+    "inputs": {
+      "on_false": "full",
+      "switch": false
+    }
+  },
+  "30:36:18": {
+    "_meta": {
+      "title": "Extend source ABC"
+    },
+    "class_type": "bno84.YuE2ExtendABC",
+    "inputs": {
+      "abc": [
+        "38",
+        0
+      ],
+      "clip": [
+        "34:4",
+        1
+      ],
+      "lyrics": [
+        "32:2",
+        0
+      ],
+      "max_abc_tokens": 8192,
+      "mode": "full",
+      "penalty_window": 100,
+      "repetition_penalty": 1.005,
+      "seed": [
+        "3",
+        0
+      ],
+      "style": [
+        "32:1",
+        0
+      ],
+      "temperature": 0.7,
+      "top_k": 30,
+      "top_p": 0.9
+    }
+  },
+  "30:36:19": {
+    "_meta": {
+      "title": "Extend or use ABC as-is"
+    },
+    "class_type": "ComfySwitchNode",
+    "inputs": {
+      "on_false": [
+        "38",
+        0
+      ],
+      "on_true": [
+        "30:36:18",
+        0
+      ],
+      "switch": [
+        "33:17",
+        0
+      ]
+    }
+  },
+  "30:36:20": {
+    "_meta": {
+      "title": "Use reference or fresh score"
+    },
+    "class_type": "ComfySwitchNode",
+    "inputs": {
+      "on_false": [
+        "30:5",
+        0
+      ],
+      "on_true": [
+        "30:36:19",
+        0
+      ],
+      "switch": [
+        "33:41",
+        2
+      ]
+    }
+  },
+  "30:5": {
+    "_meta": {
+      "title": "Fresh ABC planner"
+    },
+    "class_type": "YuE2GenerateABC",
+    "inputs": {
+      "clip": [
+        "34:4",
+        1
+      ],
+      "lyrics": [
+        "32:2",
+        0
+      ],
+      "max_abc_tokens": 8192,
+      "mode": "full",
+      "penalty_window": 100,
+      "repetition_penalty": 1.005,
+      "seed": [
+        "3",
+        0
+      ],
+      "style": [
+        "32:1",
+        0
+      ],
+      "temperature": 0.7,
+      "top_k": 30,
+      "top_p": 0.9
+    }
+  },
+  "31:10": {
+    "_meta": {
+      "title": "Decode stereo audio"
+    },
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "31:9",
+        0
+      ],
+      "vae": [
+        "34:4",
+        2
+      ]
+    }
+  },
+  "31:6": {
+    "_meta": {
+      "title": "Music tokens from ABC"
+    },
+    "class_type": "YuE2GenerateMusic",
+    "inputs": {
+      "abc": [
+        "30:36:20",
+        0
+      ],
+      "cfg_scale": 1,
+      "clip": [
+        "34:4",
+        1
+      ],
+      "lyrics": [
+        "32:2",
+        0
+      ],
+      "max_duration": 120,
+      "mode": [
+        "30:29",
+        0
+      ],
+      "repetition_penalty": 1.2,
+      "seed": [
+        "3",
+        0
+      ],
+      "style": [
+        "32:1",
+        0
+      ],
+      "temperature": 1,
+      "top_k": 100,
+      "top_p": 0.95
+    }
+  },
+  "31:7": {
+    "_meta": {
+      "title": "Audio length from generated tokens"
+    },
+    "class_type": "EmptyYuE2LatentAudio",
+    "inputs": {
+      "batch_size": 1,
+      "seconds": [
+        "31:6",
+        1
+      ]
+    }
+  },
+  "31:8": {
+    "_meta": {
+      "title": "Unconditional conditioning"
+    },
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "31:6",
+        0
+      ]
+    }
+  },
+  "31:9": {
+    "_meta": {
+      "title": "Acoustic synthesis"
+    },
+    "class_type": "KSampler",
+    "inputs": {
+      "cfg": 1,
+      "denoise": 1,
+      "latent_image": [
+        "31:7",
+        0
+      ],
+      "model": [
+        "34:4",
+        0
+      ],
+      "negative": [
+        "31:8",
+        0
+      ],
+      "positive": [
+        "31:6",
+        0
+      ],
+      "sampler_name": "dpm_2",
+      "scheduler": "sgm_uniform",
+      "seed": [
+        "3",
+        0
+      ],
+      "steps": 32
+    }
+  },
+  "32:1": {
+    "_meta": {
+      "title": "Style"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM"
+    }
+  },
+  "32:2": {
+    "_meta": {
+      "title": "Lyrics — still supplied separately"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "[Verse]\nNeon fades along the lane\nFootsteps keep the time of rain\nFold the night and leave it here\nMorning has a sky to clear\n\n[Chorus]\nLet the day come into view\nEvery road begins with you\nHold a little room for light\nWe will sing beyond the night"
+    }
+  },
+  "33:13": {
+    "_meta": {
+      "title": "Reference source"
+    },
+    "class_type": "CustomCombo",
+    "inputs": {
+      "choice": "ABC",
+      "index": 2,
+      "option1": "No reference",
+      "option2": "Transcribe audio",
+      "option3": "ABC",
+      "option4": ""
+    }
+  },
+  "33:17": {
+    "_meta": {
+      "title": "Extend reference"
+    },
+    "class_type": "PrimitiveBoolean",
+    "inputs": {
+      "value": true
+    }
+  },
+  "33:41": {
+    "_meta": {
+      "title": "Reference enabled"
+    },
+    "class_type": "ComfyMathExpression",
+    "inputs": {
+      "expression": "a > 0",
+      "values.a": [
+        "33:13",
+        1
+      ]
+    }
+  },
+  "34:4": {
+    "_meta": {
+      "title": "YuE2 3B — model, language model, VAE"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+      "ckpt_name": "yue2_3b_bf16.safetensors"
+    }
+  }
+}

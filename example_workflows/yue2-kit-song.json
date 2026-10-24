@@ -1,8 +1,8 @@
 {
   "id": "75140c3e-0999-5e9e-8139-ff1a6450053b",
   "revision": 1,
-  "last_node_id": 37,
-  "last_link_id": 22,
+  "last_node_id": 42,
+  "last_link_id": 24,
   "nodes": [
     {
       "id": 32,
@@ -131,19 +131,19 @@
       "title": "Reference controls",
       "inputs": [
         {
-          "name": "use_transcription",
-          "type": "BOOLEAN",
+          "name": "source",
+          "type": "COMBO",
           "link": null,
-          "label": "Use transcription",
+          "label": "Source",
           "widget": {
-            "name": "use_transcription"
+            "name": "source"
           }
         },
         {
           "name": "extend",
           "type": "BOOLEAN",
           "link": null,
-          "label": "Extend transcribed ABC",
+          "label": "Extend reference",
           "widget": {
             "name": "extend"
           }
@@ -151,14 +151,21 @@
       ],
       "outputs": [
         {
-          "name": "Use transcription",
+          "name": "Use reference",
           "type": "BOOLEAN",
           "links": [
             21
           ]
         },
         {
-          "name": "Extend source ABC",
+          "name": "Transcribe audio",
+          "type": "BOOLEAN",
+          "links": [
+            23
+          ]
+        },
+        {
+          "name": "Extend reference",
           "type": "BOOLEAN",
           "links": [
             12
@@ -169,11 +176,11 @@
         "previewExposures": []
       },
       "widgets_values": [
-        false,
+        "No reference",
         false
       ],
       "widgets_values_named": {
-        "use_transcription": false,
+        "source": "No reference",
         "extend": false
       }
     },
@@ -383,12 +390,12 @@
           }
         },
         {
-          "name": "use_transcription",
+          "name": "use_reference",
           "type": "BOOLEAN",
           "link": 21,
-          "label": "Use transcription",
+          "label": "Use reference",
           "widget": {
-            "name": "use_transcription"
+            "name": "use_reference"
           }
         },
         {
@@ -396,6 +403,18 @@
           "type": "AUDIO_ENCODER",
           "link": 22,
           "label": "SheetSage2 model"
+        },
+        {
+          "name": "reference_abc",
+          "type": "STRING",
+          "link": 24,
+          "label": "Reference ABC"
+        },
+        {
+          "name": "use_audio",
+          "type": "BOOLEAN",
+          "link": 23,
+          "label": "Transcribe audio"
         }
       ],
       "outputs": [
@@ -445,7 +464,7 @@
         "top_k": 30,
         "repetition_penalty": 1.005,
         "penalty_window": 100,
-        "use_transcription": false
+        "use_reference": false
       }
     },
     {
@@ -753,7 +772,7 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "# YuE2 song\n\nThree paths: fresh planning from lyrics and style, SheetSage2 transcription of reference audio used as-is, or that transcription extended by the planner.\n\nLyrics and style → Planning → ABC → Acoustic → ABC + FLAC.\n\n**ABC** now shows the selected score as sheet music beside its highlighted source. Click a note in either view to find it in the other; Expand opens a larger view. This is the exact score used for audio generation and saved with the FLAC.\n\nOptional preview playback plays fixed-velocity notes so you can hear what the ABC says; the song itself comes from Acoustic. See the soundfont note below the ABC node.\n\nDrop reference audio onto the loader at top left, or use its upload button. The Use transcription and Extend transcribed ABC switches sit just below it, above lyrics and style; models sit below Planning. Controls on the Planning face feed fresh planning and extension together. Acoustic controls are independent. max_duration is an upper limit.\n\nOptional external ABC → MIDI conversion: [Symusic](https://github.com/Yikai-Liao/symusic). It is not a dependency.\n\n**Use transcription** turns the reference-audio branch on and off from the main canvas. Off bypasses the branch, so SheetSage2 and reference-audio files are not validated or loaded. **Extend transcribed ABC** continues the transcription through the planner. The template uses standard ComfyUI audio and encoder loaders."
+        "# YuE2 song\n\nChoose a Source in Reference controls: No reference, Transcribe audio, or ABC. Extend reference continues either reference score through the planner; with No reference it is ignored.\n\nDrop audio onto Reference audio, or paste a score into Reference ABC above Planning. Both inputs stay on the main canvas. SheetSage2 is needed only for Transcribe audio; choose it in Models.\n\nThe selected ABC goes to the sheet/source preview, acoustic synthesis, and the paired FLAC + ABC exporter. As-is uses the reference score unchanged. Extension shares Planning's sampling controls and preserves the original score as a prefix.\n\nNative bypass keeps unused reference audio and SheetSage2 files out of validation and execution. The wired controls are synchronized again before prompt compilation.\n\nLyrics and style are still supplied separately. Use the matching full/melody score mode for transcription, supplied ABC, and music generation. max_duration is an upper limit, not a target.\n\nOptional external ABC → MIDI conversion: [Symusic](https://github.com/Yikai-Liao/symusic)."
       ]
     },
     {
@@ -852,6 +871,49 @@
       "widgets_values": [
         ""
       ]
+    },
+    {
+      "id": 38,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        690,
+        -45
+      ],
+      "size": [
+        440,
+        380
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "value",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "value"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            24
+          ]
+        }
+      ],
+      "title": "Reference ABC — paste score here",
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline",
+        "cnr_id": "comfy-core",
+        "ver": "0.38.0"
+      },
+      "widgets_values": [
+        ""
+      ]
     }
   ],
   "links": [
@@ -930,7 +992,7 @@
     [
       12,
       33,
-      1,
+      2,
       30,
       4,
       "BOOLEAN"
@@ -1006,6 +1068,22 @@
       30,
       14,
       "AUDIO_ENCODER"
+    ],
+    [
+      23,
+      33,
+      1,
+      30,
+      16,
+      "BOOLEAN"
+    ],
+    [
+      24,
+      38,
+      0,
+      30,
+      15,
+      "STRING"
     ]
   ],
   "groups": [],
@@ -1491,7 +1569,7 @@
         "state": {
           "lastGroupId": 0,
           "lastNodeId": 36,
-          "lastLinkId": 30,
+          "lastLinkId": 32,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -1699,12 +1777,12 @@
           },
           {
             "id": "074d9450-50cf-4d62-9f8d-2e056ef8c9ea",
-            "name": "use_transcription",
+            "name": "use_reference",
             "type": "BOOLEAN",
             "linkIds": [
               29
             ],
-            "label": "Use transcription",
+            "label": "Use reference",
             "pos": [
               -256,
               364
@@ -1721,6 +1799,32 @@
             "pos": [
               -256,
               384
+            ]
+          },
+          {
+            "id": "200df041-0d20-4018-92c3-a8533e72ecb1",
+            "name": "reference_abc",
+            "type": "STRING",
+            "linkIds": [
+              31
+            ],
+            "label": "Reference abc",
+            "pos": [
+              -256,
+              404
+            ]
+          },
+          {
+            "id": "060ec4fb-1c25-408a-96f1-39957c53db37",
+            "name": "use_audio",
+            "type": "BOOLEAN",
+            "linkIds": [
+              32
+            ],
+            "label": "Use audio",
+            "pos": [
+              -256,
+              424
             ]
           }
         ],
@@ -1949,7 +2053,7 @@
             "flags": {},
             "order": 2,
             "mode": 4,
-            "title": "Reference transcription",
+            "title": "Reference score",
             "inputs": [
               {
                 "name": "abc",
@@ -2030,6 +2134,16 @@
                 "name": "audio_encoder",
                 "type": "AUDIO_ENCODER",
                 "link": 30
+              },
+              {
+                "name": "reference_abc",
+                "type": "STRING",
+                "link": 31
+              },
+              {
+                "name": "use_audio",
+                "type": "BOOLEAN",
+                "link": 32
               }
             ],
             "outputs": [
@@ -2289,6 +2403,22 @@
             "target_id": 36,
             "target_slot": 15,
             "type": "AUDIO_ENCODER"
+          },
+          {
+            "id": 31,
+            "origin_id": -10,
+            "origin_slot": 15,
+            "target_id": 36,
+            "target_slot": 16,
+            "type": "STRING"
+          },
+          {
+            "id": 32,
+            "origin_id": -10,
+            "origin_slot": 16,
+            "target_id": 36,
+            "target_slot": 17,
+            "type": "BOOLEAN"
           }
         ],
         "extra": {}
@@ -3205,13 +3335,13 @@
         "version": 1,
         "state": {
           "lastGroupId": 0,
-          "lastNodeId": 20,
-          "lastLinkId": 22,
+          "lastNodeId": 40,
+          "lastLinkId": 24,
           "lastRerouteId": 0
         },
         "revision": 0,
         "config": {},
-        "name": "Transcription",
+        "name": "Reference score",
         "inputNode": {
           "id": -10,
           "bounding": [
@@ -3236,7 +3366,7 @@
             "name": "abc",
             "type": "STRING",
             "linkIds": [
-              19
+              22
             ],
             "label": "abc",
             "pos": [
@@ -3249,7 +3379,7 @@
             "name": "clip",
             "type": "CLIP",
             "linkIds": [
-              5
+              7
             ],
             "label": "clip",
             "pos": [
@@ -3262,7 +3392,7 @@
             "name": "style",
             "type": "STRING",
             "linkIds": [
-              6
+              8
             ],
             "label": "style",
             "pos": [
@@ -3275,7 +3405,7 @@
             "name": "lyrics",
             "type": "STRING",
             "linkIds": [
-              7
+              9
             ],
             "label": "lyrics",
             "pos": [
@@ -3288,7 +3418,7 @@
             "name": "reference_audio",
             "type": "AUDIO",
             "linkIds": [
-              2
+              1
             ],
             "label": "reference_audio",
             "pos": [
@@ -3301,7 +3431,7 @@
             "name": "extend",
             "type": "BOOLEAN",
             "linkIds": [
-              16
+              18
             ],
             "label": "extend",
             "pos": [
@@ -3314,7 +3444,7 @@
             "name": "seed",
             "type": "INT",
             "linkIds": [
-              8
+              10
             ],
             "label": "seed",
             "pos": [
@@ -3328,7 +3458,7 @@
             "type": "COMBO",
             "linkIds": [
               3,
-              9
+              11
             ],
             "label": "mode",
             "pos": [
@@ -3341,7 +3471,7 @@
             "name": "max_abc_tokens",
             "type": "INT",
             "linkIds": [
-              10
+              12
             ],
             "label": "max_abc_tokens",
             "pos": [
@@ -3354,7 +3484,7 @@
             "name": "temperature",
             "type": "FLOAT",
             "linkIds": [
-              11
+              13
             ],
             "label": "temperature",
             "pos": [
@@ -3367,7 +3497,7 @@
             "name": "top_p",
             "type": "FLOAT",
             "linkIds": [
-              12
+              14
             ],
             "label": "top_p",
             "pos": [
@@ -3380,7 +3510,7 @@
             "name": "top_k",
             "type": "INT",
             "linkIds": [
-              13
+              15
             ],
             "label": "top_k",
             "pos": [
@@ -3393,7 +3523,7 @@
             "name": "repetition_penalty",
             "type": "FLOAT",
             "linkIds": [
-              14
+              16
             ],
             "label": "repetition_penalty",
             "pos": [
@@ -3406,7 +3536,7 @@
             "name": "penalty_window",
             "type": "INT",
             "linkIds": [
-              15
+              17
             ],
             "label": "penalty_window",
             "pos": [
@@ -3419,7 +3549,7 @@
             "name": "enabled",
             "type": "BOOLEAN",
             "linkIds": [
-              22
+              21
             ],
             "label": "Enabled",
             "pos": [
@@ -3432,12 +3562,38 @@
             "name": "audio_encoder",
             "type": "AUDIO_ENCODER",
             "linkIds": [
-              1
+              2
             ],
             "label": "SheetSage2 model",
             "pos": [
               -256,
               404
+            ]
+          },
+          {
+            "id": "5ed5bbae-d7c6-475d-b8a4-2c77ba1aa91a",
+            "name": "reference_abc",
+            "type": "STRING",
+            "linkIds": [
+              4
+            ],
+            "label": "Reference abc",
+            "pos": [
+              -256,
+              424
+            ]
+          },
+          {
+            "id": "1a1a0244-4ea5-4c70-aafc-def3a18906c3",
+            "name": "use_audio",
+            "type": "BOOLEAN",
+            "linkIds": [
+              5
+            ],
+            "label": "Use audio",
+            "pos": [
+              -256,
+              444
             ]
           }
         ],
@@ -3447,10 +3603,1011 @@
             "name": "abc",
             "type": "STRING",
             "linkIds": [
-              21
+              24
             ],
             "pos": [
               2144,
+              104
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 40,
+            "type": "ee087d4c-3f9d-4bbe-bc19-532e88083ff6",
+            "pos": [
+              0,
+              80
+            ],
+            "size": [
+              420,
+              220
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 4,
+            "title": "Audio transcription",
+            "inputs": [
+              {
+                "name": "abc",
+                "type": "STRING",
+                "link": 4
+              },
+              {
+                "name": "reference_audio",
+                "type": "AUDIO",
+                "link": 1
+              },
+              {
+                "name": "audio_encoder",
+                "type": "AUDIO_ENCODER",
+                "link": 2
+              },
+              {
+                "name": "mode",
+                "type": "COMBO",
+                "link": 3
+              },
+              {
+                "name": "enabled",
+                "type": "BOOLEAN",
+                "link": 5
+              }
+            ],
+            "outputs": [
+              {
+                "name": "abc",
+                "type": "STRING",
+                "links": [
+                  6,
+                  19
+                ]
+              }
+            ],
+            "properties": {
+              "previewExposures": [],
+              "bno84.enabledInput": "enabled"
+            },
+            "widgets_values": []
+          },
+          {
+            "id": 18,
+            "type": "bno84.YuE2ExtendABC",
+            "pos": [
+              560,
+              700
+            ],
+            "size": [
+              400,
+              500
+            ],
+            "flags": {},
+            "order": 10,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "abc",
+                "type": "STRING",
+                "link": 6
+              },
+              {
+                "name": "clip",
+                "type": "CLIP",
+                "link": 7
+              },
+              {
+                "name": "style",
+                "type": "STRING",
+                "link": 8,
+                "widget": {
+                  "name": "style"
+                }
+              },
+              {
+                "name": "lyrics",
+                "type": "STRING",
+                "link": 9,
+                "widget": {
+                  "name": "lyrics"
+                }
+              },
+              {
+                "name": "seed",
+                "type": "INT",
+                "link": 10,
+                "widget": {
+                  "name": "seed"
+                }
+              },
+              {
+                "name": "mode",
+                "type": "COMBO",
+                "link": 11,
+                "widget": {
+                  "name": "mode"
+                }
+              },
+              {
+                "name": "max_abc_tokens",
+                "type": "INT",
+                "link": 12,
+                "widget": {
+                  "name": "max_abc_tokens"
+                }
+              },
+              {
+                "name": "temperature",
+                "type": "FLOAT",
+                "link": 13,
+                "widget": {
+                  "name": "temperature"
+                }
+              },
+              {
+                "name": "top_p",
+                "type": "FLOAT",
+                "link": 14,
+                "widget": {
+                  "name": "top_p"
+                }
+              },
+              {
+                "name": "top_k",
+                "type": "INT",
+                "link": 15,
+                "widget": {
+                  "name": "top_k"
+                }
+              },
+              {
+                "name": "repetition_penalty",
+                "type": "FLOAT",
+                "link": 16,
+                "widget": {
+                  "name": "repetition_penalty"
+                }
+              },
+              {
+                "name": "penalty_window",
+                "type": "INT",
+                "link": 17,
+                "widget": {
+                  "name": "penalty_window"
+                }
+              }
+            ],
+            "outputs": [
+              {
+                "name": "abc",
+                "type": "STRING",
+                "links": [
+                  20
+                ]
+              }
+            ],
+            "title": "Extend source ABC",
+            "properties": {
+              "Node name for S&R": "bno84.YuE2ExtendABC",
+              "cnr_id": "comfyui-yue2-kit",
+              "ver": "0.1.1"
+            },
+            "widgets_values": [
+              "",
+              "",
+              0,
+              "fixed",
+              "full",
+              8192,
+              0.7,
+              0.9,
+              30,
+              1.005,
+              100
+            ]
+          },
+          {
+            "id": 19,
+            "type": "ComfySwitchNode",
+            "pos": [
+              1080,
+              700
+            ],
+            "size": [
+              400,
+              160
+            ],
+            "flags": {},
+            "order": 11,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "switch",
+                "type": "BOOLEAN",
+                "link": 18,
+                "widget": {
+                  "name": "switch"
+                }
+              },
+              {
+                "name": "on_false",
+                "type": "COMFY_MATCHTYPE_V3",
+                "link": 19
+              },
+              {
+                "name": "on_true",
+                "type": "COMFY_MATCHTYPE_V3",
+                "link": 20
+              }
+            ],
+            "outputs": [
+              {
+                "name": "output",
+                "type": "COMFY_MATCHTYPE_V3",
+                "links": [
+                  23
+                ]
+              }
+            ],
+            "title": "Extend or use ABC as-is",
+            "properties": {
+              "Node name for S&R": "ComfySwitchNode",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
+            },
+            "widgets_values": [
+              ""
+            ]
+          },
+          {
+            "id": 20,
+            "type": "ComfySwitchNode",
+            "pos": [
+              1620,
+              80
+            ],
+            "size": [
+              400,
+              160
+            ],
+            "flags": {},
+            "order": 12,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "switch",
+                "type": "BOOLEAN",
+                "link": 21,
+                "widget": {
+                  "name": "switch"
+                }
+              },
+              {
+                "name": "on_false",
+                "type": "COMFY_MATCHTYPE_V3",
+                "link": 22
+              },
+              {
+                "name": "on_true",
+                "type": "COMFY_MATCHTYPE_V3",
+                "link": 23
+              }
+            ],
+            "outputs": [
+              {
+                "name": "output",
+                "type": "COMFY_MATCHTYPE_V3",
+                "links": [
+                  24
+                ]
+              }
+            ],
+            "title": "Use reference or fresh score",
+            "properties": {
+              "Node name for S&R": "ComfySwitchNode",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
+            },
+            "widgets_values": [
+              false
+            ]
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 1,
+            "origin_id": -10,
+            "origin_slot": 4,
+            "target_id": 40,
+            "target_slot": 1,
+            "type": "AUDIO"
+          },
+          {
+            "id": 2,
+            "origin_id": -10,
+            "origin_slot": 15,
+            "target_id": 40,
+            "target_slot": 2,
+            "type": "AUDIO_ENCODER"
+          },
+          {
+            "id": 3,
+            "origin_id": -10,
+            "origin_slot": 7,
+            "target_id": 40,
+            "target_slot": 3,
+            "type": "COMBO"
+          },
+          {
+            "id": 4,
+            "origin_id": -10,
+            "origin_slot": 16,
+            "target_id": 40,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 5,
+            "origin_id": -10,
+            "origin_slot": 17,
+            "target_id": 40,
+            "target_slot": 4,
+            "type": "BOOLEAN"
+          },
+          {
+            "id": 6,
+            "origin_id": 40,
+            "origin_slot": 0,
+            "target_id": 18,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 7,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 18,
+            "target_slot": 1,
+            "type": "CLIP"
+          },
+          {
+            "id": 8,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 18,
+            "target_slot": 2,
+            "type": "STRING"
+          },
+          {
+            "id": 9,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 18,
+            "target_slot": 3,
+            "type": "STRING"
+          },
+          {
+            "id": 10,
+            "origin_id": -10,
+            "origin_slot": 6,
+            "target_id": 18,
+            "target_slot": 4,
+            "type": "INT"
+          },
+          {
+            "id": 11,
+            "origin_id": -10,
+            "origin_slot": 7,
+            "target_id": 18,
+            "target_slot": 5,
+            "type": "COMBO"
+          },
+          {
+            "id": 12,
+            "origin_id": -10,
+            "origin_slot": 8,
+            "target_id": 18,
+            "target_slot": 6,
+            "type": "INT"
+          },
+          {
+            "id": 13,
+            "origin_id": -10,
+            "origin_slot": 9,
+            "target_id": 18,
+            "target_slot": 7,
+            "type": "FLOAT"
+          },
+          {
+            "id": 14,
+            "origin_id": -10,
+            "origin_slot": 10,
+            "target_id": 18,
+            "target_slot": 8,
+            "type": "FLOAT"
+          },
+          {
+            "id": 15,
+            "origin_id": -10,
+            "origin_slot": 11,
+            "target_id": 18,
+            "target_slot": 9,
+            "type": "INT"
+          },
+          {
+            "id": 16,
+            "origin_id": -10,
+            "origin_slot": 12,
+            "target_id": 18,
+            "target_slot": 10,
+            "type": "FLOAT"
+          },
+          {
+            "id": 17,
+            "origin_id": -10,
+            "origin_slot": 13,
+            "target_id": 18,
+            "target_slot": 11,
+            "type": "INT"
+          },
+          {
+            "id": 18,
+            "origin_id": -10,
+            "origin_slot": 5,
+            "target_id": 19,
+            "target_slot": 0,
+            "type": "BOOLEAN"
+          },
+          {
+            "id": 19,
+            "origin_id": 40,
+            "origin_slot": 0,
+            "target_id": 19,
+            "target_slot": 1,
+            "type": "STRING"
+          },
+          {
+            "id": 20,
+            "origin_id": 18,
+            "origin_slot": 0,
+            "target_id": 19,
+            "target_slot": 2,
+            "type": "STRING"
+          },
+          {
+            "id": 21,
+            "origin_id": -10,
+            "origin_slot": 14,
+            "target_id": 20,
+            "target_slot": 0,
+            "type": "BOOLEAN"
+          },
+          {
+            "id": 22,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 20,
+            "target_slot": 1,
+            "type": "STRING"
+          },
+          {
+            "id": 23,
+            "origin_id": 19,
+            "origin_slot": 0,
+            "target_id": 20,
+            "target_slot": 2,
+            "type": "STRING"
+          },
+          {
+            "id": 24,
+            "origin_id": 20,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "STRING"
+          }
+        ],
+        "extra": {}
+      },
+      {
+        "id": "ba803892-f0f1-55ee-aec0-5f6c0ae400d8",
+        "version": 1,
+        "state": {
+          "lastGroupId": 0,
+          "lastNodeId": 42,
+          "lastLinkId": 7,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Reference controls",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -360,
+            80,
+            128,
+            100
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            2120,
+            80,
+            128,
+            80
+          ]
+        },
+        "inputs": [
+          {
+            "id": "2ff2c622-2674-42f3-a619-f089441d1bd4",
+            "name": "source",
+            "type": "COMBO",
+            "linkIds": [
+              1
+            ],
+            "label": "Source",
+            "pos": [
+              -256,
+              104
+            ]
+          },
+          {
+            "id": "efdf213d-af85-44fd-8796-b495fa5226f2",
+            "name": "extend",
+            "type": "BOOLEAN",
+            "linkIds": [
+              2
+            ],
+            "label": "Extend reference",
+            "pos": [
+              -256,
+              124
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "d956d10c-515c-4372-926c-b282db2119bd",
+            "name": "Use reference",
+            "type": "BOOLEAN",
+            "linkIds": [
+              5
+            ],
+            "label": "Use reference",
+            "pos": [
+              -256,
+              104
+            ]
+          },
+          {
+            "id": "f92ff7da-241e-415a-afff-c7b3456a72a3",
+            "name": "Transcribe audio",
+            "type": "BOOLEAN",
+            "linkIds": [
+              6
+            ],
+            "label": "Transcribe audio",
+            "pos": [
+              -256,
+              124
+            ]
+          },
+          {
+            "id": "211e4b8a-8118-45c8-b252-1e8e4ad5883e",
+            "name": "Extend reference",
+            "type": "BOOLEAN",
+            "linkIds": [
+              7
+            ],
+            "label": "Extend reference",
+            "pos": [
+              -256,
+              144
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 13,
+            "type": "CustomCombo",
+            "pos": [
+              0,
+              80
+            ],
+            "size": [
+              400,
+              160
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "choice",
+                "type": "COMBO",
+                "link": 1,
+                "widget": {
+                  "name": "choice"
+                }
+              }
+            ],
+            "outputs": [
+              {
+                "name": "STRING",
+                "type": "STRING",
+                "links": []
+              },
+              {
+                "name": "INDEX",
+                "type": "INT",
+                "links": [
+                  3,
+                  4
+                ]
+              }
+            ],
+            "title": "Reference source",
+            "properties": {
+              "Node name for S&R": "CustomCombo",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
+            },
+            "widgets_values": [
+              "No reference",
+              0,
+              "No reference",
+              "Transcribe audio",
+              "ABC",
+              ""
+            ],
+            "widgets_values_named": {
+              "choice": "No reference",
+              "index": 0,
+              "option1": "No reference",
+              "option2": "Transcribe audio",
+              "option3": "ABC",
+              "option4": ""
+            }
+          },
+          {
+            "id": 17,
+            "type": "PrimitiveBoolean",
+            "pos": [
+              0,
+              420
+            ],
+            "size": [
+              410,
+              70
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "value",
+                "type": "BOOLEAN",
+                "link": 2,
+                "widget": {
+                  "name": "value"
+                }
+              }
+            ],
+            "outputs": [
+              {
+                "name": "BOOLEAN",
+                "type": "BOOLEAN",
+                "links": [
+                  7
+                ]
+              }
+            ],
+            "title": "Extend reference",
+            "properties": {
+              "Node name for S&R": "PrimitiveBoolean",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
+            },
+            "widgets_values": [
+              false
+            ]
+          },
+          {
+            "id": 41,
+            "type": "ComfyMathExpression",
+            "pos": [
+              560,
+              80
+            ],
+            "size": [
+              400,
+              160
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "values.a",
+                "type": "FLOAT,INT,BOOLEAN",
+                "link": 3
+              },
+              {
+                "name": "expression",
+                "type": "STRING",
+                "link": null,
+                "widget": {
+                  "name": "expression"
+                }
+              }
+            ],
+            "outputs": [
+              {
+                "name": "FLOAT",
+                "type": "FLOAT",
+                "links": []
+              },
+              {
+                "name": "INT",
+                "type": "INT",
+                "links": []
+              },
+              {
+                "name": "BOOL",
+                "type": "BOOLEAN",
+                "links": [
+                  5
+                ]
+              }
+            ],
+            "title": "Reference enabled",
+            "properties": {
+              "Node name for S&R": "ComfyMathExpression",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
+            },
+            "widgets_values": [
+              "a > 0"
+            ],
+            "widgets_values_named": {
+              "expression": "a > 0"
+            }
+          },
+          {
+            "id": 42,
+            "type": "ComfyMathExpression",
+            "pos": [
+              560,
+              340
+            ],
+            "size": [
+              400,
+              160
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "values.a",
+                "type": "FLOAT,INT,BOOLEAN",
+                "link": 4
+              },
+              {
+                "name": "expression",
+                "type": "STRING",
+                "link": null,
+                "widget": {
+                  "name": "expression"
+                }
+              }
+            ],
+            "outputs": [
+              {
+                "name": "FLOAT",
+                "type": "FLOAT",
+                "links": []
+              },
+              {
+                "name": "INT",
+                "type": "INT",
+                "links": []
+              },
+              {
+                "name": "BOOL",
+                "type": "BOOLEAN",
+                "links": [
+                  6
+                ]
+              }
+            ],
+            "title": "Audio transcription selected",
+            "properties": {
+              "Node name for S&R": "ComfyMathExpression",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
+            },
+            "widgets_values": [
+              "a == 1"
+            ],
+            "widgets_values_named": {
+              "expression": "a == 1"
+            }
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 1,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 13,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 2,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 17,
+            "target_slot": 0,
+            "type": "BOOLEAN"
+          },
+          {
+            "id": 3,
+            "origin_id": 13,
+            "origin_slot": 1,
+            "target_id": 41,
+            "target_slot": 0,
+            "type": "INT"
+          },
+          {
+            "id": 4,
+            "origin_id": 13,
+            "origin_slot": 1,
+            "target_id": 42,
+            "target_slot": 0,
+            "type": "INT"
+          },
+          {
+            "id": 5,
+            "origin_id": 41,
+            "origin_slot": 2,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "BOOLEAN"
+          },
+          {
+            "id": 6,
+            "origin_id": 42,
+            "origin_slot": 2,
+            "target_id": -20,
+            "target_slot": 1,
+            "type": "BOOLEAN"
+          },
+          {
+            "id": 7,
+            "origin_id": 17,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 2,
+            "type": "BOOLEAN"
+          }
+        ],
+        "extra": {}
+      },
+      {
+        "id": "ee087d4c-3f9d-4bbe-bc19-532e88083ff6",
+        "version": 1,
+        "state": {
+          "lastGroupId": 0,
+          "lastNodeId": 21,
+          "lastLinkId": 7,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Audio transcription",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -360,
+            80,
+            128,
+            100
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            2120,
+            80,
+            128,
+            80
+          ]
+        },
+        "inputs": [
+          {
+            "id": "ca9e0a58-96ff-497c-87ba-4070fce24697",
+            "name": "abc",
+            "type": "STRING",
+            "linkIds": [
+              5
+            ],
+            "label": "Abc",
+            "pos": [
+              -256,
+              104
+            ]
+          },
+          {
+            "id": "3280bf65-2e10-4cd3-91b0-32e2e6f3114e",
+            "name": "reference_audio",
+            "type": "AUDIO",
+            "linkIds": [
+              2
+            ],
+            "label": "Reference audio",
+            "pos": [
+              -256,
+              124
+            ]
+          },
+          {
+            "id": "3d87e1d5-d203-46c1-9eeb-13a6601cf6fc",
+            "name": "audio_encoder",
+            "type": "AUDIO_ENCODER",
+            "linkIds": [
+              1
+            ],
+            "label": "Audio encoder",
+            "pos": [
+              -256,
+              144
+            ]
+          },
+          {
+            "id": "31405e1d-a95f-45e1-85f3-2f9e2b8cac27",
+            "name": "mode",
+            "type": "COMBO",
+            "linkIds": [
+              3
+            ],
+            "label": "Mode",
+            "pos": [
+              -256,
+              164
+            ]
+          },
+          {
+            "id": "1208154b-ea86-407d-ac2a-516887cd7604",
+            "name": "enabled",
+            "type": "BOOLEAN",
+            "linkIds": [
+              4
+            ],
+            "label": "Enabled",
+            "pos": [
+              -256,
+              184
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "a50461b1-ef91-4c0c-bfee-1cc93d0e9b84",
+            "name": "abc",
+            "type": "STRING",
+            "linkIds": [
+              7
+            ],
+            "label": "Abc",
+            "pos": [
+              -256,
               104
             ]
           }
@@ -3496,8 +4653,7 @@
                 "name": "abc",
                 "type": "STRING",
                 "links": [
-                  4,
-                  17
+                  6
                 ]
               }
             ],
@@ -3512,198 +4668,10 @@
             ]
           },
           {
-            "id": 18,
-            "type": "bno84.YuE2ExtendABC",
+            "id": 21,
+            "type": "ComfySwitchNode",
             "pos": [
               560,
-              700
-            ],
-            "size": [
-              400,
-              500
-            ],
-            "flags": {},
-            "order": 10,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "abc",
-                "type": "STRING",
-                "link": 4
-              },
-              {
-                "name": "clip",
-                "type": "CLIP",
-                "link": 5
-              },
-              {
-                "name": "style",
-                "type": "STRING",
-                "link": 6,
-                "widget": {
-                  "name": "style"
-                }
-              },
-              {
-                "name": "lyrics",
-                "type": "STRING",
-                "link": 7,
-                "widget": {
-                  "name": "lyrics"
-                }
-              },
-              {
-                "name": "seed",
-                "type": "INT",
-                "link": 8,
-                "widget": {
-                  "name": "seed"
-                }
-              },
-              {
-                "name": "mode",
-                "type": "COMBO",
-                "link": 9,
-                "widget": {
-                  "name": "mode"
-                }
-              },
-              {
-                "name": "max_abc_tokens",
-                "type": "INT",
-                "link": 10,
-                "widget": {
-                  "name": "max_abc_tokens"
-                }
-              },
-              {
-                "name": "temperature",
-                "type": "FLOAT",
-                "link": 11,
-                "widget": {
-                  "name": "temperature"
-                }
-              },
-              {
-                "name": "top_p",
-                "type": "FLOAT",
-                "link": 12,
-                "widget": {
-                  "name": "top_p"
-                }
-              },
-              {
-                "name": "top_k",
-                "type": "INT",
-                "link": 13,
-                "widget": {
-                  "name": "top_k"
-                }
-              },
-              {
-                "name": "repetition_penalty",
-                "type": "FLOAT",
-                "link": 14,
-                "widget": {
-                  "name": "repetition_penalty"
-                }
-              },
-              {
-                "name": "penalty_window",
-                "type": "INT",
-                "link": 15,
-                "widget": {
-                  "name": "penalty_window"
-                }
-              }
-            ],
-            "outputs": [
-              {
-                "name": "abc",
-                "type": "STRING",
-                "links": [
-                  18
-                ]
-              }
-            ],
-            "title": "Extend source ABC",
-            "properties": {
-              "Node name for S&R": "bno84.YuE2ExtendABC",
-              "cnr_id": "comfyui-yue2-kit",
-              "ver": "0.1.1"
-            },
-            "widgets_values": [
-              "",
-              "",
-              0,
-              "fixed",
-              "full",
-              8192,
-              0.7,
-              0.9,
-              30,
-              1.005,
-              100
-            ]
-          },
-          {
-            "id": 19,
-            "type": "ComfySwitchNode",
-            "pos": [
-              1080,
-              700
-            ],
-            "size": [
-              400,
-              160
-            ],
-            "flags": {},
-            "order": 11,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "switch",
-                "type": "BOOLEAN",
-                "link": 16,
-                "widget": {
-                  "name": "switch"
-                }
-              },
-              {
-                "name": "on_false",
-                "type": "COMFY_MATCHTYPE_V3",
-                "link": 17
-              },
-              {
-                "name": "on_true",
-                "type": "COMFY_MATCHTYPE_V3",
-                "link": 18
-              }
-            ],
-            "outputs": [
-              {
-                "name": "output",
-                "type": "COMFY_MATCHTYPE_V3",
-                "links": [
-                  20
-                ]
-              }
-            ],
-            "title": "Extend or use ABC as-is",
-            "properties": {
-              "Node name for S&R": "ComfySwitchNode",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              ""
-            ]
-          },
-          {
-            "id": 20,
-            "type": "ComfySwitchNode",
-            "pos": [
-              1620,
               80
             ],
             "size": [
@@ -3711,13 +4679,13 @@
               160
             ],
             "flags": {},
-            "order": 12,
+            "order": 0,
             "mode": 0,
             "inputs": [
               {
                 "name": "switch",
                 "type": "BOOLEAN",
-                "link": 22,
+                "link": 4,
                 "widget": {
                   "name": "switch"
                 }
@@ -3725,12 +4693,12 @@
               {
                 "name": "on_false",
                 "type": "COMFY_MATCHTYPE_V3",
-                "link": 19
+                "link": 5
               },
               {
                 "name": "on_true",
                 "type": "COMFY_MATCHTYPE_V3",
-                "link": 20
+                "link": 6
               }
             ],
             "outputs": [
@@ -3738,11 +4706,11 @@
                 "name": "output",
                 "type": "COMFY_MATCHTYPE_V3",
                 "links": [
-                  21
+                  7
                 ]
               }
             ],
-            "title": "Use transcription when this block is enabled",
+            "title": "Select pasted or transcribed ABC",
             "properties": {
               "Node name for S&R": "ComfySwitchNode",
               "cnr_id": "comfy-core",
@@ -3758,7 +4726,7 @@
           {
             "id": 1,
             "origin_id": -10,
-            "origin_slot": 15,
+            "origin_slot": 2,
             "target_id": 16,
             "target_slot": 0,
             "type": "AUDIO_ENCODER"
@@ -3766,7 +4734,7 @@
           {
             "id": 2,
             "origin_id": -10,
-            "origin_slot": 4,
+            "origin_slot": 1,
             "target_id": 16,
             "target_slot": 1,
             "type": "AUDIO"
@@ -3774,372 +4742,42 @@
           {
             "id": 3,
             "origin_id": -10,
-            "origin_slot": 7,
+            "origin_slot": 3,
             "target_id": 16,
             "target_slot": 2,
             "type": "COMBO"
           },
           {
             "id": 4,
-            "origin_id": 16,
-            "origin_slot": 0,
-            "target_id": 18,
+            "origin_id": -10,
+            "origin_slot": 4,
+            "target_id": 21,
             "target_slot": 0,
-            "type": "STRING"
+            "type": "BOOLEAN"
           },
           {
             "id": 5,
             "origin_id": -10,
-            "origin_slot": 1,
-            "target_id": 18,
+            "origin_slot": 0,
+            "target_id": 21,
             "target_slot": 1,
-            "type": "CLIP"
+            "type": "STRING"
           },
           {
             "id": 6,
-            "origin_id": -10,
-            "origin_slot": 2,
-            "target_id": 18,
+            "origin_id": 16,
+            "origin_slot": 0,
+            "target_id": 21,
             "target_slot": 2,
             "type": "STRING"
           },
           {
             "id": 7,
-            "origin_id": -10,
-            "origin_slot": 3,
-            "target_id": 18,
-            "target_slot": 3,
-            "type": "STRING"
-          },
-          {
-            "id": 8,
-            "origin_id": -10,
-            "origin_slot": 6,
-            "target_id": 18,
-            "target_slot": 4,
-            "type": "INT"
-          },
-          {
-            "id": 9,
-            "origin_id": -10,
-            "origin_slot": 7,
-            "target_id": 18,
-            "target_slot": 5,
-            "type": "COMBO"
-          },
-          {
-            "id": 10,
-            "origin_id": -10,
-            "origin_slot": 8,
-            "target_id": 18,
-            "target_slot": 6,
-            "type": "INT"
-          },
-          {
-            "id": 11,
-            "origin_id": -10,
-            "origin_slot": 9,
-            "target_id": 18,
-            "target_slot": 7,
-            "type": "FLOAT"
-          },
-          {
-            "id": 12,
-            "origin_id": -10,
-            "origin_slot": 10,
-            "target_id": 18,
-            "target_slot": 8,
-            "type": "FLOAT"
-          },
-          {
-            "id": 13,
-            "origin_id": -10,
-            "origin_slot": 11,
-            "target_id": 18,
-            "target_slot": 9,
-            "type": "INT"
-          },
-          {
-            "id": 14,
-            "origin_id": -10,
-            "origin_slot": 12,
-            "target_id": 18,
-            "target_slot": 10,
-            "type": "FLOAT"
-          },
-          {
-            "id": 15,
-            "origin_id": -10,
-            "origin_slot": 13,
-            "target_id": 18,
-            "target_slot": 11,
-            "type": "INT"
-          },
-          {
-            "id": 16,
-            "origin_id": -10,
-            "origin_slot": 5,
-            "target_id": 19,
-            "target_slot": 0,
-            "type": "BOOLEAN"
-          },
-          {
-            "id": 17,
-            "origin_id": 16,
-            "origin_slot": 0,
-            "target_id": 19,
-            "target_slot": 1,
-            "type": "STRING"
-          },
-          {
-            "id": 18,
-            "origin_id": 18,
-            "origin_slot": 0,
-            "target_id": 19,
-            "target_slot": 2,
-            "type": "STRING"
-          },
-          {
-            "id": 19,
-            "origin_id": -10,
-            "origin_slot": 0,
-            "target_id": 20,
-            "target_slot": 1,
-            "type": "STRING"
-          },
-          {
-            "id": 20,
-            "origin_id": 19,
-            "origin_slot": 0,
-            "target_id": 20,
-            "target_slot": 2,
-            "type": "STRING"
-          },
-          {
-            "id": 21,
-            "origin_id": 20,
+            "origin_id": 21,
             "origin_slot": 0,
             "target_id": -20,
             "target_slot": 0,
             "type": "STRING"
-          },
-          {
-            "id": 22,
-            "origin_id": -10,
-            "origin_slot": 14,
-            "target_id": 20,
-            "target_slot": 0,
-            "type": "BOOLEAN"
-          }
-        ],
-        "extra": {}
-      },
-      {
-        "id": "ba803892-f0f1-55ee-aec0-5f6c0ae400d8",
-        "version": 1,
-        "state": {
-          "lastGroupId": 0,
-          "lastNodeId": 17,
-          "lastLinkId": 6,
-          "lastRerouteId": 0
-        },
-        "revision": 0,
-        "config": {},
-        "name": "Reference controls",
-        "inputNode": {
-          "id": -10,
-          "bounding": [
-            -360,
-            80,
-            128,
-            100
-          ]
-        },
-        "outputNode": {
-          "id": -20,
-          "bounding": [
-            2120,
-            80,
-            128,
-            80
-          ]
-        },
-        "inputs": [
-          {
-            "id": "44ace5da-e28f-5a8f-b54a-303648da5ba1",
-            "name": "use_transcription",
-            "type": "BOOLEAN",
-            "linkIds": [
-              2
-            ],
-            "label": "Use transcription",
-            "pos": [
-              -256,
-              124
-            ]
-          },
-          {
-            "id": "69158805-dca7-5408-875f-c1e4ca1e7369",
-            "name": "extend",
-            "type": "BOOLEAN",
-            "linkIds": [
-              3
-            ],
-            "label": "Extend transcribed ABC",
-            "pos": [
-              -256,
-              144
-            ]
-          }
-        ],
-        "outputs": [
-          {
-            "id": "f0628d86-ed48-5015-964e-8ecfce96b472",
-            "name": "Use transcription",
-            "type": "BOOLEAN",
-            "linkIds": [
-              5
-            ],
-            "pos": [
-              2144,
-              124
-            ]
-          },
-          {
-            "id": "9b7c35a4-1d64-590e-88e0-27772623b9fa",
-            "name": "Extend source ABC",
-            "type": "BOOLEAN",
-            "linkIds": [
-              6
-            ],
-            "pos": [
-              2144,
-              144
-            ]
-          }
-        ],
-        "widgets": [],
-        "nodes": [
-          {
-            "id": 13,
-            "type": "PrimitiveBoolean",
-            "pos": [
-              0,
-              400
-            ],
-            "size": [
-              410,
-              70
-            ],
-            "flags": {},
-            "order": 3,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "value",
-                "type": "BOOLEAN",
-                "link": 2,
-                "widget": {
-                  "name": "value"
-                }
-              }
-            ],
-            "outputs": [
-              {
-                "name": "BOOLEAN",
-                "type": "BOOLEAN",
-                "links": [
-                  5
-                ]
-              }
-            ],
-            "title": "Use SheetSage2 transcription",
-            "properties": {
-              "Node name for S&R": "PrimitiveBoolean",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              false
-            ]
-          },
-          {
-            "id": 17,
-            "type": "PrimitiveBoolean",
-            "pos": [
-              0,
-              550
-            ],
-            "size": [
-              410,
-              70
-            ],
-            "flags": {},
-            "order": 4,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "value",
-                "type": "BOOLEAN",
-                "link": 3,
-                "widget": {
-                  "name": "value"
-                }
-              }
-            ],
-            "outputs": [
-              {
-                "name": "BOOLEAN",
-                "type": "BOOLEAN",
-                "links": [
-                  6
-                ]
-              }
-            ],
-            "title": "Extend transcribed ABC",
-            "properties": {
-              "Node name for S&R": "PrimitiveBoolean",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              false
-            ]
-          }
-        ],
-        "groups": [],
-        "links": [
-          {
-            "id": 2,
-            "origin_id": -10,
-            "origin_slot": 0,
-            "target_id": 13,
-            "target_slot": 0,
-            "type": "BOOLEAN"
-          },
-          {
-            "id": 3,
-            "origin_id": -10,
-            "origin_slot": 1,
-            "target_id": 17,
-            "target_slot": 0,
-            "type": "BOOLEAN"
-          },
-          {
-            "id": 5,
-            "origin_id": 13,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 0,
-            "type": "BOOLEAN"
-          },
-          {
-            "id": 6,
-            "origin_id": 17,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 1,
-            "type": "BOOLEAN"
           }
         ],
         "extra": {}

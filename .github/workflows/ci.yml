@@ -78,6 +78,9 @@ jobs:
           --route /extensions/ComfyUI-YuE2-Kit/branch_toggle.js
           --workflow pack/example_workflows/yue2-kit-song.json
 
+      - name: Five reference routes (CPU, mocked model calls)
+        run: python pack/.github/scripts/reference_routes_check.py comfyui pack
+
   publish:
     name: Publish to the Comfy Registry
     if: startsWith(github.ref, 'refs/tags/v')

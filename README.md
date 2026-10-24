@@ -23,8 +23,8 @@ Python packages.
 ## Example workflow
 
 The example workflow turns lyrics and a style prompt into a song, saved as FLAC
-with its ABC score. It can also transcribe reference audio to ABC with
-SheetSage2, and extend that score before synthesis.
+with its ABC score. It can also use pasted ABC or transcribe reference audio with SheetSage2,
+and optionally extend either score before synthesis.
 
 Open `yue2-kit-song` from ComfyUI's template browser under
 _ComfyUI-YuE2-Kit_, or load `example_workflows/yue2-kit-song.json`.
@@ -41,23 +41,42 @@ It also needs:
   in `models/audio_encoders/`, only for transcription. The transcription block
   is bypassed by default, so text-only songs do not need this file.
 
-Drop reference audio onto the **Reference audio** node at the top left,
-or use its upload button. Both switches are grouped in **Reference controls**
-directly below it:
+The main canvas keeps reference inputs above Planning:
 
-- **Use transcription:** use the reference recording instead of fresh planning.
-- **Extend transcribed ABC:** continue the transcription through the planner.
+- **Reference audio:** drop a recording onto the native loader or use Upload.
+- **Reference ABC:** paste a YuE2-compatible ABC score into the multiline editor.
+- **Reference controls:** choose **Source** (`No reference`, `Transcribe audio`,
+  or `ABC`) and whether to **Extend reference**.
+
+These controls provide five paths:
+
+1. No reference: plan a fresh score from lyrics and style; extension is ignored.
+2. Transcribe audio, as-is: use the SheetSage2 score without planning changes.
+3. Transcribe audio, extend: continue that score with the planner.
+4. ABC, as-is: use the pasted score unchanged.
+5. ABC, extend: continue the pasted score with the planner.
 
 Choose the transcription model with **SheetSage2** in the main **Models** panel.
+Only `Transcribe audio` requires reference audio or SheetSage2 files. Both are
+excluded from validation and execution for the other sources. The extension
+stage is shared by audio and ABC references and uses Planning's controls.
+Lyrics and style are still supplied separately; choose the matching full/melody
+score mode for your reference. Leave ABC blank when using another source; paste a nonempty compatible score
+before selecting `ABC`.
 
-With **Use transcription** off, the branch is bypassed automatically. Missing
-encoder and reference-audio files are not validated, and SheetSage2 is not loaded.
-The template uses ComfyUI's standard Load Audio, Load Audio Encoder, and Boolean
-nodes. The checkbox is wired through Planning into the transcription branch.
-A small frontend binding follows that wire and synchronizes native bypass mode;
-no custom loader is needed. The state is rechecked before prompt
-compilation, including API export. A disconnected branch control reports an
-error before the prompt is compiled.
+The template uses native Load Audio, Load Audio Encoder, Custom Combo, math,
+and switch nodes. The dropdown's index feeds two native comparisons that derive
+wired reference/audio flags. The kit's frontend binding synchronizes native
+bypass from those flags before prompt compilation, including API export. It
+recognizes simple comparisons, without evaluating arbitrary expression code.
+Disconnected routing flags report an error before compilation.
+
+API examples in `api/` cover each path: `yue2-kit-song.api.json` (no reference),
+`yue2-kit-audio-reference.api.json`, `yue2-kit-audio-extend.api.json`,
+`yue2-kit-abc-reference.api.json`, and `yue2-kit-abc-extend.api.json`.
+Set the audio filename in node `35`, or paste ABC into node `38`, as appropriate.
+These are compiled snapshots; choose the corresponding file rather than
+changing its source dropdown alone, since bypass rewiring happens in the UI.
 
 `max_duration` is an upper limit on audio length, not a target.
 
