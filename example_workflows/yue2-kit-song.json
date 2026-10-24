@@ -272,11 +272,11 @@
       },
       "widgets_values": [
         "yue2_3b_bf16.safetensors",
-        "SheetSage2_MERT2_bf16.safetensors"
+        "sheetsage2_bf16.safetensors"
       ],
       "widgets_values_named": {
         "yue2": "yue2_3b_bf16.safetensors",
-        "sheetsage2": "SheetSage2_MERT2_bf16.safetensors"
+        "sheetsage2": "sheetsage2_bf16.safetensors"
       }
     },
     {
@@ -1674,7 +1674,7 @@
           },
           {
             "id": 15,
-            "type": "bno84.SheetSage2Loader",
+            "type": "AudioEncoderLoader",
             "pos": [
               0,
               350
@@ -1705,14 +1705,14 @@
                 ]
               }
             ],
-            "title": "SheetSage2 + MERT2 · restore shared output weights",
+            "title": "SheetSage2 + MERT2",
             "properties": {
-              "Node name for S&R": "bno84.SheetSage2Loader",
-              "cnr_id": "comfyui-yue2-kit",
-              "ver": "0.1.0"
+              "Node name for S&R": "AudioEncoderLoader",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
             },
             "widgets_values": [
-              "SheetSage2_MERT2_bf16.safetensors"
+              "sheetsage2_bf16.safetensors"
             ]
           }
         ],

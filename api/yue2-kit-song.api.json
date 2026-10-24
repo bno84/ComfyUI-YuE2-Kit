@@ -94,12 +94,12 @@
     }
   },
   "34:15": {
-    "class_type": "bno84.SheetSage2Loader",
+    "class_type": "AudioEncoderLoader",
     "inputs": {
-      "audio_encoder_name": "SheetSage2_MERT2_bf16.safetensors"
+      "audio_encoder_name": "sheetsage2_bf16.safetensors"
     },
     "_meta": {
-      "title": "SheetSage2 + MERT2 · restore shared output weights"
+      "title": "SheetSage2 + MERT2"
     }
   },
   "30:16": {

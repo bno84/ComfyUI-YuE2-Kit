@@ -4,20 +4,15 @@ Small additions around ComfyUI's native YuE2 and SheetSage2 nodes, plus an
 example song workflow.
 
 - **Save YuE2 FLAC + ABC:** saves the song as FLAC with the exact ABC score
-  beside it, under one incrementing filename. Runs again even when
-  generation is cached, and has an audio player.
+  beside it, under one incrementing filename.
 - **YuE2 Extend ABC:** continues a score with the native YuE2 planner,
-  keeping the original as an unchanged prefix. `max_abc_tokens` budgets new
-  tokens only.
+  keeping the original as an unchanged prefix.
 - **Load Audio (Optional):** the native audio loader plus a `(none)` choice,
   for a transcription branch that may be off.
-- **Load SheetSage2 (Shared Output Weights):** loads a combined
-  SheetSage2/MERT2 checkpoint, restoring its tied output weights in memory.
 
 ## Install
 
-- **ComfyUI-Manager:** search for _YuE2-Kit_ (Registry ID `comfyui-yue2-kit`)
-  and install it.
+- **ComfyUI-Manager:** search for _YuE2-Kit_ and install it.
 - **comfy-cli:** `comfy node install comfyui-yue2-kit`.
 - **Manually:** `git clone https://github.com/bno84/ComfyUI-YuE2-Kit` into
   `ComfyUI/custom_nodes/`.
@@ -42,7 +37,7 @@ It also needs:
   your own General MIDI `.sf2`.
 - [`yue2_3b_bf16.safetensors`](https://huggingface.co/Comfy-Org/YuE2/resolve/main/checkpoints/yue2_3b_bf16.safetensors)
   in `models/checkpoints/`.
-- [`SheetSage2_MERT2_bf16.safetensors`](https://huggingface.co/Comfy-Org/YuE2/resolve/main/audio_encoders/sheetsage2_bf16.safetensors)
+- [`sheetsage2_bf16.safetensors`](https://huggingface.co/Comfy-Org/YuE2/resolve/main/audio_encoders/sheetsage2_bf16.safetensors)
   in `models/audio_encoders/`, for transcription. Its loader is part of the
   graph, so ComfyUI may reject the workflow without it even when
   transcription is off.

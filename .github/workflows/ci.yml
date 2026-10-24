@@ -73,7 +73,7 @@ jobs:
           python pack/.github/scripts/comfyui_smoke.py comfyui
           --pack ComfyUI-YuE2-Kit --cnr-id comfyui-yue2-kit
           --node bno84.SaveYuE2Bundle --node bno84.YuE2ExtendABC
-          --node bno84.OptionalLoadAudio --node bno84.SheetSage2Loader
+          --node bno84.OptionalLoadAudio
           --route /extensions/ComfyUI-YuE2-Kit/audio_widgets.js
           --workflow pack/example_workflows/yue2-kit-song.json
 

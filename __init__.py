@@ -5,7 +5,6 @@ from pathlib import Path
 import folder_paths
 from comfy_api.latest import ComfyExtension, io, ui
 from comfy_extras.nodes_audio import LoadAudio
-from comfy_extras.nodes_audio_encoder import AudioEncoderLoader
 from comfy_extras.nodes_yue2 import YuE2GenerateABC
 
 from .planning import extend_abc
@@ -60,33 +59,6 @@ class YuE2ExtendABC(io.ComfyNode):
         return io.NodeOutput(extend_abc(**kwargs))
 
 
-class SheetSage2Loader(io.ComfyNode):
-    @classmethod
-    def define_schema(cls):
-        return io.Schema(
-            node_id="bno84.SheetSage2Loader",
-            display_name="Load SheetSage2 (Shared Output Weights)",
-            category="model/loaders",
-            description="Native audio-encoder loader with support for combined SheetSage2/MERT2 checkpoints that omit the tied output projection.",
-            inputs=AudioEncoderLoader.define_schema().inputs,
-            outputs=[io.AudioEncoder.Output()],
-        )
-
-    @classmethod
-    def execute(cls, audio_encoder_name):
-        import comfy.audio_encoders.audio_encoders
-        import comfy.utils
-
-        path = folder_paths.get_full_path_or_raise("audio_encoders", audio_encoder_name)
-        sd = comfy.utils.load_torch_file(path, safe_load=True)
-        if "layer_weight" not in sd or "token_embedding.weight" not in sd:
-            raise ValueError("Select a combined SheetSage2/MERT2 checkpoint.")
-        # These checkpoints tie the two parameters and store only one.
-        if "output_projection.weight" not in sd:
-            sd["output_projection.weight"] = sd["token_embedding.weight"]
-        return io.NodeOutput(comfy.audio_encoders.audio_encoders.load_audio_encoder_from_sd(sd))
-
-
 class SaveYuE2Bundle(io.ComfyNode):
     @classmethod
     def define_schema(cls):
@@ -129,7 +101,7 @@ class SaveYuE2Bundle(io.ComfyNode):
 
 class YuE2KitExtension(ComfyExtension):
     async def get_node_list(self):
-        return [SaveYuE2Bundle, OptionalLoadAudio, YuE2ExtendABC, SheetSage2Loader]
+        return [SaveYuE2Bundle, OptionalLoadAudio, YuE2ExtendABC]
 
 
 async def comfy_entrypoint():
