@@ -727,7 +727,7 @@
       "properties": {
         "Node name for S&R": "bno84.SaveYuE2Bundle",
         "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.1.0"
+        "ver": "0.1.1"
       },
       "widgets_values": [
         "audio/yue2/song"
@@ -3630,7 +3630,7 @@
             "properties": {
               "Node name for S&R": "bno84.YuE2ExtendABC",
               "cnr_id": "comfyui-yue2-kit",
-              "ver": "0.1.0"
+              "ver": "0.1.1"
             },
             "widgets_values": [
               "",

@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-yue2-kit"
 description = "Helpers around ComfyUI's native YuE2 and SheetSage2 nodes: paired FLAC + ABC export, score extension, and optional audio input."
-version = "0.1.0"
+version = "0.1.1"
 license = "MIT"
 requires-python = ">=3.10"
 dependencies = []
