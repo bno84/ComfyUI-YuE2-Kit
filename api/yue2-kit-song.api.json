@@ -26,24 +26,6 @@
       "title": "Seed — shared across all stages"
     }
   },
-  "33:13": {
-    "class_type": "PrimitiveBoolean",
-    "inputs": {
-      "value": false
-    },
-    "_meta": {
-      "title": "Use SheetSage2 transcription"
-    }
-  },
-  "33:17": {
-    "class_type": "PrimitiveBoolean",
-    "inputs": {
-      "value": false
-    },
-    "_meta": {
-      "title": "Extend transcribed ABC through planner"
-    }
-  },
   "34:4": {
     "class_type": "CheckpointLoaderSimple",
     "inputs": {
@@ -84,116 +66,6 @@
       "title": "Text-only · Generate fresh ABC"
     }
   },
-  "33:14": {
-    "class_type": "bno84.OptionalLoadAudio",
-    "inputs": {
-      "audio": "(none)"
-    },
-    "_meta": {
-      "title": "Optional source audio"
-    }
-  },
-  "34:15": {
-    "class_type": "AudioEncoderLoader",
-    "inputs": {
-      "audio_encoder_name": "sheetsage2_bf16.safetensors"
-    },
-    "_meta": {
-      "title": "SheetSage2 + MERT2"
-    }
-  },
-  "30:16": {
-    "class_type": "SheetSage2AudioToABC",
-    "inputs": {
-      "audio_encoder": [
-        "34:15",
-        0
-      ],
-      "audio": [
-        "33:14",
-        0
-      ],
-      "mode": "full"
-    },
-    "_meta": {
-      "title": "Audio → ABC · match mode to YuE2"
-    }
-  },
-  "30:18": {
-    "class_type": "bno84.YuE2ExtendABC",
-    "inputs": {
-      "abc": [
-        "30:16",
-        0
-      ],
-      "clip": [
-        "34:4",
-        1
-      ],
-      "style": [
-        "32:1",
-        0
-      ],
-      "lyrics": [
-        "32:2",
-        0
-      ],
-      "seed": [
-        "3",
-        0
-      ],
-      "mode": "full",
-      "max_abc_tokens": 8192,
-      "temperature": 0.7,
-      "top_p": 0.9,
-      "top_k": 30,
-      "repetition_penalty": 1.005,
-      "penalty_window": 100
-    },
-    "_meta": {
-      "title": "Extend · Source ABC becomes planner prefix"
-    }
-  },
-  "30:19": {
-    "class_type": "ComfySwitchNode",
-    "inputs": {
-      "switch": [
-        "33:17",
-        0
-      ],
-      "on_false": [
-        "30:16",
-        0
-      ],
-      "on_true": [
-        "30:18",
-        0
-      ]
-    },
-    "_meta": {
-      "title": "Extend ON: continued · OFF: ABC as-is"
-    }
-  },
-  "30:20": {
-    "class_type": "ComfySwitchNode",
-    "inputs": {
-      "switch": [
-        "33:13",
-        0
-      ],
-      "on_false": [
-        "30:5",
-        0
-      ],
-      "on_true": [
-        "30:19",
-        0
-      ]
-    },
-    "_meta": {
-      "title": "Choose text-only or transcribed score"
-    }
-  },
   "31:6": {
     "class_type": "YuE2GenerateMusic",
     "inputs": {
@@ -210,7 +82,7 @@
         0
       ],
       "abc": [
-        "30:20",
+        "30:5",
         0
       ],
       "seed": [
@@ -314,7 +186,7 @@
         0
       ],
       "abc": [
-        "30:20",
+        "30:5",
         0
       ],
       "filename_prefix": "audio/yue2/song"
@@ -337,13 +209,40 @@
     "class_type": "bno84.ABCPreview",
     "inputs": {
       "abc": [
-        "30:20",
+        "30:5",
         0
       ],
       "soundfont": "(none)"
     },
     "_meta": {
       "title": "ABC · sheet music, source, preview playback"
+    }
+  },
+  "35": {
+    "class_type": "LoadAudio",
+    "inputs": {
+      "audio": ""
+    },
+    "_meta": {
+      "title": "Reference audio — drop a file here"
+    }
+  },
+  "33:17": {
+    "class_type": "PrimitiveBoolean",
+    "inputs": {
+      "value": false
+    },
+    "_meta": {
+      "title": "Extend transcribed ABC through planner"
+    }
+  },
+  "33:13": {
+    "class_type": "PrimitiveBoolean",
+    "inputs": {
+      "value": false
+    },
+    "_meta": {
+      "title": "Use SheetSage2 transcription"
     }
   }
 }

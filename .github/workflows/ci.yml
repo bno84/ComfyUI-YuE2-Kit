@@ -75,6 +75,7 @@ jobs:
           --node bno84.SaveYuE2Bundle --node bno84.YuE2ExtendABC
           --node bno84.OptionalLoadAudio
           --route /extensions/ComfyUI-YuE2-Kit/audio_widgets.js
+          --route /extensions/ComfyUI-YuE2-Kit/branch_toggle.js
           --workflow pack/example_workflows/yue2-kit-song.json
 
   publish:

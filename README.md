@@ -28,7 +28,7 @@ SheetSage2, and extend that score before synthesis.
 
 Open `yue2-kit-song` from ComfyUI's template browser under
 _ComfyUI-YuE2-Kit_, or load `example_workflows/yue2-kit-song.json`.
-`api/yue2-kit-song.api.json` is the same graph in API format.
+`api/yue2-kit-song.api.json` is the default, text-only path in API format.
 
 It also needs:
 
@@ -38,15 +38,32 @@ It also needs:
 - [`yue2_3b_bf16.safetensors`](https://huggingface.co/Comfy-Org/YuE2/resolve/main/checkpoints/yue2_3b_bf16.safetensors)
   in `models/checkpoints/`.
 - [`sheetsage2_bf16.safetensors`](https://huggingface.co/Comfy-Org/YuE2/resolve/main/audio_encoders/sheetsage2_bf16.safetensors)
-  in `models/audio_encoders/`, for transcription. Its loader is part of the
-  graph, so ComfyUI may reject the workflow without it even when
-  transcription is off.
+  in `models/audio_encoders/`, only for transcription. The transcription block
+  is bypassed by default, so text-only songs do not need this file.
+
+Drop reference audio onto the **Reference audio** node at the top left,
+or use its upload button. Both switches are grouped in **Reference controls**
+directly below it:
+
+- **Use transcription:** use the reference recording instead of fresh planning.
+- **Extend transcribed ABC:** continue the transcription through the planner.
+
+Choose the transcription model with **SheetSage2** in the main **Models** panel.
+
+With **Use transcription** off, the branch is bypassed automatically. Missing
+encoder and reference-audio files are not validated, and SheetSage2 is not loaded.
+The template uses ComfyUI's standard Load Audio, Load Audio Encoder, and Boolean
+nodes. The checkbox is wired through Planning into the transcription branch.
+A small frontend binding follows that wire and synchronizes native bypass mode;
+no custom loader is needed. The state is rechecked before prompt
+compilation, including API export. A disconnected branch control reports an
+error before the prompt is compiled.
 
 `max_duration` is an upper limit on audio length, not a target.
 
 ## Tests
 
 ```bash
-node --test tests/test_audio_widgets.mjs   # frontend widget order
+node --test tests/*.mjs                  # widgets and branch controls
 python3 -m unittest discover -s tests      # score-prefix continuation
 ```
