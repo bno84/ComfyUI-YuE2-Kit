@@ -1,4 +1,4 @@
-"""YuE2 score continuation, optional audio input, and paired song/score export."""
+"""YuE2-Kit: score continuation, optional audio input, SheetSage2 loading, and paired song/score export."""
 
 from pathlib import Path
 
@@ -20,7 +20,7 @@ class OptionalLoadAudio(LoadAudio):
         source.inputs[0].options.insert(0, "(none)")
         source.inputs[0].default = "(none)"
         return io.Schema(
-            node_id="bno84.YuE2OptionalLoadAudio",
+            node_id="bno84.OptionalLoadAudio",
             display_name="Load Audio (Optional)",
             category="audio/YuE2",
             description="Native audio loader with a (none) choice for an inactive transcription branch.",
@@ -60,11 +60,11 @@ class YuE2ExtendABC(io.ComfyNode):
         return io.NodeOutput(extend_abc(**kwargs))
 
 
-class YuE2SheetSage2Loader(io.ComfyNode):
+class SheetSage2Loader(io.ComfyNode):
     @classmethod
     def define_schema(cls):
         return io.Schema(
-            node_id="bno84.YuE2SheetSage2Loader",
+            node_id="bno84.SheetSage2Loader",
             display_name="Load SheetSage2 (Shared Output Weights)",
             category="model/loaders",
             description="Native audio-encoder loader with support for combined SheetSage2/MERT2 checkpoints that omit the tied output projection.",
@@ -127,10 +127,10 @@ class SaveYuE2Bundle(io.ComfyNode):
         return io.NodeOutput("\n".join(files), ui=ui.SavedAudios(saved))
 
 
-class YuE2ExportExtension(ComfyExtension):
+class YuE2KitExtension(ComfyExtension):
     async def get_node_list(self):
-        return [SaveYuE2Bundle, OptionalLoadAudio, YuE2ExtendABC, YuE2SheetSage2Loader]
+        return [SaveYuE2Bundle, OptionalLoadAudio, YuE2ExtendABC, SheetSage2Loader]
 
 
 async def comfy_entrypoint():
-    return YuE2ExportExtension()
+    return YuE2KitExtension()

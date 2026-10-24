@@ -85,7 +85,7 @@
     }
   },
   "33:14": {
-    "class_type": "bno84.YuE2OptionalLoadAudio",
+    "class_type": "bno84.OptionalLoadAudio",
     "inputs": {
       "audio": "(none)"
     },
@@ -94,7 +94,7 @@
     }
   },
   "34:15": {
-    "class_type": "bno84.YuE2SheetSage2Loader",
+    "class_type": "bno84.SheetSage2Loader",
     "inputs": {
       "audio_encoder_name": "SheetSage2_MERT2_bf16.safetensors"
     },

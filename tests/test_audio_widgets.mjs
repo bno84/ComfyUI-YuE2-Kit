@@ -23,7 +23,7 @@ function createAudioWidgets(definition) {
 
 test("optional loader creates the native player before the upload widget", () => {
   const definition = {
-    name: "bno84.YuE2OptionalLoadAudio",
+    name: "bno84.OptionalLoadAudio",
     input: { required: { audio: ["COMBO", { audio_upload: true }], upload: ["AUDIOUPLOAD", {}] } },
   };
   assert.throws(() => createAudioWidgets(definition), /Native upload needs the player first/);
@@ -44,7 +44,7 @@ test("empty audio has no media URL and chosen files retain native behavior", () 
     removeAttribute(name) { assert.equal(name, "src"); removed++; },
     classList: { add() {} },
   } };
-  const node = { comfyClass: "bno84.YuE2OptionalLoadAudio", widgets: [audio, preview], onGraphConfigured() { configured++; } };
+  const node = { comfyClass: "bno84.OptionalLoadAudio", widgets: [audio, preview], onGraphConfigured() { configured++; } };
   extension.nodeCreated(node);
   assert.equal(preview.value, "");
   audio.callback("(none)");

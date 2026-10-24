@@ -773,7 +773,7 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "# YuE2 · v0.4\n\nSame three v0.2 paths and v0.3 structure.\n\nLyrics and style → Planning → ABC → Acoustic → ABC + FLAC.\n\n**ABC** now shows the selected score as sheet music beside its highlighted source. Click a note in either view to find it in the other; Expand opens a larger view. This is the exact score used for audio generation and saved with the FLAC.\n\nOptional preview playback plays fixed-velocity notes so you can hear what the ABC says; the song itself comes from Acoustic. See the soundfont note below the ABC node.\n\nReference audio and its switches sit top left, above lyrics and style; models sit below Planning. Controls on the Planning face feed fresh planning and extension together. Acoustic controls are independent. max_duration is an upper limit.\n\nOptional external ABC → MIDI conversion: [Symusic](https://github.com/Yikai-Liao/symusic). It is not a dependency."
+        "# YuE2 song\n\nThree paths: fresh planning from lyrics and style, SheetSage2 transcription of reference audio used as-is, or that transcription extended by the planner.\n\nLyrics and style → Planning → ABC → Acoustic → ABC + FLAC.\n\n**ABC** now shows the selected score as sheet music beside its highlighted source. Click a note in either view to find it in the other; Expand opens a larger view. This is the exact score used for audio generation and saved with the FLAC.\n\nOptional preview playback plays fixed-velocity notes so you can hear what the ABC says; the song itself comes from Acoustic. See the soundfont note below the ABC node.\n\nReference audio and its switches sit top left, above lyrics and style; models sit below Planning. Controls on the Planning face feed fresh planning and extension together. Acoustic controls are independent. max_duration is an upper limit.\n\nOptional external ABC → MIDI conversion: [Symusic](https://github.com/Yikai-Liao/symusic). It is not a dependency."
       ]
     },
     {
@@ -1314,7 +1314,7 @@
         "nodes": [
           {
             "id": 14,
-            "type": "bno84.YuE2OptionalLoadAudio",
+            "type": "bno84.OptionalLoadAudio",
             "pos": [
               0,
               80
@@ -1347,7 +1347,7 @@
             ],
             "title": "Optional source audio",
             "properties": {
-              "Node name for S&R": "bno84.YuE2OptionalLoadAudio"
+              "Node name for S&R": "bno84.OptionalLoadAudio"
             },
             "widgets_values": [
               "(none)"
@@ -1656,7 +1656,7 @@
           },
           {
             "id": 15,
-            "type": "bno84.YuE2SheetSage2Loader",
+            "type": "bno84.SheetSage2Loader",
             "pos": [
               0,
               350
@@ -1689,7 +1689,7 @@
             ],
             "title": "SheetSage2 + MERT2 · restore shared output weights",
             "properties": {
-              "Node name for S&R": "bno84.YuE2SheetSage2Loader"
+              "Node name for S&R": "bno84.SheetSage2Loader"
             },
             "widgets_values": [
               "SheetSage2_MERT2_bf16.safetensors"

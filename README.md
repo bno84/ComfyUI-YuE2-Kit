@@ -1,7 +1,7 @@
-# ComfyUI-YuE2Export
+# ComfyUI-YuE2-Kit
 
 Small additions around ComfyUI's native YuE2 and SheetSage2 nodes, plus an
-example song workflow (`example_workflows/yue2-v0.4.json`).
+example song workflow (`example_workflows/yue2-song.json`).
 
 - **Save YuE2 FLAC + ABC** (`bno84.SaveYuE2Bundle`): saves the song as FLAC and the
   exact ABC score beside it under one incrementing filename. Runs again even
@@ -9,9 +9,9 @@ example song workflow (`example_workflows/yue2-v0.4.json`).
 - **YuE2 Extend ABC** (`bno84.YuE2ExtendABC`): continues a supplied score with the
   native YuE2 planner, keeping it as an unchanged prefix. `max_abc_tokens`
   budgets new tokens only.
-- **Load Audio (Optional)** (`bno84.YuE2OptionalLoadAudio`): the native audio loader
+- **Load Audio (Optional)** (`bno84.OptionalLoadAudio`): the native audio loader
   plus a `(none)` choice, for a transcription branch that may be inactive.
-- **Load SheetSage2 (Shared Output Weights)** (`bno84.YuE2SheetSage2Loader`): the
+- **Load SheetSage2 (Shared Output Weights)** (`bno84.SheetSage2Loader`): the
   native audio-encoder loader for combined SheetSage2/MERT2 checkpoints,
   restoring its tied `output_projection.weight` in memory. No file is rewritten.
 
@@ -26,11 +26,11 @@ ComfyUI with native YuE2 support (tested: 0.38.0, commit `6b747c0`, frontend
 
 ## Example workflow
 
-`example_workflows/yue2-v0.4.json` turns lyrics and a style prompt into a
+`example_workflows/yue2-song.json` turns lyrics and a style prompt into a
 song, saved as FLAC with its ABC score. Optionally it transcribes reference
 audio to ABC with SheetSage2, and can extend that score with the YuE2 planner
 before synthesis. Stages: Lyrics + style → Planning → ABC → Acoustic → outputs.
-`yue2-v0.4.api.json` is the same graph in API format.
+`yue2-song.api.json` is the same graph in API format.
 
 It also needs:
 

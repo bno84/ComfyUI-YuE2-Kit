@@ -3,7 +3,7 @@
 // built-in node names. Its AUDIOUPLOAD widget requires audioUI to exist first.
 import { app } from "../../scripts/app.js";
 
-const audioNodes = new Set(["bno84.YuE2OptionalLoadAudio", "bno84.SaveYuE2Bundle"]);
+const audioNodes = new Set(["bno84.OptionalLoadAudio", "bno84.SaveYuE2Bundle"]);
 
 function clearEmptyPreview(node) {
   const source = node.widgets?.find((widget) => widget.name === "audio");
@@ -29,7 +29,7 @@ app.registerExtension({
     nodeData.input.required = required;
   },
   nodeCreated(node) {
-    if (node.comfyClass !== "bno84.YuE2OptionalLoadAudio") return;
+    if (node.comfyClass !== "bno84.OptionalLoadAudio") return;
     const source = node.widgets?.find((widget) => widget.name === "audio");
     if (source) {
       const callback = source.callback;
