@@ -3,6 +3,7 @@ name = "comfyui-yue2-kit"
 description = "Helpers around ComfyUI's native YuE2 and SheetSage2 nodes: paired FLAC + ABC export, score extension, optional audio input, and a SheetSage2 loader."
 version = "0.1.0"
 license = { file = "LICENSE" }
+requires-python = ">=3.10"
 dependencies = []
 
 [project.urls]
@@ -12,3 +13,4 @@ Repository = "https://github.com/bno84/ComfyUI-YuE2-Kit"
 PublisherId = "bno84"
 DisplayName = "YuE2-Kit"
 Icon = ""
+"requires-comfyui" = ">=0.38.0"  # Tested with 0.38.0.
