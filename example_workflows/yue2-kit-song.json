@@ -116,40 +116,68 @@
     },
     {
       "id": 33,
-      "type": "ba803892-f0f1-55ee-aec0-5f6c0ae400d8",
+      "type": "bno84.ReferenceInput",
       "pos": [
-        118.6881026170799,
-        150.87142734159804
+        110,
+        -150
       ],
       "size": [
-        460,
-        116.61329201101933
+        480,
+        378
       ],
       "flags": {},
       "order": 2,
       "mode": 0,
-      "title": "Reference controls",
+      "title": "Reference input",
       "inputs": [
         {
           "name": "source",
           "type": "COMBO",
           "link": null,
-          "label": "Source",
           "widget": {
             "name": "source"
+          }
+        },
+        {
+          "name": "abc",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "abc"
+          }
+        },
+        {
+          "name": "audio",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "audio"
           }
         },
         {
           "name": "extend",
           "type": "BOOLEAN",
           "link": null,
-          "label": "Extend reference",
           "widget": {
             "name": "extend"
           }
         }
       ],
       "outputs": [
+        {
+          "name": "ABC",
+          "type": "STRING",
+          "links": [
+            24
+          ]
+        },
+        {
+          "name": "Audio",
+          "type": "AUDIO",
+          "links": [
+            10
+          ]
+        },
         {
           "name": "Use reference",
           "type": "BOOLEAN",
@@ -158,14 +186,14 @@
           ]
         },
         {
-          "name": "Transcribe audio",
+          "name": "Transcribe",
           "type": "BOOLEAN",
           "links": [
             23
           ]
         },
         {
-          "name": "Extend reference",
+          "name": "Extend",
           "type": "BOOLEAN",
           "links": [
             12
@@ -173,14 +201,20 @@
         }
       ],
       "properties": {
-        "previewExposures": []
+        "Node name for S&R": "bno84.ReferenceInput",
+        "cnr_id": "comfyui-yue2-kit",
+        "ver": "0.1.1"
       },
       "widgets_values": [
-        "No reference",
+        "None",
+        "",
+        "",
         false
       ],
       "widgets_values_named": {
-        "source": "No reference",
+        "source": "None",
+        "abc": "",
+        "audio": "",
         "extend": false
       }
     },
@@ -772,7 +806,7 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "# YuE2 song\n\nChoose a Source in Reference controls: No reference, Transcribe audio, or ABC. Extend reference continues either reference score through the planner; with No reference it is ignored.\n\nDrop audio onto Reference audio, or paste a score into Reference ABC above Planning. Both inputs stay on the main canvas. SheetSage2 is needed only for Transcribe audio; choose it in Models.\n\nThe selected ABC goes to the sheet/source preview, acoustic synthesis, and the paired FLAC + ABC exporter. As-is uses the reference score unchanged. Extension shares Planning's sampling controls and preserves the original score as a prefix.\n\nNative bypass keeps unused reference audio and SheetSage2 files out of validation and execution. The wired controls are synchronized again before prompt compilation.\n\nLyrics and style are still supplied separately. Use the matching full/melody score mode for transcription, supplied ABC, and music generation. max_duration is an upper limit, not a target.\n\nOptional external ABC → MIDI conversion: [Symusic](https://github.com/Yikai-Liao/symusic)."
+        "# YuE2 song\n\nReference input combines None, ABC, and Transcribe in one panel. None plans from lyrics and style. ABC accepts pasted text or a dropped .abc file. Transcribe accepts an uploaded or dropped recording with audio playback.\n\nExtend reference appears for ABC and Transcribe and continues the selected score through the shared planner. Tab changes retain both reference inputs. Connect the ABC output to a separate ABC Preview node when desired.\n\nThe selected ABC goes to the sheet/source preview, acoustic synthesis, and the paired FLAC + ABC exporter. As-is uses the reference score unchanged; extension preserves it as a prefix.\n\nSheetSage2 is needed only for Transcribe; choose it in Models. Native bypass keeps it out of validation and execution for None and ABC. Wired routing flags are synchronized before prompt compilation.\n\nLyrics and style remain separate. Choose the matching full/melody score mode. max_duration is an upper limit, not a target."
       ]
     },
     {
@@ -836,83 +870,6 @@
       "properties": {},
       "widgets_values": [
         "## Preview playback needs your own soundfont\n\nDownload a General MIDI `.sf2` yourself, for example [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS). Put it in `ComfyUI/models/soundfonts/`, refresh the browser, and choose it on the ABC node.\n\nWithout one, sheet music and source still work; only playback is off."
-      ]
-    },
-    {
-      "id": 35,
-      "type": "LoadAudio",
-      "pos": [
-        112.78456439393942,
-        -45.67506026170781
-      ],
-      "size": [
-        464.01601239669435,
-        151.88791322314057
-      ],
-      "flags": {},
-      "order": 10,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "AUDIO",
-          "type": "AUDIO",
-          "links": [
-            10
-          ]
-        }
-      ],
-      "title": "Reference audio — drop a file here",
-      "properties": {
-        "Node name for S&R": "LoadAudio",
-        "cnr_id": "comfy-core",
-        "ver": "0.38.0"
-      },
-      "widgets_values": [
-        ""
-      ]
-    },
-    {
-      "id": 38,
-      "type": "PrimitiveStringMultiline",
-      "pos": [
-        690,
-        -45
-      ],
-      "size": [
-        440,
-        380
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "value",
-          "type": "STRING",
-          "link": null,
-          "widget": {
-            "name": "value"
-          }
-        }
-      ],
-      "outputs": [
-        {
-          "name": "STRING",
-          "type": "STRING",
-          "links": [
-            24
-          ]
-        }
-      ],
-      "title": "Reference ABC — paste score here",
-      "properties": {
-        "Node name for S&R": "PrimitiveStringMultiline",
-        "cnr_id": "comfy-core",
-        "ver": "0.38.0"
-      },
-      "widgets_values": [
-        ""
       ]
     }
   ],
@@ -983,8 +940,8 @@
     ],
     [
       10,
-      35,
-      0,
+      33,
+      1,
       30,
       3,
       "AUDIO"
@@ -992,7 +949,7 @@
     [
       12,
       33,
-      2,
+      4,
       30,
       4,
       "BOOLEAN"
@@ -1056,7 +1013,7 @@
     [
       21,
       33,
-      0,
+      2,
       30,
       13,
       "BOOLEAN"
@@ -1072,14 +1029,14 @@
     [
       23,
       33,
-      1,
+      3,
       30,
       16,
       "BOOLEAN"
     ],
     [
       24,
-      38,
+      33,
       0,
       30,
       15,
@@ -4106,396 +4063,6 @@
             "target_id": -20,
             "target_slot": 0,
             "type": "STRING"
-          }
-        ],
-        "extra": {}
-      },
-      {
-        "id": "ba803892-f0f1-55ee-aec0-5f6c0ae400d8",
-        "version": 1,
-        "state": {
-          "lastGroupId": 0,
-          "lastNodeId": 42,
-          "lastLinkId": 7,
-          "lastRerouteId": 0
-        },
-        "revision": 0,
-        "config": {},
-        "name": "Reference controls",
-        "inputNode": {
-          "id": -10,
-          "bounding": [
-            -360,
-            80,
-            128,
-            100
-          ]
-        },
-        "outputNode": {
-          "id": -20,
-          "bounding": [
-            2120,
-            80,
-            128,
-            80
-          ]
-        },
-        "inputs": [
-          {
-            "id": "2ff2c622-2674-42f3-a619-f089441d1bd4",
-            "name": "source",
-            "type": "COMBO",
-            "linkIds": [
-              1
-            ],
-            "label": "Source",
-            "pos": [
-              -256,
-              104
-            ]
-          },
-          {
-            "id": "efdf213d-af85-44fd-8796-b495fa5226f2",
-            "name": "extend",
-            "type": "BOOLEAN",
-            "linkIds": [
-              2
-            ],
-            "label": "Extend reference",
-            "pos": [
-              -256,
-              124
-            ]
-          }
-        ],
-        "outputs": [
-          {
-            "id": "d956d10c-515c-4372-926c-b282db2119bd",
-            "name": "Use reference",
-            "type": "BOOLEAN",
-            "linkIds": [
-              5
-            ],
-            "label": "Use reference",
-            "pos": [
-              -256,
-              104
-            ]
-          },
-          {
-            "id": "f92ff7da-241e-415a-afff-c7b3456a72a3",
-            "name": "Transcribe audio",
-            "type": "BOOLEAN",
-            "linkIds": [
-              6
-            ],
-            "label": "Transcribe audio",
-            "pos": [
-              -256,
-              124
-            ]
-          },
-          {
-            "id": "211e4b8a-8118-45c8-b252-1e8e4ad5883e",
-            "name": "Extend reference",
-            "type": "BOOLEAN",
-            "linkIds": [
-              7
-            ],
-            "label": "Extend reference",
-            "pos": [
-              -256,
-              144
-            ]
-          }
-        ],
-        "widgets": [],
-        "nodes": [
-          {
-            "id": 13,
-            "type": "CustomCombo",
-            "pos": [
-              0,
-              80
-            ],
-            "size": [
-              400,
-              160
-            ],
-            "flags": {},
-            "order": 0,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "choice",
-                "type": "COMBO",
-                "link": 1,
-                "widget": {
-                  "name": "choice"
-                }
-              }
-            ],
-            "outputs": [
-              {
-                "name": "STRING",
-                "type": "STRING",
-                "links": []
-              },
-              {
-                "name": "INDEX",
-                "type": "INT",
-                "links": [
-                  3,
-                  4
-                ]
-              }
-            ],
-            "title": "Reference source",
-            "properties": {
-              "Node name for S&R": "CustomCombo",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              "No reference",
-              0,
-              "No reference",
-              "Transcribe audio",
-              "ABC",
-              ""
-            ],
-            "widgets_values_named": {
-              "choice": "No reference",
-              "index": 0,
-              "option1": "No reference",
-              "option2": "Transcribe audio",
-              "option3": "ABC",
-              "option4": ""
-            }
-          },
-          {
-            "id": 17,
-            "type": "PrimitiveBoolean",
-            "pos": [
-              0,
-              420
-            ],
-            "size": [
-              410,
-              70
-            ],
-            "flags": {},
-            "order": 4,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "value",
-                "type": "BOOLEAN",
-                "link": 2,
-                "widget": {
-                  "name": "value"
-                }
-              }
-            ],
-            "outputs": [
-              {
-                "name": "BOOLEAN",
-                "type": "BOOLEAN",
-                "links": [
-                  7
-                ]
-              }
-            ],
-            "title": "Extend reference",
-            "properties": {
-              "Node name for S&R": "PrimitiveBoolean",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              false
-            ]
-          },
-          {
-            "id": 41,
-            "type": "ComfyMathExpression",
-            "pos": [
-              560,
-              80
-            ],
-            "size": [
-              400,
-              160
-            ],
-            "flags": {},
-            "order": 0,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "values.a",
-                "type": "FLOAT,INT,BOOLEAN",
-                "link": 3
-              },
-              {
-                "name": "expression",
-                "type": "STRING",
-                "link": null,
-                "widget": {
-                  "name": "expression"
-                }
-              }
-            ],
-            "outputs": [
-              {
-                "name": "FLOAT",
-                "type": "FLOAT",
-                "links": []
-              },
-              {
-                "name": "INT",
-                "type": "INT",
-                "links": []
-              },
-              {
-                "name": "BOOL",
-                "type": "BOOLEAN",
-                "links": [
-                  5
-                ]
-              }
-            ],
-            "title": "Reference enabled",
-            "properties": {
-              "Node name for S&R": "ComfyMathExpression",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              "a > 0"
-            ],
-            "widgets_values_named": {
-              "expression": "a > 0"
-            }
-          },
-          {
-            "id": 42,
-            "type": "ComfyMathExpression",
-            "pos": [
-              560,
-              340
-            ],
-            "size": [
-              400,
-              160
-            ],
-            "flags": {},
-            "order": 0,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "values.a",
-                "type": "FLOAT,INT,BOOLEAN",
-                "link": 4
-              },
-              {
-                "name": "expression",
-                "type": "STRING",
-                "link": null,
-                "widget": {
-                  "name": "expression"
-                }
-              }
-            ],
-            "outputs": [
-              {
-                "name": "FLOAT",
-                "type": "FLOAT",
-                "links": []
-              },
-              {
-                "name": "INT",
-                "type": "INT",
-                "links": []
-              },
-              {
-                "name": "BOOL",
-                "type": "BOOLEAN",
-                "links": [
-                  6
-                ]
-              }
-            ],
-            "title": "Audio transcription selected",
-            "properties": {
-              "Node name for S&R": "ComfyMathExpression",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              "a == 1"
-            ],
-            "widgets_values_named": {
-              "expression": "a == 1"
-            }
-          }
-        ],
-        "groups": [],
-        "links": [
-          {
-            "id": 1,
-            "origin_id": -10,
-            "origin_slot": 0,
-            "target_id": 13,
-            "target_slot": 0,
-            "type": "COMBO"
-          },
-          {
-            "id": 2,
-            "origin_id": -10,
-            "origin_slot": 1,
-            "target_id": 17,
-            "target_slot": 0,
-            "type": "BOOLEAN"
-          },
-          {
-            "id": 3,
-            "origin_id": 13,
-            "origin_slot": 1,
-            "target_id": 41,
-            "target_slot": 0,
-            "type": "INT"
-          },
-          {
-            "id": 4,
-            "origin_id": 13,
-            "origin_slot": 1,
-            "target_id": 42,
-            "target_slot": 0,
-            "type": "INT"
-          },
-          {
-            "id": 5,
-            "origin_id": 41,
-            "origin_slot": 2,
-            "target_id": -20,
-            "target_slot": 0,
-            "type": "BOOLEAN"
-          },
-          {
-            "id": 6,
-            "origin_id": 42,
-            "origin_slot": 2,
-            "target_id": -20,
-            "target_slot": 1,
-            "type": "BOOLEAN"
-          },
-          {
-            "id": 7,
-            "origin_id": 17,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 2,
-            "type": "BOOLEAN"
           }
         ],
         "extra": {}

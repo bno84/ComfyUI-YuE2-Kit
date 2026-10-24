@@ -78,6 +78,14 @@ with patch.object(folder_paths, "get_filename_list", side_effect=filenames), \
      patch.object(nodes.NODE_CLASS_MAPPINGS["SheetSage2AudioToABC"], "execute", new=recorded("transcribe", lambda _: [transcribed])), \
      patch.object(nodes.NODE_CLASS_MAPPINGS["YuE2GenerateABC"], "execute", new=recorded("fresh", lambda _: fresh)), \
      patch.object(nodes.NODE_CLASS_MAPPINGS["bno84.YuE2ExtendABC"], "execute", new=recorded("extend", lambda args: args["abc"] + "EXTENDED\n")):
+    reference = nodes.NODE_CLASS_MAPPINGS["bno84.ReferenceInput"]
+    assert reference.validate_inputs("None", "stale ABC", "missing.wav") is True
+    assert reference.fingerprint_inputs("None", "missing.wav") is None
+    assert reference.fingerprint_inputs("ABC", "missing.wav") is None
+    assert reference.execute("None", "stale ABC", "missing.wav", True).result == ("", None, False, False, False)
+    assert reference.execute("ABC", pasted, "missing.wav", True).result == (pasted, None, True, False, True)
+    assert "empty" in reference.validate_inputs("ABC", " \n", "missing.wav")
+    assert reference.validate_inputs("Transcribe", pasted, "missing.wav") is not True
     cases = [
         ("song", False, False),
         ("audio-reference", True, False),
@@ -90,15 +98,15 @@ with patch.object(folder_paths, "get_filename_list", side_effect=filenames), \
         abc_link = data["11"]["inputs"]["abc"]
         prompt = {key: value for key, value in data.items() if key not in ("11", "22")}
         prompt["capture"] = {"class_type": "TestCapture", "inputs": {"value": abc_link}}
-        if "38" in prompt:
-            prompt["38"]["inputs"]["value"] = pasted
+        if "33" in prompt:
+            prompt["33"]["inputs"]["abc"] = pasted
         installed = False
         valid = asyncio.run(execution.validate_prompt(suffix, copy.deepcopy(prompt), None))
         assert valid[0] == (not audio), (suffix, valid)
         if audio:
             assert "audio_encoder_name" in str(valid), valid
             installed = True
-            prompt["35"]["inputs"]["audio"] = "reference.wav"
+            prompt["33"]["inputs"]["audio"] = "reference.wav"
             valid = asyncio.run(execution.validate_prompt(suffix, prompt, None))
             assert valid[0], valid
         calls.clear()

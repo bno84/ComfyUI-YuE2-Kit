@@ -31,7 +31,13 @@ function effectiveWidgetValue(node, name) {
   return value;
 }
 
-function knownBoolean(node) {
+function knownBoolean(node, outputIndex) {
+  if (node.comfyClass === "bno84.ReferenceInput") {
+    const source = effectiveWidgetValue(node, "source");
+    const extend = effectiveWidgetValue(node, "extend");
+    if (!["None", "ABC", "Transcribe"].includes(source)) return undefined;
+    return { 2: source !== "None", 3: source === "Transcribe", 4: source !== "None" && extend }[outputIndex];
+  }
   if (node.comfyClass === "PrimitiveBoolean") return effectiveWidgetValue(node, "value");
   if (node.comfyClass !== "ComfyMathExpression") return undefined;
   // These native comparisons derive Boolean flags from a native Custom Combo's
@@ -55,15 +61,15 @@ function knownBoolean(node) {
 
 function syncBranch(node, synced) {
   const root = node.graph?.rootGraph ?? node.graph;
-  const value = knownBoolean(node);
-  if (typeof value !== "boolean" || !root) return;
-  const mode = value ? 0 : 4; // Always / Bypass.
-  const pending = (node.outputs ?? [])
-    .filter((output) => output.type === "BOOLEAN")
-    .flatMap((output) => (output.links ?? []).map((id) => [node.graph, id]));
+  if (!root) return;
+  const pending = (node.outputs ?? []).flatMap((output, index) => {
+    const value = knownBoolean(node, index);
+    return output.type === "BOOLEAN" && typeof value === "boolean"
+      ? (output.links ?? []).map((id) => [node.graph, id, value ? 0 : 4]) : [];
+  });
   const visited = new Map();
   while (pending.length) {
-    const [graph, id] = pending.pop();
+    const [graph, id, mode] = pending.pop();
     if (!visited.has(graph)) visited.set(graph, new Set());
     if (visited.get(graph).has(id)) continue;
     visited.get(graph).add(id);
@@ -72,7 +78,7 @@ function syncBranch(node, synced) {
       // A Boolean inside a control subgraph leaves through its output boundary.
       for (const host of subgraphHosts(root, graph)) {
         for (const next of host.outputs?.[link.target_slot]?.links ?? []) {
-          pending.push([host.graph, next]);
+          pending.push([host.graph, next, mode]);
         }
       }
       continue;
@@ -91,7 +97,7 @@ function syncBranch(node, synced) {
     }
     if (target.subgraph) {
       const slot = target.subgraph.inputNode.slots[link.target_slot];
-      for (const next of slot?.linkIds ?? []) pending.push([target.subgraph, next]);
+      for (const next of slot?.linkIds ?? []) pending.push([target.subgraph, next, mode]);
     }
   }
 }
@@ -104,8 +110,11 @@ function syncSubgraph(node, synced, required) {
     if (!graph || visited.has(graph)) continue;
     visited.add(graph);
     for (const child of graph._nodes ?? []) {
+      if (required && child.comfyClass === "bno84.ReferenceInput" && child.isUploading) {
+        throw new Error("Reference input: wait for the file to finish loading before queueing or exporting.");
+      }
       if (child.properties?.["bno84.enabledInput"]) required?.push(child);
-      if (["PrimitiveBoolean", "ComfyMathExpression"].includes(child.comfyClass)) syncBranch(child, synced);
+      if (["PrimitiveBoolean", "ComfyMathExpression", "bno84.ReferenceInput"].includes(child.comfyClass)) syncBranch(child, synced);
       if (child.subgraph) pending.push(child.subgraph);
     }
   }
@@ -167,7 +176,7 @@ app.registerExtension({
       bindPromotedControls(node);
       return;
     }
-    const widgetName = { PrimitiveBoolean: "value", CustomCombo: "choice", ComfyMathExpression: "expression" }[node.comfyClass];
+    const widgetName = { PrimitiveBoolean: "value", CustomCombo: "choice", ComfyMathExpression: "expression", "bno84.ReferenceInput": "source" }[node.comfyClass];
     if (!widgetName) return;
     const control = node.widgets?.find((widget) => widget.name === widgetName);
     if (!control) return;

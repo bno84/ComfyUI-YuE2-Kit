@@ -7,8 +7,9 @@ example song workflow.
   beside it, under one incrementing filename.
 - **YuE2 Extend ABC:** continues a score with the native YuE2 planner,
   keeping the original as an unchanged prefix.
-- **Load Audio (Optional):** the native audio loader plus a `(none)` choice,
-  for a transcription branch that may be off.
+- **Reference input:** one tabbed panel for no reference, editable/droppable ABC,
+  or uploaded/dropped audio, with recording playback and optional extension.
+- **Load Audio (Optional):** the original audio helper, retained for older workflows.
 
 ## Install
 
@@ -41,42 +42,43 @@ It also needs:
   in `models/audio_encoders/`, only for transcription. The transcription block
   is bypassed by default, so text-only songs do not need this file.
 
-The main canvas keeps reference inputs above Planning:
+**Reference input** combines the reference inputs and controls in one node:
 
-- **Reference audio:** drop a recording onto the native loader or use Upload.
-- **Reference ABC:** paste a YuE2-compatible ABC score into the multiline editor.
-- **Reference controls:** choose **Source** (`No reference`, `Transcribe audio`,
-  or `ABC`) and whether to **Extend reference**.
+- **None:** the rest of the panel is blank. Plan a fresh score from lyrics/style.
+- **ABC:** paste a score, use Open ABC, or drop an `.abc` file.
+- **Transcribe:** select, upload, or drop audio. The built-in player previews
+  the recording. Choose the SheetSage2 model in the main Models panel.
+  **Transcribe now** queues only the connected transcription path, using that
+  same model and the current score mode. On success it fills the ABC editor and
+  switches to ABC, keeping Extend reference. It does not run extension or song
+  generation. **Cancel** affects only this transcription job. Existing ABC edits
+  are retained if you change them while transcription is running.
 
-These controls provide five paths:
+**Extend reference** appears for ABC and Transcribe. Off uses the chosen score
+unchanged; on continues it through the shared planner. Switching tabs retains
+both ABC text and the selected audio file. The node keeps its height across tabs;
+the ABC textbox fills extra height when the node is resized. A file drop selects
+its matching tab.
+ABC files are read locally; audio uploads use ComfyUI's standard input endpoint.
 
-1. No reference: plan a fresh score from lyrics and style; extension is ignored.
-2. Transcribe audio, as-is: use the SheetSage2 score without planning changes.
-3. Transcribe audio, extend: continue that score with the planner.
-4. ABC, as-is: use the pasted score unchanged.
-5. ABC, extend: continue the pasted score with the planner.
+The node validates and reads only the selected input. Unused audio files and
+ABC text do not cause errors while None is selected. Native bypass keeps the
+SheetSage2 encoder outside validation and execution for None and ABC. Explicit
+score, audio, source-flag, and extension outputs are wired into Planning; the
+frontend rechecks their bypass states before compiling or exporting a prompt.
+No reference ignores extension. All five reference paths remain available.
 
-Choose the transcription model with **SheetSage2** in the main **Models** panel.
-Only `Transcribe audio` requires reference audio or SheetSage2 files. Both are
-excluded from validation and execution for the other sources. The extension
-stage is shared by audio and ABC references and uses Planning's controls.
-Lyrics and style are still supplied separately; choose the matching full/melody
-score mode for your reference. Leave ABC blank when using another source; paste a nonempty compatible score
-before selecting `ABC`.
+Reference input handles input only. Connect its **ABC** output to a separate
+**ABC Preview** node for notation or score playback. The template's existing
+ABC Preview shows the final selected score after any transcription or extension.
+Lyrics and style remain separate. Choose the matching full/melody mode.
 
-The template uses native Load Audio, Load Audio Encoder, Custom Combo, math,
-and switch nodes. The dropdown's index feeds two native comparisons that derive
-wired reference/audio flags. The kit's frontend binding synchronizes native
-bypass from those flags before prompt compilation, including API export. It
-recognizes simple comparisons, without evaluating arbitrary expression code.
-Disconnected routing flags report an error before compilation.
-
-API examples in `api/` cover each path: `yue2-kit-song.api.json` (no reference),
+API examples in `api/` cover each path: `yue2-kit-song.api.json` (None),
 `yue2-kit-audio-reference.api.json`, `yue2-kit-audio-extend.api.json`,
 `yue2-kit-abc-reference.api.json`, and `yue2-kit-abc-extend.api.json`.
-Set the audio filename in node `35`, or paste ABC into node `38`, as appropriate.
-These are compiled snapshots; choose the corresponding file rather than
-changing its source dropdown alone, since bypass rewiring happens in the UI.
+Reference values live in node `33`: `source`, `abc`, `audio`, and `extend`.
+These are compiled snapshots; use the corresponding file, since bypass
+rewiring happens in the UI before export.
 
 `max_duration` is an upper limit on audio length, not a target.
 

@@ -12,8 +12,9 @@ function loadExtension(app = {}) {
 
 function fixture() {
   const workflow = JSON.parse(readFileSync(new URL("../example_workflows/yue2-kit-song.json", import.meta.url), "utf8"));
-  const controls = workflow.nodes.find((node) => node.title === "Reference controls");
-  assert.deepEqual(controls.inputs.map((input) => input.name), ["source", "extend"]);
+  const controls = workflow.nodes.find((node) => node.id === 33);
+  assert.equal(controls.type, "bno84.ReferenceInput");
+  assert.equal(controls.outputs.length, 5);
   assert.ok(controls.outputs.every((output) => output.links.length));
   const definitions = new Map(workflow.definitions.subgraphs.map((graph) => [graph.id, graph]));
   function graphFrom(definition, root) {
@@ -40,7 +41,7 @@ function fixture() {
   }
   const root = graphFrom(workflow);
   const host = root.getNodeById(controls.id);
-  host.widgets = [{ name: "source", value: "No reference" }, { name: "extend", value: false }];
+  host.widgets = [{ name: "source", value: "None" }, { name: "abc", value: "" }, { name: "audio", value: "" }, { name: "extend", value: false }];
   const reference = root.getNodeById(30).subgraph.getNodeById(36);
   const transcription = reference.subgraph.getNodeById(40);
   const unrelated = { mode: 4, properties: {} };
@@ -54,17 +55,17 @@ function fixture() {
 }
 
 for (const [choice, extend, expected] of [
-  ["No reference", false, [4, 4]],
-  ["No reference", true, [4, 4]],
-  ["Transcribe audio", false, [0, 0]],
-  ["Transcribe audio", true, [0, 0]],
+  ["None", false, [4, 4]],
+  ["None", true, [4, 4]],
+  ["Transcribe", false, [0, 0]],
+  ["Transcribe", true, [0, 0]],
   ["ABC", false, [0, 4]],
   ["ABC", true, [0, 4]],
 ]) {
   test(`${choice}, extend=${extend}: compilation repairs modes without widget callbacks`, () => {
     const { host, reference, transcription, unrelated, app } = fixture();
     host.widgets[0].value = choice;
-    host.widgets[1].value = extend;
+    host.widgets[3].value = extend;
     reference.mode = 2;
     transcription.mode = 2;
     assert.deepEqual(app.graphToPrompt(), expected);
@@ -72,9 +73,9 @@ for (const [choice, extend, expected] of [
   });
 }
 
-test("the grouped source dropdown updates both bypass blocks live", () => {
+test("the unified source field updates both bypass blocks live", () => {
   const { host, app } = fixture();
-  host.widgets[0].value = "Transcribe audio";
+  host.widgets[0].value = "Transcribe";
   host.widgets[0].callback();
   assert.deepEqual(app.graphToPrompt(), [0, 0]);
   host.widgets[0].value = "ABC";
@@ -99,19 +100,24 @@ test("setup is idempotent and compilation respects an explicit graph, arguments 
 
 test("disconnecting a routing flag blocks compilation; reconnecting repairs it", () => {
   const { host, app } = fixture();
-  const flag = host.subgraph.getNodeById(41);
-  const links = flag.outputs[2].links;
-  flag.outputs[2].links = [];
+  const links = host.outputs[2].links;
+  host.outputs[2].links = [];
   assert.throws(() => app.graphToPrompt(), /Reference score: no connected Boolean.*Reconnect/);
-  flag.outputs[2].links = links;
+  host.outputs[2].links = links;
   assert.deepEqual(app.graphToPrompt(), [4, 4]);
 });
 
-test("unknown expressions and invalid source choices cannot silently set bypass", () => {
+test("invalid reference modes cannot silently set bypass", () => {
   const { host, app } = fixture();
   host.widgets[0].value = "invalid";
   assert.throws(() => app.graphToPrompt(), /no connected Boolean/);
-  host.widgets[0].value = "ABC";
-  host.subgraph.getNodeById(41).widgets[0].value = "arbitrary_call(a)";
-  assert.throws(() => app.graphToPrompt(), /no connected Boolean/);
+});
+
+
+test("compilation waits for reference file loading to finish", () => {
+  const { host, app } = fixture();
+  host.isUploading = true;
+  assert.throws(() => app.graphToPrompt(), /wait for the file to finish loading/);
+  host.isUploading = false;
+  assert.deepEqual(app.graphToPrompt(), [4, 4]);
 });

@@ -217,5 +217,17 @@
     "inputs": {
       "ckpt_name": "yue2_3b_bf16.safetensors"
     }
+  },
+  "33": {
+    "class_type": "bno84.ReferenceInput",
+    "inputs": {
+      "source": "None",
+      "abc": "",
+      "audio": "",
+      "extend": false
+    },
+    "_meta": {
+      "title": "Reference input"
+    }
   }
 }

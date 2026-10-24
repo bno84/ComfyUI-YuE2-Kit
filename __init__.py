@@ -42,6 +42,55 @@ class OptionalLoadAudio(LoadAudio):
         return LoadAudio.execute(audio)
 
 
+class ReferenceInput(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        files = LoadAudio.define_schema().inputs[0].options
+        return io.Schema(
+            node_id="bno84.ReferenceInput",
+            display_name="Reference input",
+            category="audio/YuE2",
+            inputs=[
+                io.Combo.Input("source", options=["None", "ABC", "Transcribe"], default="None"),
+                io.String.Input("abc", multiline=True, default="", dynamic_prompts=False),
+                io.Combo.Input("audio", options=["", *files], default=""),
+                io.Boolean.Input("extend", default=False),
+            ],
+            outputs=[
+                io.String.Output("abc", display_name="ABC"),
+                io.Audio.Output("audio", display_name="Audio"),
+                io.Boolean.Output("use_reference", display_name="Use reference"),
+                io.Boolean.Output("transcribe", display_name="Transcribe"),
+                io.Boolean.Output("extend", display_name="Extend"),
+            ],
+        )
+
+    @classmethod
+    def validate_inputs(cls, source, abc, audio):
+        if source not in ("None", "ABC", "Transcribe"):
+            return "Choose None, ABC, or Transcribe as the reference source."
+        if source == "ABC" and not abc.strip():
+            return "Reference ABC is empty. Paste a score or drop an .abc file."
+        if source == "Transcribe":
+            return LoadAudio.validate_inputs(audio)
+        return True
+
+    @classmethod
+    def fingerprint_inputs(cls, source, audio, **kwargs):
+        return LoadAudio.fingerprint_inputs(audio=audio) if source == "Transcribe" else None
+
+    @classmethod
+    def execute(cls, source, abc, audio, extend):
+        valid = cls.validate_inputs(source, abc, audio)
+        if valid is not True:
+            raise ValueError(valid)
+        payload = LoadAudio.execute(audio=audio)[0] if source == "Transcribe" else None
+        return io.NodeOutput(
+            abc if source == "ABC" else "", payload,
+            source != "None", source == "Transcribe", source != "None" and extend,
+        )
+
+
 class YuE2ExtendABC(io.ComfyNode):
     @classmethod
     def define_schema(cls):
@@ -101,7 +150,7 @@ class SaveYuE2Bundle(io.ComfyNode):
 
 class YuE2KitExtension(ComfyExtension):
     async def get_node_list(self):
-        return [SaveYuE2Bundle, OptionalLoadAudio, YuE2ExtendABC]
+        return [SaveYuE2Bundle, OptionalLoadAudio, ReferenceInput, YuE2ExtendABC]
 
 
 async def comfy_entrypoint():
