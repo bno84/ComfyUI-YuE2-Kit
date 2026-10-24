@@ -1,60 +1,57 @@
 # ComfyUI-YuE2-Kit
 
 Small additions around ComfyUI's native YuE2 and SheetSage2 nodes, plus an
-example song workflow (`example_workflows/yue2-kit-song.json`).
+example song workflow.
 
-- **Save YuE2 FLAC + ABC** (`bno84.SaveYuE2Bundle`): saves the song as FLAC and the
-  exact ABC score beside it under one incrementing filename. Runs again even
-  when generation is cached, and has a native audio player.
-- **YuE2 Extend ABC** (`bno84.YuE2ExtendABC`): continues a supplied score with the
-  native YuE2 planner, keeping it as an unchanged prefix. `max_abc_tokens`
-  budgets new tokens only.
-- **Load Audio (Optional)** (`bno84.OptionalLoadAudio`): the native audio loader
-  plus a `(none)` choice, for a transcription branch that may be inactive.
-- **Load SheetSage2 (Shared Output Weights)** (`bno84.SheetSage2Loader`): the
-  native audio-encoder loader for combined SheetSage2/MERT2 checkpoints,
-  restoring its tied `output_projection.weight` in memory. No file is rewritten.
+- **Save YuE2 FLAC + ABC:** saves the song as FLAC with the exact ABC score
+  beside it, under one incrementing filename. Runs again even when
+  generation is cached, and has an audio player.
+- **YuE2 Extend ABC:** continues a score with the native YuE2 planner,
+  keeping the original as an unchanged prefix. `max_abc_tokens` budgets new
+  tokens only.
+- **Load Audio (Optional):** the native audio loader plus a `(none)` choice,
+  for a transcription branch that may be off.
+- **Load SheetSage2 (Shared Output Weights):** loads a combined
+  SheetSage2/MERT2 checkpoint, restoring its tied output weights in memory.
 
-`web/audio_widgets.js` gives the optional loader and the exporter ComfyUI's
-native audio player; keep it with the Python files.
+## Install
 
-## Requirements
+- **ComfyUI-Manager:** search for _YuE2-Kit_ (Registry ID `comfyui-yue2-kit`)
+  and install it.
+- **comfy-cli:** `comfy node install comfyui-yue2-kit`.
+- **Manually:** `git clone https://github.com/bno84/ComfyUI-YuE2-Kit` into
+  `ComfyUI/custom_nodes/`.
 
-ComfyUI with native YuE2 support (tested: 0.38.0, commit `6b747c0`, frontend
-1.53.6). No Python packages beyond ComfyUI's own. Copy this directory to
-`ComfyUI/custom_nodes/` and restart.
+Then restart ComfyUI. Requires ComfyUI 0.38.0 or newer (native YuE2); no extra
+Python packages.
 
 ## Example workflow
 
-`example_workflows/yue2-kit-song.json` turns lyrics and a style prompt into a
-song, saved as FLAC with its ABC score. Optionally it transcribes reference
-audio to ABC with SheetSage2, and can extend that score with the YuE2 planner
-before synthesis. Stages: Lyrics + style → Planning → ABC → Acoustic → outputs.
-`api/yue2-kit-song.api.json` is the same graph in API format, kept outside
-`example_workflows/` so it does not show up as a ComfyUI template.
+The example workflow turns lyrics and a style prompt into a song, saved as FLAC
+with its ABC score. It can also transcribe reference audio to ABC with
+SheetSage2, and extend that score before synthesis.
+
+Open `yue2-kit-song` from ComfyUI's template browser under
+_ComfyUI-YuE2-Kit_, or load `example_workflows/yue2-kit-song.json`.
+`api/yue2-kit-song.api.json` is the same graph in API format.
 
 It also needs:
 
-- [ComfyUI-ABCPreview](https://github.com/bno84/ComfyUI-ABCPreview) for the
-  sheet-music ABC display. Preview playback needs your own General MIDI `.sf2`
-  in `models/soundfonts/`; none is included.
-- `yue2_3b_bf16.safetensors` (model, language model, and VAE) in
-  `models/checkpoints/`:
-  <https://huggingface.co/Comfy-Org/YuE2/resolve/main/checkpoints/yue2_3b_bf16.safetensors>
-- `SheetSage2_MERT2_bf16.safetensors` in `models/audio_encoders/`, for
-  transcription. Its loader is part of the graph, so ComfyUI may reject the
-  workflow without it even when transcription is off:
-  <https://huggingface.co/Comfy-Org/YuE2/resolve/main/audio_encoders/sheetsage2_bf16.safetensors>
+- [ABC Preview](https://github.com/bno84/ComfyUI-ABCPreview) (Registry ID
+  `comfyui-abcpreview`) for the sheet-music display. Playback there needs
+  your own General MIDI `.sf2`.
+- [`yue2_3b_bf16.safetensors`](https://huggingface.co/Comfy-Org/YuE2/resolve/main/checkpoints/yue2_3b_bf16.safetensors)
+  in `models/checkpoints/`.
+- [`SheetSage2_MERT2_bf16.safetensors`](https://huggingface.co/Comfy-Org/YuE2/resolve/main/audio_encoders/sheetsage2_bf16.safetensors)
+  in `models/audio_encoders/`, for transcription. Its loader is part of the
+  graph, so ComfyUI may reject the workflow without it even when
+  transcription is off.
 
 `max_duration` is an upper limit on audio length, not a target.
-
-## License
-
-MIT, © 2026 bno84; see `LICENSE`.
 
 ## Tests
 
 ```bash
 node --test tests/test_audio_widgets.mjs   # frontend widget order
-python3 -m unittest discover -s tests       # score-prefix continuation
+python3 -m unittest discover -s tests      # score-prefix continuation
 ```
