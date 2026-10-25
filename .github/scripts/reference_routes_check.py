@@ -2,7 +2,9 @@
 
 Every route is the same compiled prompt with different control values. Each
 runs against three model layouts: optional models missing, everything
-installed in subfolders, and the required checkpoint missing.
+installed in subfolders, and the required checkpoint missing. The disabled
+Audio Visualizer from comfyui/custom_nodes stays in every prompt: neither it
+nor its still may block a route or run.
 """
 import asyncio
 import copy
@@ -36,6 +38,13 @@ async def register():
     spec.loader.exec_module(kit)
     for cls in await (await kit.comfy_entrypoint()).get_node_list():
         nodes.NODE_CLASS_MAPPINGS[cls.GET_SCHEMA().node_id] = cls
+    visualizer = comfyui / "custom_nodes" / "ComfyUI-AudioVisualizer"
+    spec = importlib.util.spec_from_file_location("visualizer", visualizer / "__init__.py",
+                                                  submodule_search_locations=[str(visualizer)])
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    nodes.NODE_CLASS_MAPPINGS.update(module.NODE_CLASS_MAPPINGS)
 
 
 class Capture:
@@ -53,6 +62,9 @@ class Capture:
 asyncio.run(register())
 nodes.NODE_CLASS_MAPPINGS["TestCapture"] = Capture
 original_names = folder_paths.get_filename_list
+file_exists = folder_paths.exists_annotated_filepath
+# Loading the kit copied its default still into the input folder.
+assert file_exists("yue2-kit-still.png")
 CHECKPOINT = "yue2/yue2_3b_bf16.safetensors"
 ENCODER = "yue2/sheetsage2_bf16.safetensors"
 LORA = "loras/ar_lora_inst_v3abc_comfyui.safetensors"
@@ -107,6 +119,9 @@ assert data["33"]["inputs"]["source"] == "None" and data["32"]["inputs"]["instru
 music_inputs = data["31:6"]["inputs"]
 assert data["31:9"]["inputs"]["model"] == ["34:4", 0]
 assert not any(node["class_type"] == "bno84.ModelStatus" for node in data.values())
+visualizer = next(node for node in data.values() if node["class_type"] == "AudioVisualizer")
+assert visualizer["inputs"]["enabled"] is False and visualizer["inputs"]["audio"] == data["11"]["inputs"]["audio"]
+assert data[visualizer["inputs"]["image"][0]]["inputs"]["image"] == "yue2-kit-still.png"
 
 
 def route_prompt(source, extend, instrumental):
@@ -123,7 +138,8 @@ def route_prompt(source, extend, instrumental):
 
 
 with patch.object(folder_paths, "get_filename_list", side_effect=filenames), \
-     patch.object(folder_paths, "exists_annotated_filepath", side_effect=lambda name: name == "reference.wav"), \
+     patch.object(folder_paths, "exists_annotated_filepath", side_effect=lambda name: name == "reference.wav" or file_exists(name)), \
+     patch.object(nodes.NODE_CLASS_MAPPINGS["LoadImage"], "load_image", new=lambda self, image: calls.append("still")), \
      patch.object(nodes.NODE_CLASS_MAPPINGS["CheckpointLoaderSimple"], "load_checkpoint", new=load_checkpoint), \
      patch.object(nodes.NODE_CLASS_MAPPINGS["LoraLoader"], "load_lora", new=load_lora), \
      patch.object(nodes.NODE_CLASS_MAPPINGS["LoadAudio"], "fingerprint_inputs", new=classmethod(lambda cls, **kwargs: 0)), \
@@ -193,5 +209,6 @@ with patch.object(folder_paths, "get_filename_list", side_effect=filenames), \
                 assert calls.count("audio") == int(audio), (name, calls)
                 assert calls.count("transcribe") == int(audio), (name, calls)
                 assert calls.count("fresh") == int(route == "song"), (name, calls)
+                assert "still" not in calls, (name, calls)
                 print(f"PASS {name}: {calls}")
 print("All ten reference routes passed in three model layouts with native routing and mocked model execution.")

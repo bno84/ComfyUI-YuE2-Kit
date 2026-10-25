@@ -43,6 +43,9 @@ It also needs:
 - [ABC Preview](https://github.com/bno84/ComfyUI-ABCPreview) (Registry ID
   `comfyui-abcpreview`) for the sheet-music display. Playback there needs
   your own General MIDI `.sf2`.
+- [Audio Visualizer](https://github.com/bno84/ComfyUI-AudioVisualizer)
+  (Registry ID `comfyui-audiovisualizer`) for the optional visualizer video.
+  It needs FFmpeg on `PATH`.
 - [`yue2_3b_bf16.safetensors`](https://huggingface.co/Comfy-Org/YuE2/resolve/main/checkpoints/yue2_3b_bf16.safetensors)
   in `models/checkpoints/`.
 - Optional: [`sheetsage2_bf16.safetensors`](https://huggingface.co/Comfy-Org/YuE2/resolve/main/audio_encoders/sheetsage2_bf16.safetensors)
@@ -114,6 +117,15 @@ Lyrics and style remain separate. Choose the matching full/melody mode.
 
 `max_duration` is an upper limit on audio length, not a target.
 
+### Visualizer video
+
+**Visualizer video** is off by default. Turn on **enabled** to also save an
+MP4 of the song: a still with a spectrum along the bottom. While off, it never
+loads the still or waits for the song audio. The default still,
+`yue2-kit-still.png`, is a 1280×720 music logo. YuE2-Kit copies it into
+ComfyUI's input folder on startup unless a file of that name is already there.
+Upload your own image on **Visualizer still** to replace it.
+
 ### Model files
 
 **Models** holds every model choice: YuE2, SheetSage2, and the instrumental
@@ -152,7 +164,9 @@ its wiring. Reference values live in node `33`: `source` (`None`, `ABC`, or
 `Transcribe`), `abc`, `audio`, and `extend`. Instrumental is
 `32.inputs.instrumental`; also set `32.inputs.lyrics` to an instrumental
 section plan. Model files are `34:51` (YuE2), `34:52` (SheetSage2), and
-`34:53` (instrumental LoRA), each with a `name` input.
+`34:53` (instrumental LoRA), each with a `name` input. Set
+`55.inputs.enabled` to also render the visualizer video from the still in
+`54.inputs.image`.
 
 ## Tests
 

@@ -17,6 +17,8 @@ env:
   RUFF_VERSION: "0.17.2"
   # Oldest ComfyUI this pack declares in requires-comfyui.
   COMFYUI_REF: v0.38.0
+  # The template's Audio Visualizer release.
+  AUDIOVISUALIZER_REF: v0.1.0
 
 jobs:
   checks:
@@ -68,6 +70,7 @@ jobs:
           pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
           pip install -r comfyui/requirements.txt
           cp -r pack comfyui/custom_nodes/ComfyUI-YuE2-Kit
+          git clone --depth 1 --branch "$AUDIOVISUALIZER_REF" https://github.com/bno84/ComfyUI-AudioVisualizer.git comfyui/custom_nodes/ComfyUI-AudioVisualizer
       - name: Start ComfyUI and check the pack
         run: >
           python pack/.github/scripts/comfyui_smoke.py comfyui

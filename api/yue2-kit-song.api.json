@@ -418,5 +418,48 @@
     "inputs": {
       "name": "ar_lora_inst_v3abc_comfyui.safetensors"
     }
+  },
+  "54": {
+    "_meta": {
+      "title": "Visualizer still"
+    },
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "yue2-kit-still.png"
+    }
+  },
+  "55": {
+    "_meta": {
+      "title": "Visualizer video"
+    },
+    "class_type": "AudioVisualizer",
+    "inputs": {
+      "aac_bitrate": 192,
+      "audio": [
+        "31:10",
+        0
+      ],
+      "audio_codec": "flac",
+      "color": "#9750c4",
+      "crf": -1,
+      "dot_spacing": 12,
+      "duration": 0,
+      "enabled": false,
+      "filename_prefix": "audio/yue2/song_viz",
+      "fps": 60,
+      "gain": 12,
+      "glow": 0,
+      "h264_crf": 22,
+      "h265_crf": 18,
+      "image": [
+        "54",
+        0
+      ],
+      "opus_bitrate": 128,
+      "start": 0,
+      "style": "bars",
+      "trail": 0,
+      "video_codec": "h265"
+    }
   }
 }

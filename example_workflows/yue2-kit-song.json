@@ -1,8 +1,8 @@
 {
   "id": "75140c3e-0999-5e9e-8139-ff1a6450053b",
   "revision": 1,
-  "last_node_id": 53,
-  "last_link_id": 25,
+  "last_node_id": 55,
+  "last_link_id": 27,
   "nodes": [
     {
       "id": 32,
@@ -716,7 +716,8 @@
           "name": "AUDIO",
           "type": "AUDIO",
           "links": [
-            18
+            18,
+            27
           ]
         }
       ],
@@ -1016,6 +1017,312 @@
       },
       "color": "#2a363b",
       "bgcolor": "#3f5159"
+    },
+    {
+      "id": 54,
+      "type": "LoadImage",
+      "pos": [
+        2896,
+        76
+      ],
+      "size": [
+        300,
+        330
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            26
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.38.0"
+      },
+      "widgets_values": [
+        "yue2-kit-still.png",
+        "image"
+      ],
+      "title": "Visualizer still"
+    },
+    {
+      "id": 55,
+      "type": "AudioVisualizer",
+      "pos": [
+        3258,
+        76
+      ],
+      "size": [
+        500,
+        670
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 26
+        },
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 27
+        },
+        {
+          "localized_name": "enabled",
+          "name": "enabled",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "style",
+          "name": "style",
+          "type": "COMBO",
+          "widget": {
+            "name": "style"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dot_spacing",
+          "name": "dot_spacing",
+          "type": "INT",
+          "widget": {
+            "name": "dot_spacing"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "color",
+          "name": "color",
+          "type": "COLOR",
+          "widget": {
+            "name": "color"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "gain",
+          "name": "gain",
+          "type": "FLOAT",
+          "widget": {
+            "name": "gain"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "glow",
+          "name": "glow",
+          "type": "FLOAT",
+          "widget": {
+            "name": "glow"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "trail",
+          "name": "trail",
+          "type": "FLOAT",
+          "widget": {
+            "name": "trail"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "fps",
+          "name": "fps",
+          "type": "COMBO",
+          "widget": {
+            "name": "fps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start",
+          "name": "start",
+          "type": "FLOAT",
+          "widget": {
+            "name": "start"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "duration",
+          "name": "duration",
+          "type": "FLOAT",
+          "widget": {
+            "name": "duration"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "video_codec",
+          "name": "video_codec",
+          "type": "COMBO",
+          "widget": {
+            "name": "video_codec"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "h265_crf",
+          "name": "h265_crf",
+          "type": "INT",
+          "widget": {
+            "name": "h265_crf"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "h264_crf",
+          "name": "h264_crf",
+          "type": "INT",
+          "widget": {
+            "name": "h264_crf"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "audio_codec",
+          "name": "audio_codec",
+          "type": "COMBO",
+          "widget": {
+            "name": "audio_codec"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "aac_bitrate",
+          "name": "aac_bitrate",
+          "type": "INT",
+          "widget": {
+            "name": "aac_bitrate"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "opus_bitrate",
+          "name": "opus_bitrate",
+          "type": "INT",
+          "widget": {
+            "name": "opus_bitrate"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "crf",
+          "name": "crf",
+          "type": "INT",
+          "widget": {
+            "name": "crf"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "video",
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "AudioVisualizer",
+        "sdcpp_audio_visualizer_widget_order": [
+          "enabled",
+          "filename_prefix",
+          "style",
+          "dot_spacing",
+          "color",
+          "gain",
+          "glow",
+          "trail",
+          "fps",
+          "start",
+          "duration",
+          "video_codec",
+          "h265_crf",
+          "h264_crf",
+          "audio_codec",
+          "aac_bitrate",
+          "opus_bitrate",
+          "crf"
+        ],
+        "cnr_id": "comfyui-audiovisualizer",
+        "ver": "0.1.0"
+      },
+      "widgets_values": [
+        false,
+        "audio/yue2/song_viz",
+        "bars",
+        12,
+        "#9750c4",
+        12,
+        0,
+        0,
+        60,
+        0,
+        0,
+        "h265",
+        18,
+        22,
+        "flac",
+        192,
+        128,
+        -1
+      ],
+      "title": "Visualizer video"
     }
   ],
   "links": [
@@ -1194,6 +1501,22 @@
       34,
       3,
       "BOOLEAN"
+    ],
+    [
+      26,
+      54,
+      0,
+      55,
+      0,
+      "IMAGE"
+    ],
+    [
+      27,
+      31,
+      0,
+      55,
+      1,
+      "AUDIO"
     ]
   ],
   "groups": [],
