@@ -917,10 +917,10 @@
       "properties": {
         "Node name for S&R": "bno84.ABCPreview",
         "cnr_id": "comfyui-abcpreview",
-        "ver": "0.1.0"
+        "ver": "0.3.0"
       },
       "widgets_values": [
-        "(none)"
+        "GeneralUser-GS.sf2"
       ]
     },
     {
@@ -942,10 +942,10 @@
       "title": "Optional soundfont",
       "properties": {},
       "widgets_values": [
-        "## Preview playback needs your own soundfont\n\nDownload a General MIDI `.sf2` yourself, for example [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS). Put it in `ComfyUI/models/soundfonts/`, refresh the browser, and choose it on the ABC node.\n\nWithout one, sheet music and source still work; only playback is off."
+        "## Optional preview soundfont\n\nThe preview tries `GeneralUser-GS.sf2` automatically, including inside soundfont subfolders. Download [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS) yourself and put it in `ComfyUI/models/soundfonts/` or a subfolder, then refresh.\n\nWithout it, sheet music and source still work; only playback is off. Choose another installed soundfont, or select **(none)** to disable playback."
       ],
       "widgets_values_named": {
-        "text": "## Preview playback needs your own soundfont\n\nDownload a General MIDI `.sf2` yourself, for example [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS). Put it in `ComfyUI/models/soundfonts/`, refresh the browser, and choose it on the ABC node.\n\nWithout one, sheet music and source still work; only playback is off."
+        "text": "## Optional preview soundfont\n\nThe preview tries `GeneralUser-GS.sf2` automatically, including inside soundfont subfolders. Download [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS) yourself and put it in `ComfyUI/models/soundfonts/` or a subfolder, then refresh.\n\nWithout it, sheet music and source still work; only playback is off. Choose another installed soundfont, or select **(none)** to disable playback."
       },
       "color": "#432",
       "bgcolor": "#653"

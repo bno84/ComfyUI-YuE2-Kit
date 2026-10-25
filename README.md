@@ -40,7 +40,7 @@ _ComfyUI-YuE2-Kit_, or load `example_workflows/yue2-kit-song.json`.
 
 It also needs:
 
-- [ABC Preview](https://github.com/bno84/ComfyUI-ABCPreview) 0.2.0 or newer
+- [ABC Preview](https://github.com/bno84/ComfyUI-ABCPreview) 0.3.0 or newer
   (Registry ID `comfyui-abcpreview`) for the sheet-music display and the score
   timeline. Playback there needs your own General MIDI `.sf2`.
 - [Audio Visualizer](https://github.com/bno84/ComfyUI-AudioVisualizer)

@@ -20,7 +20,7 @@ env:
   # The template's Audio Visualizer release.
   AUDIOVISUALIZER_REF: v0.2.0
   # The template's ABC Preview release, with the timeline.
-  ABCPREVIEW_REF: v0.2.0
+  ABCPREVIEW_REF: v0.3.0
 
 jobs:
   checks:
