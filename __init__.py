@@ -1,15 +1,102 @@
-"""YuE2-Kit: score continuation, optional audio input, SheetSage2 loading, and paired song/score export."""
+"""YuE2-Kit: score continuation, optional audio input, optional model files, and paired song/score export."""
 
 from pathlib import Path
 
 import folder_paths
+from aiohttp import web
 from comfy_api.latest import ComfyExtension, io, ui
 from comfy_extras.nodes_audio import LoadAudio
 from comfy_extras.nodes_yue2 import YuE2GenerateABC
+from server import PromptServer
 
+from .model_files import file_choices, missing_message, model_status, resolve
 from .planning import extend_abc
 
 WEB_DIRECTORY = "./web"
+
+
+def model_file_node(folder, node_id, display_name, loader, required):
+    """A file choice for a native loader, found by name in any subfolder.
+
+    Naming ``name`` in validate_inputs replaces ComfyUI's "value in list" check.
+    A required file is still checked before queueing. An optional file is only
+    checked when a lazy switch actually asks for its loader, so a missing one
+    does not block the paths that do not use it.
+    """
+
+    class ModelFile(io.ComfyNode):
+        @classmethod
+        def define_schema(cls):
+            when = "before queueing" if required else "only when the workflow uses it"
+            return io.Schema(
+                node_id=node_id,
+                display_name=display_name,
+                category="audio/YuE2",
+                description=(
+                    f"Chooses a file in models/{folder} for {loader}. The same file name in another "
+                    f"subfolder is also found. The file is checked {when}."
+                ),
+                inputs=[
+                    io.Combo.Input("name", options=file_choices(folder, folder_paths.get_filename_list(folder)),
+                                   tooltip="Known YuE2-Kit files are listed even when not installed; Model files shows which are."),
+                ],
+                # Native legacy loaders declare their file list as the input type,
+                # which only an Any output can connect to.
+                outputs=[io.AnyType.Output("file", display_name="file")],
+            )
+
+        @classmethod
+        def validate_inputs(cls, name):
+            if not required or resolve(name, folder_paths.get_filename_list(folder)):
+                return True
+            return missing_message(folder, name)
+
+        @classmethod
+        def fingerprint_inputs(cls, name):
+            return resolve(name, folder_paths.get_filename_list(folder))
+
+        @classmethod
+        def execute(cls, name):
+            found = resolve(name, folder_paths.get_filename_list(folder))
+            if found is None:
+                raise ValueError(missing_message(folder, name))
+            return io.NodeOutput(found)
+
+    ModelFile.__name__ = ModelFile.__qualname__ = node_id.removeprefix("bno84.")
+    return ModelFile
+
+
+CheckpointFile = model_file_node(
+    "checkpoints", "bno84.CheckpointFile", "Checkpoint file", "Load Checkpoint", required=True)
+OptionalAudioEncoderFile = model_file_node(
+    "audio_encoders", "bno84.OptionalAudioEncoderFile", "Audio encoder file (optional)", "Audio Encoder Loader", required=False)
+OptionalLoraFile = model_file_node(
+    "loras", "bno84.OptionalLoraFile", "LoRA file (optional)", "Load LoRA", required=False)
+
+
+class ModelStatus(io.ComfyNode):
+    """Display only: the frontend lists the known model files and whether they are installed."""
+
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(
+            node_id="bno84.ModelStatus",
+            display_name="Model files",
+            category="audio/YuE2",
+            description="Shows which of YuE2-Kit's known model files are installed, with download links for missing ones. Not part of the prompt.",
+            inputs=[],
+            outputs=[],
+        )
+
+    @classmethod
+    def execute(cls):
+        return io.NodeOutput()
+
+
+if getattr(PromptServer, "instance", None) is not None:
+    @PromptServer.instance.routes.get("/yue2-kit/models")
+    async def known_model_status(request):
+        return web.json_response(model_status(folder_paths.get_filename_list))
 
 
 class LyricsStyle(io.ComfyNode):
@@ -177,7 +264,10 @@ class SaveYuE2Bundle(io.ComfyNode):
 
 class YuE2KitExtension(ComfyExtension):
     async def get_node_list(self):
-        return [SaveYuE2Bundle, OptionalLoadAudio, ReferenceInput, YuE2ExtendABC, LyricsStyle]
+        return [
+            SaveYuE2Bundle, OptionalLoadAudio, ReferenceInput, YuE2ExtendABC, LyricsStyle,
+            CheckpointFile, OptionalAudioEncoderFile, OptionalLoraFile, ModelStatus,
+        ]
 
 
 async def comfy_entrypoint():

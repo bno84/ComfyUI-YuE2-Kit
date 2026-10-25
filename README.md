@@ -11,6 +11,11 @@ example song workflow.
   instrumental-format warnings linked to the LoRA prompt guide.
 - **Reference input:** one tabbed panel for no reference, editable/droppable ABC,
   or uploaded/dropped audio, with recording playback and optional extension.
+- **Checkpoint file, Audio encoder file (optional), LoRA file (optional):** file
+  choices for the native loaders. They find a file by name in any subfolder,
+  and an optional file is only checked when the workflow uses it.
+- **Model files:** shows which known model files are installed, with download
+  details for missing ones.
 - **Load Audio (Optional):** the original audio helper, retained for older workflows.
 
 ## Install
@@ -31,7 +36,7 @@ and optionally extend either score before synthesis.
 
 Open `yue2-kit-song` from ComfyUI's template browser under
 _ComfyUI-YuE2-Kit_, or load `example_workflows/yue2-kit-song.json`.
-`api/yue2-kit-song.api.json` is the default, text-only path in API format.
+`api/yue2-kit-song.api.json` is the same workflow in API format.
 
 It also needs:
 
@@ -40,18 +45,16 @@ It also needs:
   your own General MIDI `.sf2`.
 - [`yue2_3b_bf16.safetensors`](https://huggingface.co/Comfy-Org/YuE2/resolve/main/checkpoints/yue2_3b_bf16.safetensors)
   in `models/checkpoints/`.
-- [`sheetsage2_bf16.safetensors`](https://huggingface.co/Comfy-Org/YuE2/resolve/main/audio_encoders/sheetsage2_bf16.safetensors)
-  in `models/audio_encoders/`, only for transcription. The transcription block
-  is bypassed by default, so text-only songs do not need this file.
+- Optional: [`sheetsage2_bf16.safetensors`](https://huggingface.co/Comfy-Org/YuE2/resolve/main/audio_encoders/sheetsage2_bf16.safetensors)
+  in `models/audio_encoders/`, only for Transcribe.
 
 **Instrumental** in Lyrics + style enables the optional
 [Mothersuperior instrumental AR LoRA](https://huggingface.co/Mothersuperior/YuE2-instrumental-cot-full-loras).
-Download `ar_lora_inst_v3abc_comfyui.safetensors` yourself, put it in
-`ComfyUI/models/loras/`, refresh the model list, and select it in **Models →
-Instrumental LoRA**. These weights are **CC BY-NC 4.0 (non-commercial)**; they
-are not bundled or downloaded automatically. A note beside Models links to
-the download. With Instrumental off (the default), the LoRA is bypassed and
-the file is not needed for validation or execution.
+Download `ar_lora_inst_v3abc_comfyui.safetensors` yourself and put it in
+`ComfyUI/models/loras/` or a subfolder. These weights are **CC BY-NC 4.0
+(non-commercial)**; they are not bundled or downloaded automatically. With
+Instrumental off (the default), the LoRA is never loaded and the file is not
+needed.
 
 With Instrumental on, the LoRA is applied to the YuE2 language model at
 strength 1.0 for planning, extension, and music generation. The acoustic model
@@ -93,28 +96,53 @@ its matching tab.
 ABC files are read locally; audio uploads use ComfyUI's standard input endpoint.
 
 The node validates and reads only the selected input. Unused audio files and
-ABC text do not cause errors while None is selected. Native bypass keeps the
-SheetSage2 encoder outside validation and execution for None and ABC. Explicit
-score, audio, source-flag, and extension outputs are wired into Planning; the
-frontend rechecks their bypass states before compiling or exporting a prompt.
-No reference ignores extension. All five reference paths remain available.
+ABC text do not cause errors while None is selected. Explicit score, audio,
+source-flag, and extension outputs are wired into Planning, where ordinary
+If/Else switches pick the path. A switch only evaluates the side it selects, so
+SheetSage2 loads for Transcribe alone. No reference ignores extension. All
+five reference paths remain available.
 
 Reference input handles input only. Connect its **ABC** output to a separate
 **ABC Preview** node for notation or score playback. The template's existing
 ABC Preview shows the final selected score after any transcription or extension.
 Lyrics and style remain separate. Choose the matching full/melody mode.
 
-API examples in `api/` cover each path: `yue2-kit-song.api.json` (None),
-`yue2-kit-audio-reference.api.json`, `yue2-kit-audio-extend.api.json`,
-`yue2-kit-abc-reference.api.json`, and `yue2-kit-abc-extend.api.json`.
-Reference values live in node `33`: `source`, `abc`, `audio`, and `extend`.
-Instrumental variants are named `yue2-kit-instrumental-*.api.json`. Their
-control is `32.inputs.instrumental`; the CLIP branch must also be rewired, so use
-the matching instrumental snapshot rather than changing only that Boolean.
-These are compiled snapshots; use the corresponding file, since bypass
-rewiring happens in the UI before export.
-
 `max_duration` is an upper limit on audio length, not a target.
+
+### Model files
+
+**Models** holds every model choice: YuE2, SheetSage2, and the instrumental
+LoRA. Each choice finds its file by name anywhere under the matching
+`models/` folder, so `loras/ar_lora_inst_v3abc_comfyui.safetensors` also
+matches the template's `ar_lora_inst_v3abc_comfyui.safetensors`. With the
+default files installed, nothing needs selecting. Choose another file only to
+use a different version, such as another quantization or LoRA release.
+
+YuE2 is required: a missing checkpoint stops queueing with download details.
+SheetSage2 and the LoRA are optional: without them, the workflow still runs
+every path that does not use them. Turning Instrumental on or choosing
+Transcribe without the file stops at that step with download details. The
+pack's default files stay listed in the dropdowns even when not installed.
+Otherwise ComfyUI would report them as missing required models on load.
+
+**Model files**, beside Models, lists each known model as installed (with the
+path found) or missing (with source, license, file name, and folder). Use
+**Check again** after downloading. ComfyUI finds new files without a restart.
+
+Workflows saved from the 0.3.0 template or earlier load with their bypassed
+branches re-enabled, so Reference input and Instrumental keep routing
+correctly. They still use the native loaders directly, so their optional
+model files are required again; load the current template to make them
+optional.
+
+### API
+
+`api/yue2-kit-song.api.json` covers every path; change its values rather than
+its wiring. Reference values live in node `33`: `source` (`None`, `ABC`, or
+`Transcribe`), `abc`, `audio`, and `extend`. Instrumental is
+`32.inputs.instrumental`; also set `32.inputs.lyrics` to an instrumental
+section plan. Model files are `34:51` (YuE2), `34:52` (SheetSage2), and
+`34:53` (instrumental LoRA), each with a `name` input.
 
 ## Tests
 

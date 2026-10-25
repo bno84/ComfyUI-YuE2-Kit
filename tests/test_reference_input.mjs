@@ -30,3 +30,19 @@ test("the reference panel does not modify unrelated native audio nodes", () => {
   extension.nodeCreated(node);
   assert.deepEqual(node, { comfyClass: "LoadAudio" });
 });
+
+test("compilation waits for reference file loading to finish, also inside subgraphs", () => {
+  const inner = { comfyClass: "bno84.ReferenceInput", isUploading: true };
+  const root = { _nodes: [{ comfyClass: "Other", subgraph: { _nodes: [inner] } }] };
+  const result = {};
+  let guarded;
+  const app = { rootGraph: root, graphToPrompt() { return result; }, registerExtension(value) { guarded = value; } };
+  new Function("app", "api", source)(app, {});
+  guarded.setup();
+  const hook = app.graphToPrompt;
+  guarded.setup();
+  assert.equal(app.graphToPrompt, hook);
+  assert.throws(() => app.graphToPrompt(), /wait for the file to finish loading/);
+  inner.isUploading = false;
+  assert.equal(app.graphToPrompt(), result);
+});

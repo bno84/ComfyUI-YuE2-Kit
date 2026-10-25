@@ -229,8 +229,37 @@ class ReferencePanel {
   destroy() { this.destroyed = true; void this.transcriptionJob?.cancel(); this.pauseAudio(); this.root.remove(); }
 }
 
+// While a dropped file uploads, the audio widget still names the previous
+// file. Refuse to compile a prompt until every reference input has finished.
+export function assertNoUploads(graph) {
+  const pending = [graph], seen = new Set();
+  while (pending.length) {
+    const current = pending.pop();
+    if (!current || seen.has(current)) continue;
+    seen.add(current);
+    for (const node of current._nodes ?? []) {
+      if (node.comfyClass === NODE && node.isUploading) {
+        throw new Error("Reference input: wait for the file to finish loading before queueing or exporting.");
+      }
+      if (node.subgraph) pending.push(node.subgraph);
+    }
+  }
+}
+
+const uploadGuard = Symbol.for("bno84.ReferenceInput.uploadGuard");
+
 app.registerExtension({
   name: "bno84.ReferenceInput",
+  setup() {
+    if (app[uploadGuard]) return;
+    const graphToPrompt = app.graphToPrompt;
+    app.graphToPrompt = function (...args) {
+      // ComfyUI also accepts an explicit graph when exporting/compiling a prompt.
+      assertNoUploads(args[0]?._nodes ? args[0] : this.rootGraph ?? this.graph);
+      return graphToPrompt.apply(this, args);
+    };
+    app[uploadGuard] = true;
+  },
   nodeCreated(node) {
     if (node.comfyClass !== NODE) return;
     for (const widget of node.widgets ?? []) {
