@@ -61,14 +61,15 @@ async def register():
 class Capture:
     INPUT_TYPES = classmethod(lambda cls: {"required": {
         "value": ("STRING",), "clip": ("CLIP",), "lyrics": ("STRING",), "max_duration": ("FLOAT",),
+        "model": ("MODEL",),
     }})
     RETURN_TYPES = ()
     OUTPUT_NODE = True
     FUNCTION = "capture"
     values = []
 
-    def capture(self, value, clip, lyrics, max_duration):
-        self.values.append((value, clip, lyrics, max_duration))
+    def capture(self, value, clip, lyrics, max_duration, model):
+        self.values.append((value, clip, lyrics, max_duration, model))
         return ()
 
 
@@ -130,7 +131,10 @@ fresh = "FRESH\n"
 data = json.loads((pack / "api" / "yue2-kit-song.api.json").read_text())
 assert data["33"]["inputs"]["source"] == "None" and data["32"]["inputs"]["instrumental"] is False
 music_inputs = data["31:6"]["inputs"]
-assert data["31:9"]["inputs"]["model"] == ["34:4", 0]
+acoustic_model = data["31:9"]["inputs"]["model"]
+assert acoustic_model == ["59", 0]
+assert data["59"]["class_type"] == "bno84.OptionalModelLora"
+assert data["59"]["inputs"] == {"model": ["34:4", 0], "lora_name": "(none)", "strength_model": 1.0}
 assert not any(node["class_type"] == "bno84.ModelStatus" for node in data.values())
 visualizer = next(node for node in data.values() if node["class_type"] == "AudioVisualizer")
 assert visualizer["inputs"]["enabled"] is False and visualizer["inputs"]["audio"] == data["11"]["inputs"]["audio"]
@@ -147,7 +151,7 @@ def route_prompt(source, extend, instrumental):
     prompt = {key: copy.deepcopy(value) for key, value in data.items() if key not in ("11", "22")}
     prompt["capture"] = {"class_type": "TestCapture", "inputs": {
         "value": data["11"]["inputs"]["abc"], "clip": music_inputs["clip"], "lyrics": music_inputs["lyrics"],
-        "max_duration": music_inputs["max_duration"],
+        "max_duration": music_inputs["max_duration"], "model": acoustic_model,
     }}
     prompt["33"]["inputs"].update(source=source, abc=pasted, extend=extend,
                                   audio="reference.wav" if source == "Transcribe" else "")
@@ -221,7 +225,8 @@ with patch.object(folder_paths, "get_filename_list", side_effect=filenames), \
                     continue
                 assert executor.success, executor.status_messages
                 expected = fresh if route == "song" else transcribed if audio else pasted
-                score, clip, lyrics, max_duration = Capture.values[-1]
+                score, clip, lyrics, max_duration, model = Capture.values[-1]
+                assert model is base_model, (name, model)
                 assert score == expected + ("EXTENDED\n" if extend else ""), (name, Capture.values)
                 assert clip is (instrumental_clip if instrumental else base_clip), name
                 expected_lyrics = "[instrumental]" if instrumental else data["32"]["inputs"]["lyrics"]
