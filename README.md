@@ -90,9 +90,15 @@ retained; the toggle does not remove vocal notes or words from a supplied score.
 - **ABC:** paste a score, use Open ABC, or drop an `.abc` file.
 - **Transcribe:** select, upload, or drop audio. The built-in player previews
   the recording. Choose the SheetSage2 model in the main Models panel.
-  **Transcribe now** queues only the connected transcription path, using that
-  same model and the current score mode. On success it fills the ABC editor and
-  switches to ABC, keeping Extend reference. It does not run extension or song
+  Connect Models’ optional SheetSage2 file output or its loaded **AUDIO_ENCODER**
+  output to **transcription_model**. A loaded encoder is used directly.
+  Choose **Full** (melody + chords) or **Melody** to match your generation mode.
+  **Transcribe now** queues a dedicated job using those explicit settings; no
+  downstream transcription nodes are required. This model input is evaluated
+  only for that job, so missing optional weights do not block None or ABC.
+  On success it fills the ABC editor and
+  switches to ABC, keeping Extend reference. Progress uses ComfyUI’s native bar
+  on Reference input. It does not run extension or song
   generation. **Cancel** affects only this transcription job. Existing ABC edits
   are retained if you change them while transcription is running.
 

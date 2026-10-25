@@ -1,4 +1,4 @@
-// Submit just the connected SheetSage2 path through ComfyUI's normal queue.
+// Submit a self-contained SheetSage2 job through ComfyUI's normal queue.
 const REFERENCE = "bno84.ReferenceInput";
 
 function isLink(value) {
@@ -21,54 +21,50 @@ export function referenceExecutionId(root, node) {
   return matches[0];
 }
 
-export function buildTranscriptionPrompt(prompt, referenceId) {
+export function buildTranscriptionPrompt(prompt, referenceId, nodeDefs = {}) {
   const reference = prompt[referenceId];
   if (reference?.class_type !== REFERENCE || reference.inputs.source !== "Transcribe") {
     throw new Error("Select the Transcribe tab first.");
   }
   if (!reference.inputs.audio) throw new Error("Select or drop an audio file first.");
-  function usesAudio(value, seen = new Set()) {
-    if (!isLink(value)) return false;
-    const [id, slot] = value;
-    if (id === referenceId) return slot === 1;
-    if (seen.has(id)) return false;
-    const next = new Set(seen).add(id);
-    return Object.values(prompt[id]?.inputs ?? {}).some((input) => usesAudio(input, next));
+  const model = reference.inputs.transcription_model;
+  if (!model) throw new Error("Connect an optional audio encoder file to Transcription model first.");
+  const mode = reference.inputs.transcription_mode ?? "full";
+  const output = {}, visiting = new Set();
+  function copyDependency(value) {
+    if (!isLink(value)) return;
+    const id = value[0];
+    if (output[id]) return;
+    if (id === referenceId || visiting.has(id)) throw new Error("The transcription settings contain a cycle.");
+    const node = prompt[id];
+    if (!node) throw new Error(`Missing transcription input: ${id}.`);
+    visiting.add(id);
+    for (const input of Object.values(node.inputs)) copyDependency(input);
+    output[id] = structuredClone(node);
+    visiting.delete(id);
   }
-  const matches = Object.entries(prompt).filter(([, node]) =>
-    node.class_type === "SheetSage2AudioToABC" && usesAudio(node.inputs.audio));
-  if (!matches.length) throw new Error("Connect this reference's Audio output to a SheetSage2 transcription path first.");
-  if (matches.length !== 1) throw new Error("More than one SheetSage2 path uses this reference. Connect one transcription path for Transcribe now.");
-  const [transcriber] = matches[0];
-  function ancestors(input) {
-    const output = {}, visiting = new Set();
-    function add(id) {
-      if (output[id]) return;
-      if (visiting.has(id)) throw new Error("The transcription path contains a cycle.");
-      if (!input[id]) throw new Error(`Missing transcription input: ${id}.`);
-      visiting.add(id);
-      for (const value of Object.values(input[id].inputs)) if (isLink(value)) add(value[0]);
-      output[id] = structuredClone(input[id]);
-      visiting.delete(id);
-    }
-    add(transcriber);
-    return output;
+  // Only explicit settings and their dependencies belong in this job.
+  for (const value of [model, mode, reference.inputs.audio]) copyDependency(value);
+  const prefix = `bno84_transcription_${referenceId.replaceAll(":", "_")}`;
+  const ids = ["audio", "model", "result"].map((suffix) => `${prefix}_${suffix}`);
+  if (ids.some((id) => prompt[id])) throw new Error("The transcription job ID is already in use.");
+  const [audioId, modelId, sinkId] = ids;
+  // ComfyUI keys native node progress by execution ID. Run the dedicated
+  // transcriber under the reference's ID so its real progress appears there.
+  const scoreId = referenceId;
+  output[audioId] = { class_type: "LoadAudio", inputs: { audio: structuredClone(reference.inputs.audio) } };
+  const modelType = isLink(model) ? nodeDefs[prompt[model[0]]?.class_type]?.output?.[model[1]] : "STRING";
+  const loadedEncoder = modelType === "AUDIO_ENCODER";
+  if (modelType && !["AUDIO_ENCODER", "STRING", "*", "COMBO"].includes(modelType) && !Array.isArray(modelType)) {
+    throw new Error("Transcription model must be an audio encoder file or a loaded AUDIO_ENCODER.");
   }
-  let output = ancestors(prompt);
-  // With ordinary audio-only dependencies, use the native loader. This avoids
-  // invalidating transcription caching when unrelated ABC/extension values change.
-  const references = Object.values(output).flatMap((node) => Object.values(node.inputs))
-    .filter((value) => isLink(value) && value[0] === referenceId);
-  if (references.every((value) => value[1] === 1)) {
-    output[referenceId] = { class_type: "LoadAudio", inputs: { audio: structuredClone(reference.inputs.audio) } };
-    for (const node of Object.values(output)) for (const value of Object.values(node.inputs)) {
-      if (isLink(value) && value[0] === referenceId) value[1] = 0;
-    }
-    output = ancestors(output);
+  if (!loadedEncoder) {
+    output[modelId] = { class_type: "AudioEncoderLoader", inputs: { audio_encoder_name: structuredClone(model) } };
   }
-  const sinkId = `bno84_transcription_${referenceId.replaceAll(":", "_")}`;
-  if (output[sinkId]) throw new Error("The transcription output ID is already in use.");
-  output[sinkId] = { class_type: "PreviewAny", inputs: { source: [transcriber, 0] } };
+  output[scoreId] = { class_type: "SheetSage2AudioToABC", inputs: {
+    audio: [audioId, 0], audio_encoder: loadedEncoder ? structuredClone(model) : [modelId, 0], mode: structuredClone(mode),
+  } };
+  output[sinkId] = { class_type: "PreviewAny", inputs: { source: [scoreId, 0] } };
   return { output, sinkId };
 }
 
@@ -85,7 +81,7 @@ function scoreFrom(output) {
   return text;
 }
 
-export function queueTranscription(api, { output, sinkId }, onStatus = () => {}, { pollInterval = 2000 } = {}) {
+export function queueTranscription(api, { output, sinkId, workflow }, onStatus = () => {}, { pollInterval = 2000 } = {}) {
   let promptId, done = false, cancelled = false, timer, checking = false, missing = 0, result;
   let resolve, reject;
   const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
@@ -155,7 +151,7 @@ export function queueTranscription(api, { output, sinkId }, onStatus = () => {},
   const submitted = (async () => {
     onStatus("Queueing transcription…");
     try {
-      const response = await api.queuePrompt(0, { output });
+      const response = await api.queuePrompt(0, { output, ...(workflow ? { workflow } : {}) });
       if (!response?.prompt_id) throw new Error("ComfyUI did not return a transcription job ID.");
       promptId = response.prompt_id;
       if (cancelled || done) return;

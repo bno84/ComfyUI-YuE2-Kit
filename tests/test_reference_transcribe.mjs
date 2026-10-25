@@ -7,44 +7,86 @@ const { referenceExecutionId, buildTranscriptionPrompt, queueTranscription } = n
 
 function fixture() {
   return {
-    unrelated: { class_type: "SheetSage2AudioToABC", inputs: { audio: ["other", 1], audio_encoder: ["otherModel", 0], mode: "full" } },
-    other: { class_type: "bno84.ReferenceInput", inputs: { source: "Transcribe", audio: "other.wav", abc: "", extend: false } },
-    otherModel: { class_type: "AudioEncoderLoader", inputs: { audio_encoder_name: "wrong-model.safetensors" } },
-    "33": { class_type: "bno84.ReferenceInput", inputs: { source: "Transcribe", audio: "chosen.wav", abc: "old ABC", extend: true } },
-    "34:15": { class_type: "AudioEncoderLoader", inputs: { audio_encoder_name: "selected-model.safetensors" } },
-    "30:36:40:16": { class_type: "SheetSage2AudioToABC", inputs: { audio: ["33", 1], audio_encoder: ["34:15", 0], mode: "melody" } },
-    music: { class_type: "YuE2GenerateMusic", inputs: { abc: ["30:36:40:16", 0] } },
-    extend: { class_type: "bno84.YuE2ExtendABC", inputs: { abc: ["30:36:40:16", 0] } },
+    file: { class_type: "bno84.OptionalAudioEncoderFile", inputs: { name: "selected-model.safetensors" } },
+    "33": { class_type: "bno84.ReferenceInput", inputs: { source: "Transcribe", audio: "chosen.wav",
+      abc: "old ABC", extend: true, transcription_model: ["file", 0], transcription_mode: "melody" } },
+    unrelated: { class_type: "SheetSage2AudioToABC", inputs: { audio: ["33", 1] } },
+    another: { class_type: "SheetSage2AudioToABC", inputs: { audio: ["33", 1] } },
+    music: { class_type: "YuE2GenerateMusic", inputs: { abc: ["33", 0] } },
   };
 }
 
-test("uses the connected model and mode, excluding unrelated transcription and all generation", () => {
+test("builds a dedicated job from explicit settings, without downstream discovery", () => {
   const original = fixture(), snapshot = structuredClone(original);
   const { output, sinkId } = buildTranscriptionPrompt(original, "33");
-  assert.deepEqual(output["34:15"], snapshot["34:15"]);
-  assert.equal(output["30:36:40:16"].inputs.mode, "melody");
-  assert.deepEqual(output["30:36:40:16"].inputs.audio_encoder, ["34:15", 0]);
-  assert.deepEqual(output["33"], { class_type: "LoadAudio", inputs: { audio: "chosen.wav" } });
-  assert.deepEqual(output["30:36:40:16"].inputs.audio, ["33", 0]);
-  assert.deepEqual(output[sinkId].inputs.source, ["30:36:40:16", 0]);
-  assert.equal(Object.keys(output).length, 4);
+  const find = (type) => Object.entries(output).find(([, node]) => node.class_type === type);
+  const [audioId, audio] = find("LoadAudio"), [modelId, model] = find("AudioEncoderLoader");
+  const [scoreId, score] = find("SheetSage2AudioToABC");
+  assert.equal(scoreId, "33", "native progress targets the reference node");
+  assert.deepEqual(audio.inputs, { audio: "chosen.wav" });
+  assert.deepEqual(model.inputs, { audio_encoder_name: ["file", 0] });
+  assert.deepEqual(score.inputs, { audio: [audioId, 0], audio_encoder: [modelId, 0], mode: "melody" });
+  assert.deepEqual(output[sinkId].inputs.source, [scoreId, 0]);
+  assert.deepEqual(output.file, original.file);
+  assert.equal(Object.keys(output).length, 5);
   assert.deepEqual(original, snapshot);
 });
 
-test("model changes in the main group are reflected in the next submission", () => {
+test("works disconnected and uses changed model selections", () => {
   const prompt = fixture();
-  prompt["34:15"].inputs.audio_encoder_name = "new-selection.safetensors";
-  const built = buildTranscriptionPrompt(prompt, "33");
-  assert.equal(built.output["34:15"].inputs.audio_encoder_name, "new-selection.safetensors");
+  delete prompt.unrelated; delete prompt.another; delete prompt.music;
+  prompt.file.inputs.name = "new-model.safetensors";
+  assert.equal(buildTranscriptionPrompt(prompt, "33").output.file.inputs.name, "new-model.safetensors");
 });
 
-test("disconnected and ambiguous transcription paths report errors", () => {
+test("supports linked modes and copies only their upstream dependencies", () => {
   const prompt = fixture();
-  delete prompt["30:36:40:16"];
-  assert.throws(() => buildTranscriptionPrompt(prompt, "33"), /Connect this reference/);
-  prompt.one = structuredClone(prompt.unrelated); prompt.one.inputs.audio = ["33", 1];
-  prompt.two = structuredClone(prompt.one);
-  assert.throws(() => buildTranscriptionPrompt(prompt, "33"), /More than one/);
+  prompt.mode = { class_type: "PrimitiveString", inputs: { value: "full" } };
+  prompt["33"].inputs.transcription_mode = ["mode", 0];
+  const { output } = buildTranscriptionPrompt(prompt, "33");
+  assert.deepEqual(output.mode, prompt.mode);
+  assert.deepEqual(Object.values(output).find((n) => n.class_type === "SheetSage2AudioToABC").inputs.mode, ["mode", 0]);
+});
+
+test("uses a connected loaded encoder directly, including nested execution IDs", () => {
+  const prompt = fixture();
+  prompt["models:encoder"] = { class_type: "CustomEncoderLoader", inputs: { filename: ["file", 0] } };
+  prompt["33"].inputs.transcription_model = ["models:encoder", 0];
+  const snapshot = structuredClone(prompt);
+  const { output } = buildTranscriptionPrompt(prompt, "33", { CustomEncoderLoader: { output: ["AUDIO_ENCODER"] } });
+  assert.deepEqual(output["models:encoder"], prompt["models:encoder"]);
+  assert.deepEqual(output.file, prompt.file);
+  assert.ok(!Object.values(output).some((n) => n.class_type === "AudioEncoderLoader"));
+  const score = Object.values(output).find((n) => n.class_type === "SheetSage2AudioToABC");
+  assert.deepEqual(score.inputs.audio_encoder, ["models:encoder", 0]);
+  assert.deepEqual(prompt, snapshot);
+});
+
+test("rejects incompatible model types before queueing", () => {
+  const prompt = fixture();
+  assert.throws(() => buildTranscriptionPrompt(prompt, "33", {
+    "bno84.OptionalAudioEncoderFile": { output: ["MODEL"] },
+  }), /audio encoder file or a loaded AUDIO_ENCODER/);
+});
+
+test("native progress also targets nested reference execution IDs", () => {
+  const prompt = fixture();
+  prompt["group:33"] = prompt["33"];
+  delete prompt["33"];
+  const { output, sinkId } = buildTranscriptionPrompt(prompt, "group:33");
+  assert.equal(output["group:33"].class_type, "SheetSage2AudioToABC");
+  assert.deepEqual(output[sinkId].inputs.source, ["group:33", 0]);
+});
+
+test("reports missing settings, missing ancestors, and cycles", () => {
+  const prompt = fixture();
+  delete prompt["33"].inputs.transcription_model;
+  assert.throws(() => buildTranscriptionPrompt(prompt, "33"), /Connect an optional/);
+  prompt["33"].inputs.transcription_model = ["missing", 0];
+  assert.throws(() => buildTranscriptionPrompt(prompt, "33"), /Missing transcription input/);
+  prompt["33"].inputs.transcription_model = ["file", 0];
+  prompt.file.inputs.name = ["33", 0];
+  assert.throws(() => buildTranscriptionPrompt(prompt, "33"), /cycle/);
 });
 
 test("nested reference execution IDs follow the actual node instance", () => {

@@ -178,6 +178,9 @@ with patch.object(folder_paths, "get_filename_list", side_effect=filenames), \
     assert reference.validate_inputs("None", "stale ABC", "missing.wav") is True
     assert reference.fingerprint_inputs("None", "missing.wav") is None
     assert reference.fingerprint_inputs("ABC", "missing.wav") is None
+    model_input = next(item for item in reference.define_schema().inputs if item.id == "transcription_model")
+    assert model_input.optional and model_input.lazy
+    assert reference.check_lazy_status(source="ABC", transcription_model=None) == []
     assert reference.execute("None", "stale ABC", "missing.wav", True).result == ("", None, False, False, False)
     assert reference.execute("ABC", pasted, "missing.wav", True).result == (pasted, None, True, False, True)
     assert "empty" in reference.validate_inputs("ABC", " \n", "missing.wav")

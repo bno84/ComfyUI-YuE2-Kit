@@ -22,7 +22,7 @@ function styles() {
   const style = document.createElement("style");
   style.id = "yue2-reference-style";
   style.textContent = `
-.yue2-reference {box-sizing:border-box;display:flex;flex-direction:column;gap:10px;width:100%;height:100%;min-height:0;color:var(--input-text,#ddd);font:13px sans-serif;padding:5px;}
+.yue2-reference {box-sizing:border-box;display:flex;flex-direction:column;gap:10px;width:100%;height:100%;min-height:0;overflow:auto;min-width:0;color:var(--input-text,#ddd);font:13px sans-serif;padding:5px;}
 .yue2-reference [hidden] {display:none!important;}
 .yue2-reference .ref-tabs {display:flex;flex:none;border:1px solid var(--border-color,#555);border-radius:6px;overflow:hidden;}
 .yue2-reference button,.yue2-reference select {font:inherit;color:inherit;background:var(--comfy-input-bg,#252525);border:1px solid var(--border-color,#555);border-radius:4px;padding:6px;}
@@ -35,7 +35,7 @@ function styles() {
 .yue2-reference select {min-width:0;flex:1;}
 .yue2-reference audio {display:block;flex:none;width:100%;height:44px;min-height:44px;}
 .yue2-reference .ref-extend {flex:none;display:flex;gap:6px;align-items:center;}
-.yue2-reference .ref-status {flex:none;font-size:12px;opacity:.8;overflow-wrap:anywhere;}
+.yue2-reference .ref-status {flex:none;max-height:4.5em;overflow:auto;font-size:12px;opacity:.8;overflow-wrap:anywhere;}
 .yue2-reference .ref-status:empty {display:none;}
 .yue2-reference .ref-status[data-error=true] {color:#ff9d9d;}
 .yue2-reference.ref-drag {outline:2px solid #76a5eb;outline-offset:-2px;}
@@ -62,6 +62,7 @@ class ReferencePanel {
       <div class="ref-body ref-audio" role="tabpanel" aria-label="Audio reference">
         <div class="ref-row"><select class="ref-files" aria-label="Reference audio file"></select><button type="button" class="ref-upload">Upload audio…</button></div>
         <audio controls aria-label="Reference audio preview"></audio>
+        <label class="ref-row">Score mode <select class="ref-mode" aria-label="Transcription mode"><option value="full">Full (melody + chords)</option><option value="melody">Melody</option></select></label>
         <div class="ref-row"><button type="button" class="ref-transcribe">Transcribe now</button><button type="button" class="ref-cancel" hidden>Cancel</button></div>
       </div>
       <label class="ref-extend"><input type="checkbox"> Extend reference</label>
@@ -69,6 +70,8 @@ class ReferencePanel {
     this.abc = this.root.querySelector("textarea");
     this.audio = this.root.querySelector("audio");
     this.files = this.root.querySelector(".ref-files");
+    this.mode = this.root.querySelector(".ref-mode");
+    this.mode.onchange = () => this.set("transcription_mode", this.mode.value);
     this.extend = this.root.querySelector(".ref-extend input");
     this.status = this.root.querySelector(".ref-status");
     this.transcribeButton = this.root.querySelector(".ref-transcribe");
@@ -184,6 +187,7 @@ class ReferencePanel {
     const values = typeof widget.options?.values === "function" ? widget.options.values() : Array.from(widget.options?.values ?? []);
     this.files.replaceChildren(...[...new Set(["", ...values, selected])].map((value) => new Option(value || "Choose audio…", value)));
     this.files.value = selected;
+    this.mode.value = this.get("transcription_mode") ?? "full";
     const url = source === "Transcribe" && selected ? api.apiURL(audioViewPath(selected)) : "";
     if (this.audio.getAttribute("src") !== url) {
       this.audio.pause();
@@ -199,6 +203,7 @@ class ReferencePanel {
     this.cancelButton.hidden = !this.transcribing;
     this.cancelButton.disabled = !this.transcriptionJob;
     this.files.disabled = !!this.transcribing;
+    this.mode.disabled = !!this.transcribing;
     this.root.querySelector(".ref-upload").disabled = !!this.transcribing;
     this.root.querySelector(".ref-open-abc").disabled = !!this.transcribing;
   }
@@ -207,13 +212,18 @@ class ReferencePanel {
     this.transcribing = true; this.updateActionState();
     const previousABC = this.get("abc"), previousAudio = this.get("audio");
     try {
-      this.message("Preparing transcription…");
+      this.message();
       const root = this.node.graph?.rootGraph ?? this.node.graph;
       const id = referenceExecutionId(root, this.node);
       const compiled = await app.graphToPrompt(root);
       if (this.destroyed) return;
-      const prompt = buildTranscriptionPrompt(compiled.output, id);
-      this.transcriptionJob = queueTranscription(api, prompt, (status) => { if (!this.destroyed) this.message(status); });
+      const definitions = await api.fetchApi("/object_info");
+      if (!definitions.ok) throw new Error(`Cannot read transcription node types (${definitions.status}).`);
+      const nodeDefs = await definitions.json();
+      if (this.destroyed) return;
+      const prompt = buildTranscriptionPrompt(compiled.output, id, nodeDefs);
+      prompt.workflow = compiled.workflow;
+      this.transcriptionJob = queueTranscription(api, prompt);
       this.updateActionState();
       const abc = await this.transcriptionJob.promise;
       if (this.destroyed) return;

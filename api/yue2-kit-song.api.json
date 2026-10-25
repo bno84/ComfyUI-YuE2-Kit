@@ -378,7 +378,12 @@
       "abc": "",
       "audio": "",
       "extend": false,
-      "source": "None"
+      "source": "None",
+      "transcription_model": [
+        "34:52",
+        0
+      ],
+      "transcription_mode": "full"
     }
   },
   "34:15": {

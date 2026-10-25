@@ -2,7 +2,7 @@
   "id": "75140c3e-0999-5e9e-8139-ff1a6450053b",
   "revision": 1,
   "last_node_id": 58,
-  "last_link_id": 30,
+  "last_link_id": 31,
   "nodes": [
     {
       "id": 32,
@@ -173,6 +173,19 @@
           "widget": {
             "name": "extend"
           }
+        },
+        {
+          "name": "transcription_mode",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "transcription_mode"
+          }
+        },
+        {
+          "name": "transcription_model",
+          "type": "*",
+          "link": 31
         }
       ],
       "outputs": [
@@ -221,13 +234,15 @@
         "None",
         "",
         "",
-        false
+        false,
+        "full"
       ],
       "widgets_values_named": {
         "source": "None",
         "abc": "",
         "audio": "",
-        "extend": false
+        "extend": false,
+        "transcription_mode": "full"
       }
     },
     {
@@ -308,6 +323,13 @@
           "type": "AUDIO_ENCODER",
           "links": [
             22
+          ]
+        },
+        {
+          "name": "SheetSage2 file",
+          "type": "*",
+          "links": [
+            31
           ]
         }
       ],
@@ -1428,6 +1450,14 @@
       31,
       8,
       "FLOAT"
+    ],
+    [
+      31,
+      34,
+      4,
+      33,
+      5,
+      "*"
     ]
   ],
   "groups": [],
@@ -1439,7 +1469,7 @@
         "state": {
           "lastGroupId": 0,
           "lastNodeId": 53,
-          "lastLinkId": 16,
+          "lastLinkId": 17,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -1564,6 +1594,18 @@
             "pos": [
               2144,
               164
+            ]
+          },
+          {
+            "id": "a4871a46-db05-5a90-9dad-8ccca25fec55",
+            "name": "SheetSage2 file",
+            "type": "*",
+            "linkIds": [
+              17
+            ],
+            "pos": [
+              2144,
+              184
             ]
           }
         ],
@@ -1712,7 +1754,8 @@
                 "name": "file",
                 "type": "*",
                 "links": [
-                  15
+                  15,
+                  17
                 ]
               }
             ],
@@ -2086,6 +2129,14 @@
             "origin_slot": 0,
             "target_id": 44,
             "target_slot": 2,
+            "type": "*"
+          },
+          {
+            "id": 17,
+            "origin_id": 52,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 4,
             "type": "*"
           }
         ],

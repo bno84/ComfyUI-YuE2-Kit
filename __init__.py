@@ -186,6 +186,10 @@ class ReferenceInput(io.ComfyNode):
                 io.String.Input("abc", multiline=True, default="", dynamic_prompts=False),
                 io.Combo.Input("audio", options=["", *files], default=""),
                 io.Boolean.Input("extend", default=False),
+                io.Combo.Input("transcription_mode", options=["full", "melody"], default="full",
+                               tooltip="Match YuE2 score mode: full includes chords; melody transcribes melody only."),
+                io.AnyType.Input("transcription_model", optional=True, lazy=True,
+                                 tooltip="Connect Audio encoder file (optional) or a loaded AUDIO_ENCODER. Used only by Transcribe now."),
             ],
             outputs=[
                 io.String.Output("abc", display_name="ABC"),
@@ -211,7 +215,12 @@ class ReferenceInput(io.ComfyNode):
         return LoadAudio.fingerprint_inputs(audio=audio) if source == "Transcribe" else None
 
     @classmethod
-    def execute(cls, source, abc, audio, extend):
+    def check_lazy_status(cls, **kwargs):
+        # The button queues its own job; ordinary execution never needs the model file.
+        return []
+
+    @classmethod
+    def execute(cls, source, abc, audio, extend, transcription_mode="full", transcription_model=None):
         valid = cls.validate_inputs(source, abc, audio)
         if valid is not True:
             raise ValueError(valid)
