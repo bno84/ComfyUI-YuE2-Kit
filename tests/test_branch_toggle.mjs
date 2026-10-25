@@ -31,7 +31,10 @@ function fixture() {
     for (const node of graph._nodes) {
       node.graph = graph;
       node.comfyClass = node.type;
-      if (definitions.has(node.type)) node.subgraph = graphFrom(definitions.get(node.type), graph.rootGraph);
+      if (definitions.has(node.type)) {
+        node.subgraph = graphFrom(definitions.get(node.type), graph.rootGraph);
+        node.widgets = Object.entries(node.widgets_values_named ?? {}).map(([name, value]) => ({ name, value }));
+      }
       else if (node.type === "CustomCombo") {
         node.widgets = Object.entries(node.widgets_values_named).map(([name, value]) => ({ name, value }));
       } else if (node.type === "ComfyMathExpression") node.widgets = [{ name: "expression", value: node.widgets_values[0] }];
@@ -120,4 +123,39 @@ test("compilation waits for reference file loading to finish", () => {
   assert.throws(() => app.graphToPrompt(), /wait for the file to finish loading/);
   host.isUploading = false;
   assert.deepEqual(app.graphToPrompt(), [4, 4]);
+});
+
+for (const enabled of [false, true]) {
+  test(`instrumental=${enabled}: compilation repairs LoRA bypass from the promoted control`, () => {
+    const { root, app } = fixture();
+    const song = root.getNodeById(32);
+    const models = root.getNodeById(34);
+    const lora = models.subgraph.getNodeById(47);
+    song.widgets.find((widget) => widget.name === "instrumental").value = enabled;
+    lora.mode = 2;
+    app.graphToPrompt();
+    assert.equal(lora.mode, enabled ? 0 : 4);
+  });
+}
+
+test("instrumental promoted control updates LoRA bypass live and preserves lyrics", () => {
+  const { root, extension } = fixture();
+  const song = root.getNodeById(32);
+  const lora = root.getNodeById(34).subgraph.getNodeById(47);
+  const lyrics = song.widgets.find((widget) => widget.name === "lyrics").value;
+  extension.nodeCreated(song);
+  song.onGraphConfigured();
+  const toggle = song.widgets.find((widget) => widget.name === "instrumental");
+  for (const enabled of [true, false]) {
+    toggle.value = enabled;
+    toggle.callback();
+    assert.equal(lora.mode, enabled ? 0 : 4);
+    assert.equal(song.widgets.find((widget) => widget.name === "lyrics").value, lyrics);
+  }
+});
+
+test("disconnecting the instrumental flag blocks compilation", () => {
+  const { root, app } = fixture();
+  root.getNodeById(32).outputs[2].links = [];
+  assert.throws(() => app.graphToPrompt(), /Instrumental LoRA: no connected Boolean/);
 });

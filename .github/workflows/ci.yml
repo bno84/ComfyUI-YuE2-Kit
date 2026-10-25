@@ -80,7 +80,7 @@ jobs:
           --route /extensions/ComfyUI-YuE2-Kit/reference_transcribe.js
           --workflow pack/example_workflows/yue2-kit-song.json
 
-      - name: Five reference routes (CPU, mocked model calls)
+      - name: Vocal and instrumental reference routes (CPU, mocked model calls)
         run: python pack/.github/scripts/reference_routes_check.py comfyui pack
 
   publish:

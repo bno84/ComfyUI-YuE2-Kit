@@ -42,6 +42,25 @@ It also needs:
   in `models/audio_encoders/`, only for transcription. The transcription block
   is bypassed by default, so text-only songs do not need this file.
 
+**Instrumental** in Lyrics + style enables the optional
+[Mothersuperior instrumental AR LoRA](https://huggingface.co/Mothersuperior/YuE2-instrumental-cot-full-loras).
+Download `ar_lora_inst_v3abc_comfyui.safetensors` yourself, put it in
+`ComfyUI/models/loras/`, refresh the model list, and select it in **Models →
+Instrumental LoRA**. These weights are **CC BY-NC 4.0 (non-commercial)**; they
+are not bundled or downloaded automatically. A note beside Models links to
+the download. With Instrumental off (the default), the LoRA is bypassed and
+the file is not needed for validation or execution.
+
+With Instrumental on, the LoRA is applied to the YuE2 language model at
+strength 1.0 for planning, extension, and music generation. The acoustic model
+and VAE stay unchanged. Use score mode **full**. The toggle sends
+`[instrumental]` as the section plan instead of vocal lyrics, preserving your
+lyrics for when you switch it off. To supply a structure, double-click Lyrics +
+style and edit **Instrumental section plan** using lowercase section tags
+such as `[intro]`, `[verse]`, `[chorus]`, and `[outro]`, with no sung text.
+Choose the desired instruments in Style. Existing reference ABC is retained;
+the toggle does not remove vocal notes or words from a supplied score.
+
 **Reference input** combines the reference inputs and controls in one node:
 
 - **None:** the rest of the panel is blank. Plan a fresh score from lyrics/style.
@@ -77,6 +96,9 @@ API examples in `api/` cover each path: `yue2-kit-song.api.json` (None),
 `yue2-kit-audio-reference.api.json`, `yue2-kit-audio-extend.api.json`,
 `yue2-kit-abc-reference.api.json`, and `yue2-kit-abc-extend.api.json`.
 Reference values live in node `33`: `source`, `abc`, `audio`, and `extend`.
+Instrumental variants are named `yue2-kit-instrumental-*.api.json`. Their
+control is `32:41.inputs.value`; the CLIP branch must also be rewired, so use
+the matching instrumental snapshot rather than changing only that Boolean.
 These are compiled snapshots; use the corresponding file, since bypass
 rewiring happens in the UI before export.
 

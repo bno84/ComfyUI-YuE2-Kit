@@ -1,13 +1,4 @@
 {
-  "3": {
-    "_meta": {
-      "title": "Seed — shared"
-    },
-    "class_type": "PrimitiveInt",
-    "inputs": {
-      "value": 831001
-    }
-  },
   "11": {
     "_meta": {
       "title": "Final outputs · ABC + FLAC"
@@ -38,6 +29,15 @@
       "soundfont": "(none)"
     }
   },
+  "3": {
+    "_meta": {
+      "title": "Seed — shared"
+    },
+    "class_type": "PrimitiveInt",
+    "inputs": {
+      "value": 831001
+    }
+  },
   "30:29": {
     "_meta": {
       "title": "Shared score mode"
@@ -63,7 +63,7 @@
         1
       ],
       "lyrics": [
-        "32:2",
+        "32:42",
         0
       ],
       "max_abc_tokens": 8192,
@@ -171,7 +171,7 @@
         1
       ],
       "lyrics": [
-        "32:2",
+        "32:42",
         0
       ],
       "max_abc_tokens": 8192,
@@ -223,7 +223,7 @@
         1
       ],
       "lyrics": [
-        "32:2",
+        "32:42",
         0
       ],
       "max_duration": 120,
@@ -321,6 +321,56 @@
       "value": "[Verse]\nNeon fades along the lane\nFootsteps keep the time of rain\nFold the night and leave it here\nMorning has a sky to clear\n\n[Chorus]\nLet the day come into view\nEvery road begins with you\nHold a little room for light\nWe will sing beyond the night"
     }
   },
+  "32:41": {
+    "_meta": {
+      "title": "Instrumental"
+    },
+    "class_type": "PrimitiveBoolean",
+    "inputs": {
+      "value": false
+    }
+  },
+  "32:42": {
+    "_meta": {
+      "title": "Lyrics or instrumental section plan"
+    },
+    "class_type": "ComfySwitchNode",
+    "inputs": {
+      "on_false": [
+        "32:2",
+        0
+      ],
+      "on_true": [
+        "32:43",
+        0
+      ],
+      "switch": [
+        "32:41",
+        0
+      ]
+    }
+  },
+  "32:43": {
+    "_meta": {
+      "title": "Instrumental section plan"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "[instrumental]"
+    }
+  },
+  "33": {
+    "_meta": {
+      "title": "Reference input"
+    },
+    "class_type": "bno84.ReferenceInput",
+    "inputs": {
+      "abc": "",
+      "audio": "",
+      "extend": true,
+      "source": "Transcribe"
+    }
+  },
   "34:15": {
     "_meta": {
       "title": "SheetSage2 + MERT2"
@@ -337,18 +387,6 @@
     "class_type": "CheckpointLoaderSimple",
     "inputs": {
       "ckpt_name": "yue2_3b_bf16.safetensors"
-    }
-  },
-  "33": {
-    "class_type": "bno84.ReferenceInput",
-    "inputs": {
-      "source": "Transcribe",
-      "abc": "",
-      "audio": "",
-      "extend": true
-    },
-    "_meta": {
-      "title": "Reference input"
     }
   }
 }
