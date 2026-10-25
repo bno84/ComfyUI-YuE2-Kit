@@ -1104,186 +1104,22 @@
         76
       ],
       "size": [
-        500,
-        670
+        540,
+        737
       ],
       "flags": {},
       "order": 12,
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "image",
           "name": "image",
           "type": "IMAGE",
           "link": 26
         },
         {
-          "localized_name": "audio",
           "name": "audio",
           "type": "AUDIO",
           "link": 27
-        },
-        {
-          "localized_name": "enabled",
-          "name": "enabled",
-          "type": "BOOLEAN",
-          "widget": {
-            "name": "enabled"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "filename_prefix",
-          "name": "filename_prefix",
-          "type": "STRING",
-          "widget": {
-            "name": "filename_prefix"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "style",
-          "name": "style",
-          "type": "COMBO",
-          "widget": {
-            "name": "style"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "dot_spacing",
-          "name": "dot_spacing",
-          "type": "INT",
-          "widget": {
-            "name": "dot_spacing"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "color",
-          "name": "color",
-          "type": "COLOR",
-          "widget": {
-            "name": "color"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "gain",
-          "name": "gain",
-          "type": "FLOAT",
-          "widget": {
-            "name": "gain"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "glow",
-          "name": "glow",
-          "type": "FLOAT",
-          "widget": {
-            "name": "glow"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "trail",
-          "name": "trail",
-          "type": "FLOAT",
-          "widget": {
-            "name": "trail"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "fps",
-          "name": "fps",
-          "type": "COMBO",
-          "widget": {
-            "name": "fps"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "start",
-          "name": "start",
-          "type": "FLOAT",
-          "widget": {
-            "name": "start"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "duration",
-          "name": "duration",
-          "type": "FLOAT",
-          "widget": {
-            "name": "duration"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "video_codec",
-          "name": "video_codec",
-          "type": "COMBO",
-          "widget": {
-            "name": "video_codec"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "h265_crf",
-          "name": "h265_crf",
-          "type": "INT",
-          "widget": {
-            "name": "h265_crf"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "h264_crf",
-          "name": "h264_crf",
-          "type": "INT",
-          "widget": {
-            "name": "h264_crf"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "audio_codec",
-          "name": "audio_codec",
-          "type": "COMBO",
-          "widget": {
-            "name": "audio_codec"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "aac_bitrate",
-          "name": "aac_bitrate",
-          "type": "INT",
-          "widget": {
-            "name": "aac_bitrate"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "opus_bitrate",
-          "name": "opus_bitrate",
-          "type": "INT",
-          "widget": {
-            "name": "opus_bitrate"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "crf",
-          "name": "crf",
-          "type": "INT",
-          "widget": {
-            "name": "crf"
-          },
-          "link": null
         }
       ],
       "outputs": [
@@ -1302,6 +1138,7 @@
           "style",
           "dot_spacing",
           "color",
+          "band_height",
           "gain",
           "glow",
           "trail",
@@ -1317,15 +1154,16 @@
           "crf"
         ],
         "cnr_id": "comfyui-audiovisualizer",
-        "ver": "0.1.0"
+        "ver": "0.2.0"
       },
       "widgets_values": [
         false,
         "audio/yue2/song_viz",
         "bars",
-        12,
+        17,
         "#9750c4",
-        12,
+        0.35,
+        1.3,
         0,
         0,
         60,
