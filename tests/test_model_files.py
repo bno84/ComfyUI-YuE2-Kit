@@ -11,6 +11,8 @@ model_files = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(model_files)
 
 LORA = "ar_lora_inst_v3abc_comfyui.safetensors"
+CKPT = "yue2_3b_bf16.safetensors"
+CKPT_SUB = f"yue2/{CKPT}"
 
 
 class ResolveTests(unittest.TestCase):
@@ -35,15 +37,20 @@ class ResolveTests(unittest.TestCase):
 
 
 class ChoiceTests(unittest.TestCase):
-    def test_lists_known_defaults_beside_installed_files(self):
-        self.assertEqual(model_files.file_choices("loras", ["mine.safetensors"]), [LORA, "mine.safetensors"])
+    def test_optional_defaults_are_listed_even_when_absent(self):
+        self.assertEqual(model_files.file_choices("loras", ["mine.safetensors"], False), [LORA, "mine.safetensors"])
 
-    def test_keeps_the_bare_default_when_only_a_subfolder_copy_exists(self):
-        self.assertEqual(model_files.file_choices("loras", [f"loras/{LORA}"]), [LORA, f"loras/{LORA}"])
+    def test_bare_default_listed_when_only_a_subfolder_copy_exists(self):
+        for required in (False, True):
+            self.assertEqual(model_files.file_choices("loras", [f"loras/{LORA}"], required), [LORA, f"loras/{LORA}"])
+
+    def test_absent_required_default_stays_unlisted_so_comfyui_warns(self):
+        self.assertEqual(model_files.file_choices("checkpoints", ["other.safetensors"], True), ["other.safetensors"])
+        self.assertEqual(model_files.file_choices("checkpoints", [CKPT_SUB], True), [CKPT_SUB, CKPT])
 
     def test_no_duplicates_and_no_defaults_from_other_folders(self):
-        self.assertEqual(model_files.file_choices("loras", [LORA]), [LORA])
-        self.assertEqual(model_files.file_choices("vae", []), [])
+        self.assertEqual(model_files.file_choices("loras", [LORA], True), [LORA])
+        self.assertEqual(model_files.file_choices("vae", [], False), [])
 
 
 class MessageTests(unittest.TestCase):
@@ -74,7 +81,8 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(status["YuE2 3B"]["installed"], "yue2/yue2_3b_bf16.safetensors")
         self.assertIsNone(status["SheetSage2"]["installed"])
         self.assertEqual(status["Instrumental LoRA"]["installed"], f"loras/{LORA}")
-        self.assertEqual(status["Instrumental LoRA"]["license"], "CC BY-NC 4.0 (non-commercial)")
+        for label in ("YuE2 3B", "SheetSage2", "Instrumental LoRA"):
+            self.assertEqual(status[label]["license"], "CC BY-NC 4.0 (non-commercial)")
 
 
 if __name__ == "__main__":

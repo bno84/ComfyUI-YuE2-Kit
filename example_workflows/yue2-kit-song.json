@@ -1372,7 +1372,14 @@
             "properties": {
               "Node name for S&R": "bno84.CheckpointFile",
               "cnr_id": "comfyui-yue2-kit",
-              "ver": "0.4.0"
+              "ver": "0.4.0",
+              "models": [
+                {
+                  "name": "yue2_3b_bf16.safetensors",
+                  "url": "https://huggingface.co/Comfy-Org/YuE2/resolve/main/checkpoints/yue2_3b_bf16.safetensors",
+                  "directory": "checkpoints"
+                }
+              ]
             },
             "widgets_values": [
               "yue2_3b_bf16.safetensors"

@@ -37,7 +37,7 @@ def model_file_node(folder, node_id, display_name, loader, required):
                     f"subfolder is also found. The file is checked {when}."
                 ),
                 inputs=[
-                    io.Combo.Input("name", options=file_choices(folder, folder_paths.get_filename_list(folder)),
+                    io.Combo.Input("name", options=file_choices(folder, folder_paths.get_filename_list(folder), required),
                                    tooltip="Known YuE2-Kit files are listed even when not installed; Model files shows which are."),
                 ],
                 # Native legacy loaders declare their file list as the input type,

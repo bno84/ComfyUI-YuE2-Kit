@@ -48,6 +48,11 @@ It also needs:
 - Optional: [`sheetsage2_bf16.safetensors`](https://huggingface.co/Comfy-Org/YuE2/resolve/main/audio_encoders/sheetsage2_bf16.safetensors)
   in `models/audio_encoders/`, only for Transcribe.
 
+YuE2, SheetSage2 and the instrumental LoRA are all **CC BY-NC 4.0
+(non-commercial)**, per their Hugging Face model cards (`Comfy-Org/YuE2`
+repackages `m-a-p/YuE2-3B` and `m-a-p/SheetSage2`). This pack's MIT license
+covers its code only.
+
 **Instrumental** in Lyrics + style enables the optional
 [Mothersuperior instrumental AR LoRA](https://huggingface.co/Mothersuperior/YuE2-instrumental-cot-full-loras).
 Download `ar_lora_inst_v3abc_comfyui.safetensors` yourself and put it in
@@ -118,15 +123,16 @@ matches the template's `ar_lora_inst_v3abc_comfyui.safetensors`. With the
 default files installed, nothing needs selecting. Choose another file only to
 use a different version, such as another quantization or LoRA release.
 
-YuE2 is required: a missing checkpoint stops queueing with download details.
-SheetSage2 and the LoRA are optional: without them, the workflow still runs
-every path that does not use them. Turning Instrumental on or choosing
-Transcribe without the file stops at that step with download details. The
-pack's default files stay listed in the dropdowns even when not installed.
-Otherwise ComfyUI would report them as missing required models on load.
+YuE2 is required. Without it, ComfyUI reports a missing model on load and
+offers the download; queueing stops with download details. SheetSage2 and
+the LoRA are optional: without them, the workflow still runs every path that
+does not use them. Turning Instrumental on or choosing Transcribe without the
+file stops at that step with download details. Their default files stay
+listed in the dropdowns even when not installed, so ComfyUI does not report
+them as missing required models.
 
 **Model files**, beside Models, lists each known model as installed (with the
-path found) or missing (with source, license, file name, and folder). Use
+path found) or missing (with source, file name, and folder), with its license. Use
 **Check again** after downloading. ComfyUI finds new files without a restart.
 
 Workflows saved from the 0.3.0 template or earlier load with their bypassed

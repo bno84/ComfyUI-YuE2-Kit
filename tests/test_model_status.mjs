@@ -16,9 +16,10 @@ const lora = {
   license: "CC BY-NC 4.0 (non-commercial)", installed: null,
 };
 
-test("an installed model shows the path it was found at", () => {
+test("an installed model shows the path it was found at and its license", () => {
   assert.deepEqual(describeModel({ ...lora, installed: "loras/ar_lora_inst_v3abc_comfyui.safetensors" }), {
-    label: "Instrumental LoRA", use: lora.use, installed: true, file: "loras/ar_lora_inst_v3abc_comfyui.safetensors",
+    label: "Instrumental LoRA", use: lora.use, license: lora.license,
+    installed: true, file: "loras/ar_lora_inst_v3abc_comfyui.safetensors",
   });
 });
 

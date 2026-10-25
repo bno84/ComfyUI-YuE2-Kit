@@ -18,23 +18,28 @@ class KnownModel:
     license: str = ""
 
 
+# Checked on the Hugging Face model cards: Comfy-Org/YuE2 and its sources
+# m-a-p/YuE2-3B and m-a-p/SheetSage2, and the instrumental LoRA.
+NON_COMMERCIAL = "CC BY-NC 4.0 (non-commercial)"
+
 KNOWN_MODELS = (
     KnownModel(
         "YuE2 3B", "checkpoints", "yue2_3b_bf16.safetensors",
         "https://huggingface.co/Comfy-Org/YuE2/resolve/main/checkpoints/yue2_3b_bf16.safetensors",
-        "Comfy-Org/YuE2", "Needed for every song.",
+        "Comfy-Org/YuE2", "Needed for every song.", NON_COMMERCIAL,
     ),
     KnownModel(
         "SheetSage2", "audio_encoders", "sheetsage2_bf16.safetensors",
         "https://huggingface.co/Comfy-Org/YuE2/resolve/main/audio_encoders/sheetsage2_bf16.safetensors",
         "Comfy-Org/YuE2", "Needed for Transcribe only. Choose None or ABC in Reference input to continue without it.",
+        NON_COMMERCIAL,
     ),
     KnownModel(
         "Instrumental LoRA", "loras", "ar_lora_inst_v3abc_comfyui.safetensors",
         "https://huggingface.co/Mothersuperior/YuE2-instrumental-cot-full-loras",
         "Mothersuperior/YuE2-instrumental-cot-full-loras",
         "Needed only when Instrumental is on. Turn it off to continue without it.",
-        "CC BY-NC 4.0 (non-commercial)",
+        NON_COMMERCIAL,
     ),
 )
 
@@ -57,15 +62,20 @@ def resolve(name, available):
     return next((entry for entry in available if filename(entry) == wanted), None)
 
 
-def file_choices(folder, available):
-    """Installed files plus this folder's known default files.
+def file_choices(folder, available, required):
+    """Installed files plus the known default files ComfyUI should accept.
 
-    Listing a known default even when it is absent, or only present in a
-    subfolder, keeps the template's choice valid in the dropdown. ComfyUI's
-    frontend would otherwise report every such value as a missing required
-    model on load, although it is optional or resolves by name when used.
+    ComfyUI's frontend reports any model value that is not an exact dropdown
+    entry as a missing required model on load. So a default found only in a
+    subfolder is listed under its bare name, since it resolves when used. An
+    optional default is listed even when absent: not having it is fine. A
+    required default that is truly absent stays unlisted, so ComfyUI warns
+    about it on load and can offer the template's download link.
     """
-    defaults = [model.filename for model in KNOWN_MODELS if model.folder == folder]
+    defaults = [
+        model.filename for model in KNOWN_MODELS
+        if model.folder == folder and (not required or resolve(model.filename, available))
+    ]
     return sorted({*available, *defaults})
 
 

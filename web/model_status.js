@@ -7,11 +7,11 @@ const NODE = "bno84.ModelStatus";
 
 // Plain data, so the wording can be tested without a DOM.
 export function describeModel(model) {
-  const base = { label: model.label, use: model.use };
+  const base = { label: model.label, use: model.use, license: model.license };
   if (model.installed) return { ...base, installed: true, file: model.installed };
   return {
     ...base, installed: false, file: model.filename, folder: `ComfyUI/models/${model.folder}/`,
-    link: { href: model.url, text: model.link_text }, license: model.license,
+    link: { href: model.url, text: model.link_text },
   };
 }
 
@@ -47,6 +47,7 @@ function item(model) {
   li.append(element("strong", `${info.label}: `));
   if (info.installed) {
     li.append(element("span", "✓ installed as ", "state-ok"), element("code", info.file));
+    if (info.license) li.append(element("br"), element("em", info.license));
   } else {
     li.append(element("span", "✗ not installed", "state-missing"), element("br"));
     const link = element("a", info.link.text);
