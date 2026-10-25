@@ -14,6 +14,7 @@ from server import PromptServer
 
 from .model_files import file_choices, missing_message, resolve, workflow_models
 from .planning import extend_abc
+from .optional_lora import load_optional_lora
 
 WEB_DIRECTORY = "./web"
 
@@ -82,6 +83,35 @@ OptionalAudioEncoderFile = model_file_node(
     "audio_encoders", "bno84.OptionalAudioEncoderFile", "Audio encoder file (optional)", "Audio Encoder Loader", required=False)
 OptionalLoraFile = model_file_node(
     "loras", "bno84.OptionalLoraFile", "LoRA file (optional)", "Load LoRA", required=False)
+
+
+class OptionalModelLora(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(
+            node_id="bno84.OptionalModelLora",
+            display_name="Load LoRA (Model Only, Optional)",
+            category="audio/YuE2",
+            description="Apply a ComfyUI-format LoRA to the acoustic model. (none) or strength zero passes the model through unchanged.",
+            inputs=[
+                io.Model.Input("model"),
+                io.Combo.Input("lora_name", options=["(none)", *folder_paths.get_filename_list("loras")]),
+                io.Float.Input("strength_model", default=1.0, min=-100.0, max=100.0, step=0.01),
+            ],
+            outputs=[io.Model.Output()],
+        )
+
+    @classmethod
+    def validate_inputs(cls, lora_name, strength_model):
+        if lora_name == "(none)" or strength_model == 0:
+            return True
+        if resolve(lora_name, folder_paths.get_filename_list("loras")):
+            return True
+        return missing_message("loras", lora_name, TEMPLATE_MODELS)
+
+    @classmethod
+    def execute(cls, model, lora_name, strength_model):
+        return io.NodeOutput(load_optional_lora(model, lora_name, strength_model))
 
 
 class ModelStatus(io.ComfyNode):
@@ -292,7 +322,7 @@ class YuE2KitExtension(ComfyExtension):
     async def get_node_list(self):
         return [
             SaveYuE2Bundle, OptionalLoadAudio, ReferenceInput, YuE2ExtendABC, LyricsStyle,
-            CheckpointFile, OptionalAudioEncoderFile, OptionalLoraFile, ModelStatus,
+            CheckpointFile, OptionalAudioEncoderFile, OptionalLoraFile, OptionalModelLora, ModelStatus,
         ]
 
 

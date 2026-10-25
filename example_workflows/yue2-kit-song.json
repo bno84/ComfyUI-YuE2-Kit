@@ -1,8 +1,8 @@
 {
   "id": "75140c3e-0999-5e9e-8139-ff1a6450053b",
   "revision": 1,
-  "last_node_id": 58,
-  "last_link_id": 31,
+  "last_node_id": 59,
+  "last_link_id": 32,
   "nodes": [
     {
       "id": 32,
@@ -607,7 +607,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 16,
+          "link": 32,
           "label": "YuE2 acoustic model"
         },
         {
@@ -1240,6 +1240,47 @@
         "ver": "0.2.0"
       },
       "widgets_values": []
+    },
+    {
+      "id": 59,
+      "type": "bno84.OptionalModelLora",
+      "pos": [
+        2220,
+        1260
+      ],
+      "size": [
+        440,
+        130
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 16
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            32
+          ]
+        }
+      ],
+      "title": "NAR LoRA · optional",
+      "properties": {
+        "Node name for S&R": "bno84.OptionalModelLora",
+        "cnr_id": "comfyui-yue2-kit",
+        "ver": "0.2.1"
+      },
+      "widgets_values": [
+        "(none)",
+        1.0
+      ]
     }
   ],
   "links": [
@@ -1343,8 +1384,8 @@
       16,
       34,
       0,
-      31,
-      4,
+      59,
+      0,
       "MODEL"
     ],
     [
@@ -1458,6 +1499,14 @@
       33,
       5,
       "*"
+    ],
+    [
+      32,
+      59,
+      0,
+      31,
+      4,
+      "MODEL"
     ]
   ],
   "groups": [],

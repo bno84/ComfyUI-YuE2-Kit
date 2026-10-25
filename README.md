@@ -64,6 +64,21 @@ Download `ar_lora_inst_v3abc_comfyui.safetensors` yourself and put it in
 Instrumental off (the default), the LoRA is never loaded and the file is not
 needed.
 
+The **NAR LoRA** node below Acoustic optionally patches only the acoustic MODEL
+path, with the usual `strength_model` multiplier (default 1.0). Select `(none)`
+(the default) or set strength to zero to use the original model without loading
+any LoRA file. This leaves the language model and VAE unchanged. Files come from
+ComfyUI's `loras` folders; the node delegates loading to ComfyUI's native
+model-only loader.
+
+Use a **ComfyUI-format** acoustic adapter. For Mothersuperior's joint v9 NAR
+adapter, use `nar_lora_joint_v9_comfyui.safetensors`, not
+`nar_lora_joint_v9.safetensors`: the original has separate NAR projections and
+full replacement weights; ComfyUI needs fused projections and base-relative
+deltas. The joint tokenizer head encodes real audio and is not used by this
+lyrics/ABC-to-song workflow. The adapter was trained with that head; its effect
+on generated tokens needs a listening comparison.
+
 With Instrumental on, the LoRA is applied to the YuE2 language model at
 strength 1.0 for planning, extension, and music generation. The acoustic model
 and VAE stay unchanged. Use score mode **full**. The **Lyrics + style** custom

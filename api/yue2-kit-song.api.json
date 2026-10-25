@@ -338,7 +338,7 @@
         0
       ],
       "model": [
-        "34:4",
+        "59",
         0
       ],
       "negative": [
@@ -533,6 +533,20 @@
         "30:36:20",
         0
       ]
+    }
+  },
+  "59": {
+    "class_type": "bno84.OptionalModelLora",
+    "inputs": {
+      "model": [
+        "34:4",
+        0
+      ],
+      "lora_name": "(none)",
+      "strength_model": 1.0
+    },
+    "_meta": {
+      "title": "NAR LoRA · optional"
     }
   }
 }
