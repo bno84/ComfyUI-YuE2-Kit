@@ -20,7 +20,7 @@ WEB_DIRECTORY = "./web"
 
 # The template's file nodes describe the default model files; nothing else does.
 TEMPLATE_MODELS = workflow_models(json.loads(
-    (Path(__file__).parent / "example_workflows" / "yue2-kit-song.json").read_text(encoding="utf-8")))
+    (Path(__file__).parent / "example_workflows" / "YuE2 Kit - Song workflow.json").read_text(encoding="utf-8")))
 FILE_FOLDERS = {}
 
 

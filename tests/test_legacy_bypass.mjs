@@ -36,7 +36,7 @@ test("the 0.3.0 template's bypassed branches load enabled and unmarked", () => {
 });
 
 test("the current template has nothing to migrate", () => {
-  for (const data of nodesOf("../example_workflows/yue2-kit-song.json")) {
+  for (const data of nodesOf("../example_workflows/YuE2 Kit - Song workflow.json")) {
     const node = structuredClone(data);
     assert.equal(migrateLegacyBranch(node), false, node.title);
     assert.equal(node.mode, 0, node.title);

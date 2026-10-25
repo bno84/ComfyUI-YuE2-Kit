@@ -88,7 +88,7 @@ jobs:
           --route /extensions/ComfyUI-YuE2-Kit/model_status.js
           --route /extensions/ComfyUI-YuE2-Kit/reference_input.js
           --route /extensions/ComfyUI-YuE2-Kit/reference_transcribe.js
-          --workflow pack/example_workflows/yue2-kit-song.json
+          --workflow "pack/example_workflows/YuE2 Kit - Song workflow.json"
 
       - name: Reference routes in three model layouts (CPU, mocked model calls)
         run: python pack/.github/scripts/reference_routes_check.py comfyui pack

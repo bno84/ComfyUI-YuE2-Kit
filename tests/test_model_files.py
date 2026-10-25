@@ -57,7 +57,7 @@ class WorkflowTests(unittest.TestCase):
         ])
 
     def test_bundled_template_describes_its_three_files(self):
-        template = Path(__file__).resolve().parents[1] / "example_workflows" / "yue2-kit-song.json"
+        template = Path(__file__).resolve().parents[1] / "example_workflows" / "YuE2 Kit - Song workflow.json"
         models = model_files.workflow_models(json.loads(template.read_text(encoding="utf-8")))
         self.assertEqual({m["label"] for m in models}, {"YuE2 3B", "SheetSage2", "Instrumental LoRA"})
 
