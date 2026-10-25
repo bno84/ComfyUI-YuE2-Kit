@@ -131,9 +131,13 @@ file stops at that step with download details. Their default files stay
 listed in the dropdowns even when not installed, so ComfyUI does not report
 them as missing required models.
 
-**Model files**, beside Models, lists each known model as installed (with the
-path found) or missing (with source, file name, and folder), with its license. Use
-**Check again** after downloading. ComfyUI finds new files without a restart.
+**Model files**, beside Models, lists the file each choice in Models selects
+and where it was found. For the template's default files it adds the source,
+license, and folder when missing. For any other file it only says whether it
+was found and where it looked. The details live in the template's file
+nodes: ComfyUI's standard `models` entry and a `bno84.model` property. They
+travel with the Models block when it is copied into another workflow. Use
+**Check again** after downloading; ComfyUI finds new files without a restart.
 
 Workflows saved from the 0.3.0 template or earlier load with their bypassed
 branches re-enabled, so Reference input and Instrumental keep routing

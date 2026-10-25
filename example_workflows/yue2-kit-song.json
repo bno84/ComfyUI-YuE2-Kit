@@ -1379,7 +1379,12 @@
                   "url": "https://huggingface.co/Comfy-Org/YuE2/resolve/main/checkpoints/yue2_3b_bf16.safetensors",
                   "directory": "checkpoints"
                 }
-              ]
+              ],
+              "bno84.model": {
+                "label": "YuE2 3B",
+                "use": "Needed for every song.",
+                "license": "CC BY-NC 4.0 (non-commercial)"
+              }
             },
             "widgets_values": [
               "yue2_3b_bf16.safetensors"
@@ -1481,7 +1486,19 @@
             "properties": {
               "Node name for S&R": "bno84.OptionalAudioEncoderFile",
               "cnr_id": "comfyui-yue2-kit",
-              "ver": "0.4.0"
+              "ver": "0.4.0",
+              "models": [
+                {
+                  "name": "sheetsage2_bf16.safetensors",
+                  "url": "https://huggingface.co/Comfy-Org/YuE2/resolve/main/audio_encoders/sheetsage2_bf16.safetensors",
+                  "directory": "audio_encoders"
+                }
+              ],
+              "bno84.model": {
+                "label": "SheetSage2",
+                "use": "Needed for Transcribe only. Choose None or ABC in Reference input to continue without it.",
+                "license": "CC BY-NC 4.0 (non-commercial)"
+              }
             },
             "widgets_values": [
               "sheetsage2_bf16.safetensors"
@@ -1567,7 +1584,19 @@
             "properties": {
               "Node name for S&R": "bno84.OptionalLoraFile",
               "cnr_id": "comfyui-yue2-kit",
-              "ver": "0.4.0"
+              "ver": "0.4.0",
+              "models": [
+                {
+                  "name": "ar_lora_inst_v3abc_comfyui.safetensors",
+                  "url": "https://huggingface.co/Mothersuperior/YuE2-instrumental-cot-full-loras/resolve/main/ar_lora_inst_v3abc_comfyui.safetensors",
+                  "directory": "loras"
+                }
+              ],
+              "bno84.model": {
+                "label": "Instrumental LoRA",
+                "use": "Needed only when Instrumental is on. Turn it off to continue without it.",
+                "license": "CC BY-NC 4.0 (non-commercial)"
+              }
             },
             "widgets_values": [
               "ar_lora_inst_v3abc_comfyui.safetensors"

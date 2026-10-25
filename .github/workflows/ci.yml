@@ -80,7 +80,6 @@ jobs:
           --route /extensions/ComfyUI-YuE2-Kit/legacy_bypass.js
           --route /extensions/ComfyUI-YuE2-Kit/lyrics_style.js
           --route /extensions/ComfyUI-YuE2-Kit/model_status.js
-          --route /yue2-kit/models
           --route /extensions/ComfyUI-YuE2-Kit/reference_input.js
           --route /extensions/ComfyUI-YuE2-Kit/reference_transcribe.js
           --workflow pack/example_workflows/yue2-kit-song.json

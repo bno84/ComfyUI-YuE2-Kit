@@ -1,18 +1,57 @@
-// List the pack's known model files, styled like a workflow note: installed
-// files by their found path, missing ones with where to get and save them.
+// List the files the workflow's file nodes select, styled like a workflow
+// note. A node's own metadata (ComfyUI's "models" entry plus bno84.model)
+// describes its default file; other selections get only name and folder.
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
 const NODE = "bno84.ModelStatus";
+const DETAILS = "bno84.model";
 
-// Plain data, so the wording can be tested without a DOM.
-export function describeModel(model) {
-  const base = { label: model.label, use: model.use, license: model.license };
-  if (model.installed) return { ...base, installed: true, file: model.installed };
+const baseName = (name) => String(name).split(/[\\/]/).pop();
+
+// A Hugging Face file URL links to its model page, named after the repository.
+export function sourcePage(url) {
+  const parsed = new URL(url);
+  const [owner, repo] = parsed.pathname.split("/").filter(Boolean);
+  if (parsed.hostname === "huggingface.co" && owner && repo) {
+    return { href: `https://huggingface.co/${owner}/${repo}`, text: `${owner}/${repo}` };
+  }
+  return { href: url, text: parsed.hostname };
+}
+
+// Plain data, so the wording can be tested without a DOM. entry: the file
+// node's title, properties and selected name, plus the server's lookup.
+export function describeModel({ title, properties, selected, folder, installed }) {
+  const details = properties?.[DETAILS] ?? {};
+  const model = properties?.models?.[0];
+  const base = { label: details.label ?? title, use: details.use ?? "" };
+  if (!model || baseName(selected) !== model.name) {
+    // Not the described default: do not attach its source or license.
+    return { ...base, installed: !!installed, file: installed ?? selected, folder: `ComfyUI/models/${folder}/` };
+  }
+  if (installed) return { ...base, installed: true, file: installed, license: details.license };
   return {
-    ...base, installed: false, file: model.filename, folder: `ComfyUI/models/${model.folder}/`,
-    link: { href: model.url, text: model.link_text },
+    ...base, installed: false, file: model.name, folder: `ComfyUI/models/${model.directory}/`,
+    link: sourcePage(model.url), license: details.license, described: true,
   };
+}
+
+// File nodes in compiled prompt order, with execution IDs such as "34:53".
+export function selectedFiles(root, output) {
+  const found = [];
+  (function visit(graph, prefix, seen) {
+    if (!graph || seen.has(graph)) return;
+    const next = new Set(seen).add(graph);
+    for (const node of graph._nodes ?? []) {
+      const id = prefix + node.id;
+      const compiled = output[id];
+      if (compiled?.class_type?.startsWith("bno84.") && typeof compiled.inputs?.name === "string") {
+        found.push({ id, type: compiled.class_type, title: node.title, properties: node.properties, selected: compiled.inputs.name });
+      }
+      if (node.subgraph) visit(node.subgraph, id + ":", next);
+    }
+  })(root, "", new Set());
+  return found;
 }
 
 function styles() {
@@ -41,13 +80,16 @@ function element(tag, text, className) {
   return node;
 }
 
-function item(model) {
-  const info = describeModel(model);
+function item(entry) {
+  const info = describeModel(entry);
   const li = element("li");
   li.append(element("strong", `${info.label}: `));
   if (info.installed) {
     li.append(element("span", "✓ installed as ", "state-ok"), element("code", info.file));
     if (info.license) li.append(element("br"), element("em", info.license));
+  } else if (!info.described) {
+    li.append(element("span", "✗ not found", "state-missing"), element("br"), element("code", info.file));
+    li.append(element("br"), "Looked in ", element("code", info.folder), " and its subfolders");
   } else {
     li.append(element("span", "✗ not installed", "state-missing"), element("br"));
     const link = element("a", info.link.text);
@@ -59,7 +101,7 @@ function item(model) {
     li.append(element("br"), "Download ", element("code", info.file));
     li.append(element("br"), "Save in ", element("code", info.folder));
   }
-  li.append(element("br"), element("span", info.use, "use"));
+  if (info.use) li.append(element("br"), element("span", info.use, "use"));
   return li;
 }
 
@@ -82,21 +124,42 @@ class ModelStatusPanel {
       getMinHeight: () => 140,
     });
     this.widget.serialize = false;
-    void this.refresh();
+    // Follow selection changes; graphChanged also fires for unrelated edits.
+    this.onGraphChanged = () => {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => this.refresh(false), 500);
+    };
+    api.addEventListener("graphChanged", this.onGraphChanged);
+    this.onGraphChanged();
   }
 
-  async refresh() {
+  async refresh(force = true) {
+    const root = this.node.graph?.rootGraph ?? this.node.graph;
+    let files;
+    try {
+      files = selectedFiles(root, (await app.graphToPrompt(root)).output);
+    } catch {
+      return; // e.g. while a reference upload blocks compilation; try again on the next change.
+    }
+    const key = JSON.stringify(files.map((file) => [file.id, file.selected]));
+    if (this.destroyed || (!force && key === this.key)) return;
+    this.key = key;
     this.note.textContent = "Checking…";
     try {
-      const response = await api.fetchApi("/yue2-kit/models");
+      const response = await api.fetchApi("/yue2-kit/resolve", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(files.map(({ type, selected }) => ({ type, name: selected }))),
+      });
       if (!response.ok) throw new Error(String(response.status));
-      const models = await response.json();
+      const lookups = await response.json();
       if (this.destroyed) return;
-      this.list.replaceChildren(...models.map(item));
-      this.note.textContent = "";
+      const entries = files.flatMap((file, index) => lookups[index] ? [{ ...file, ...lookups[index] }] : []);
+      this.list.replaceChildren(...entries.map(item));
+      this.note.textContent = entries.length ? "" : "No model file nodes in this workflow.";
       requestAnimationFrame(() => this.fit());
     } catch {
       if (this.destroyed) return;
+      this.key = undefined;
       this.note.textContent = "Cannot read model status. Restart ComfyUI after updating YuE2-Kit.";
     }
     this.node.graph?.setDirtyCanvas?.(true, true);
@@ -110,7 +173,12 @@ class ModelStatusPanel {
     this.node.graph?.setDirtyCanvas?.(true, true);
   }
 
-  destroy() { this.destroyed = true; this.root.remove(); }
+  destroy() {
+    this.destroyed = true;
+    clearTimeout(this.timer);
+    api.removeEventListener("graphChanged", this.onGraphChanged);
+    this.root.remove();
+  }
 }
 
 app.registerExtension({

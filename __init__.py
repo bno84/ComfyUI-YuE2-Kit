@@ -1,5 +1,6 @@
 """YuE2-Kit: score continuation, optional audio input, optional model files, and paired song/score export."""
 
+import json
 from pathlib import Path
 
 import folder_paths
@@ -9,10 +10,15 @@ from comfy_extras.nodes_audio import LoadAudio
 from comfy_extras.nodes_yue2 import YuE2GenerateABC
 from server import PromptServer
 
-from .model_files import file_choices, missing_message, model_status, resolve
+from .model_files import file_choices, missing_message, resolve, workflow_models
 from .planning import extend_abc
 
 WEB_DIRECTORY = "./web"
+
+# The template's file nodes describe the default model files; nothing else does.
+TEMPLATE_MODELS = workflow_models(json.loads(
+    (Path(__file__).parent / "example_workflows" / "yue2-kit-song.json").read_text(encoding="utf-8")))
+FILE_FOLDERS = {}
 
 
 def model_file_node(folder, node_id, display_name, loader, required):
@@ -37,8 +43,9 @@ def model_file_node(folder, node_id, display_name, loader, required):
                     f"subfolder is also found. The file is checked {when}."
                 ),
                 inputs=[
-                    io.Combo.Input("name", options=file_choices(folder, folder_paths.get_filename_list(folder), required),
-                                   tooltip="Known YuE2-Kit files are listed even when not installed; Model files shows which are."),
+                    io.Combo.Input("name", options=file_choices(
+                        node_id, folder_paths.get_filename_list(folder), required, TEMPLATE_MODELS),
+                        tooltip="The template's optional files are listed even when not installed; Model files shows which are."),
                 ],
                 # Native legacy loaders declare their file list as the input type,
                 # which only an Any output can connect to.
@@ -49,7 +56,7 @@ def model_file_node(folder, node_id, display_name, loader, required):
         def validate_inputs(cls, name):
             if not required or resolve(name, folder_paths.get_filename_list(folder)):
                 return True
-            return missing_message(folder, name)
+            return missing_message(folder, name, TEMPLATE_MODELS)
 
         @classmethod
         def fingerprint_inputs(cls, name):
@@ -59,10 +66,11 @@ def model_file_node(folder, node_id, display_name, loader, required):
         def execute(cls, name):
             found = resolve(name, folder_paths.get_filename_list(folder))
             if found is None:
-                raise ValueError(missing_message(folder, name))
+                raise ValueError(missing_message(folder, name, TEMPLATE_MODELS))
             return io.NodeOutput(found)
 
     ModelFile.__name__ = ModelFile.__qualname__ = node_id.removeprefix("bno84.")
+    FILE_FOLDERS[node_id] = folder
     return ModelFile
 
 
@@ -83,7 +91,7 @@ class ModelStatus(io.ComfyNode):
             node_id="bno84.ModelStatus",
             display_name="Model files",
             category="audio/YuE2",
-            description="Shows which of YuE2-Kit's known model files are installed, with download links for missing ones. Not part of the prompt.",
+            description="Shows the model files the workflow's file nodes select, whether each is installed, and where to get described ones. Not part of the prompt.",
             inputs=[],
             outputs=[],
         )
@@ -94,9 +102,16 @@ class ModelStatus(io.ComfyNode):
 
 
 if getattr(PromptServer, "instance", None) is not None:
-    @PromptServer.instance.routes.get("/yue2-kit/models")
-    async def known_model_status(request):
-        return web.json_response(model_status(folder_paths.get_filename_list))
+    @PromptServer.instance.routes.post("/yue2-kit/resolve")
+    async def resolve_model_files(request):
+        """For each {type, name}: its models folder and the installed entry, or null for other node types."""
+        found = []
+        for item in await request.json():
+            folder = FILE_FOLDERS.get(item.get("type"))
+            found.append(folder and {
+                "folder": folder, "installed": resolve(str(item.get("name", "")), folder_paths.get_filename_list(folder)),
+            })
+        return web.json_response(found)
 
 
 class LyricsStyle(io.ComfyNode):
