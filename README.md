@@ -69,8 +69,7 @@ requires FFmpeg with `showcqt` and the selected codecs.
 
 ## API and tests
 
-Use [the API prompt](api/yue2-kit-song.api.json); see [API controls](docs/API.md)
-for node IDs and reusable reference-input connections.
+Use [the API prompt](api/yue2-kit-song.api.json).
 
 ```bash
 node --test tests/*.mjs
