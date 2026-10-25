@@ -25,6 +25,7 @@ import execution
 import folder_paths
 import nodes
 from comfy_api.latest import io
+from server import PromptServer
 
 
 async def register():
@@ -45,17 +46,29 @@ async def register():
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     nodes.NODE_CLASS_MAPPINGS.update(module.NODE_CLASS_MAPPINGS)
+    # ABC Preview's timeline feeds Acoustic's score estimate. Its routes need a server.
+    preview = comfyui / "custom_nodes" / "ComfyUI-ABCPreview"
+    spec = importlib.util.spec_from_file_location("abc_preview", preview / "__init__.py",
+                                                  submodule_search_locations=[str(preview)])
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    with patch.object(PromptServer, "instance", Mock(), create=True):
+        spec.loader.exec_module(module)
+    for cls in await (await module.comfy_entrypoint()).get_node_list():
+        nodes.NODE_CLASS_MAPPINGS[cls.GET_SCHEMA().node_id] = cls
 
 
 class Capture:
-    INPUT_TYPES = classmethod(lambda cls: {"required": {"value": ("STRING",), "clip": ("CLIP",), "lyrics": ("STRING",)}})
+    INPUT_TYPES = classmethod(lambda cls: {"required": {
+        "value": ("STRING",), "clip": ("CLIP",), "lyrics": ("STRING",), "max_duration": ("FLOAT",),
+    }})
     RETURN_TYPES = ()
     OUTPUT_NODE = True
     FUNCTION = "capture"
     values = []
 
-    def capture(self, value, clip, lyrics):
-        self.values.append((value, clip, lyrics))
+    def capture(self, value, clip, lyrics, max_duration):
+        self.values.append((value, clip, lyrics, max_duration))
         return ()
 
 
@@ -122,12 +135,19 @@ assert not any(node["class_type"] == "bno84.ModelStatus" for node in data.values
 visualizer = next(node for node in data.values() if node["class_type"] == "AudioVisualizer")
 assert visualizer["inputs"]["enabled"] is False and visualizer["inputs"]["audio"] == data["11"]["inputs"]["audio"]
 assert data[visualizer["inputs"]["image"][0]]["inputs"]["image"] == "yue2-kit-still.png"
+# Generation length: the timeline's estimate plus a margin, unless Maximum duration is on.
+limit = data[music_inputs["max_duration"][0]]["inputs"]
+assert limit["switch"] is False and data[limit["on_true"][0]]["inputs"]["value"] == 120
+estimate = data[limit["on_false"][0]]["inputs"]
+assert estimate["expression"] == "a + b" and data[estimate["values.a"][0]]["class_type"] == "bno84.ABCTimeline"
+assert data[estimate["values.b"][0]]["inputs"]["value"] == 10
 
 
 def route_prompt(source, extend, instrumental):
     prompt = {key: copy.deepcopy(value) for key, value in data.items() if key not in ("11", "22")}
     prompt["capture"] = {"class_type": "TestCapture", "inputs": {
         "value": data["11"]["inputs"]["abc"], "clip": music_inputs["clip"], "lyrics": music_inputs["lyrics"],
+        "max_duration": music_inputs["max_duration"],
     }}
     prompt["33"]["inputs"].update(source=source, abc=pasted, extend=extend,
                                   audio="reference.wav" if source == "Transcribe" else "")
@@ -198,11 +218,14 @@ with patch.object(folder_paths, "get_filename_list", side_effect=filenames), \
                     continue
                 assert executor.success, executor.status_messages
                 expected = fresh if route == "song" else transcribed if audio else pasted
-                score, clip, lyrics = Capture.values[-1]
+                score, clip, lyrics, max_duration = Capture.values[-1]
                 assert score == expected + ("EXTENDED\n" if extend else ""), (name, Capture.values)
                 assert clip is (instrumental_clip if instrumental else base_clip), name
                 expected_lyrics = "[instrumental]" if instrumental else data["32"]["inputs"]["lyrics"]
                 assert lyrics == expected_lyrics, (name, lyrics)
+                # The timeline's estimate of the score used, plus the template's 10 s margin.
+                estimate = sys.modules["abc_preview.timeline"].parse(score)["seconds"]
+                assert estimate > 0 and max_duration == estimate + 10, (name, estimate, max_duration)
                 assert calls.count("instrumental") == int(instrumental), (name, calls)
                 assert calls.count("extend") == int(extend), (name, calls)
                 assert calls.count("encoder") == int(audio), (name, calls)

@@ -40,9 +40,9 @@ _ComfyUI-YuE2-Kit_, or load `example_workflows/yue2-kit-song.json`.
 
 It also needs:
 
-- [ABC Preview](https://github.com/bno84/ComfyUI-ABCPreview) (Registry ID
-  `comfyui-abcpreview`) for the sheet-music display. Playback there needs
-  your own General MIDI `.sf2`.
+- [ABC Preview](https://github.com/bno84/ComfyUI-ABCPreview) 0.2.0 or newer
+  (Registry ID `comfyui-abcpreview`) for the sheet-music display and the score
+  timeline. Playback there needs your own General MIDI `.sf2`.
 - [Audio Visualizer](https://github.com/bno84/ComfyUI-AudioVisualizer)
   (Registry ID `comfyui-audiovisualizer`) for the optional visualizer video.
   It needs FFmpeg on `PATH`.
@@ -115,7 +115,14 @@ Reference input handles input only. Connect its **ABC** output to a separate
 ABC Preview shows the final selected score after any transcription or extension.
 Lyrics and style remain separate. Choose the matching full/melody mode.
 
-`max_duration` is an upper limit on audio length, not a target.
+### Song length
+
+**ABC timeline**, above the ABC preview, shows the final score's length at its
+own tempo and meter, in minutes and seconds, with its sections. By default,
+Acoustic generates up to that length plus a 10-second margin, so a long score
+is not cut short. Turn on **Maximum duration** in Acoustic to use **Maximum
+seconds** instead. Either way it is an upper limit, not a target: YuE2 can
+end earlier. The margin is the **Margin seconds** node inside Acoustic.
 
 ### Visualizer video
 
@@ -167,6 +174,8 @@ section plan. Model files are `34:51` (YuE2), `34:52` (SheetSage2), and
 `34:53` (instrumental LoRA), each with a `name` input. Set
 `55.inputs.enabled` to also render the visualizer video from the still in
 `54.inputs.image`.
+`31:14.inputs.switch` turns on Maximum duration; `31:57` holds Maximum seconds
+and `31:58` the margin.
 
 ## Tests
 

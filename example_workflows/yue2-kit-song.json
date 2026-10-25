@@ -1,8 +1,8 @@
 {
   "id": "75140c3e-0999-5e9e-8139-ff1a6450053b",
   "revision": 1,
-  "last_node_id": 55,
-  "last_link_id": 27,
+  "last_node_id": 58,
+  "last_link_id": 30,
   "nodes": [
     {
       "id": 32,
@@ -489,7 +489,8 @@
           "links": [
             15,
             19,
-            20
+            20,
+            28
           ]
         },
         {
@@ -609,6 +610,21 @@
           "label": "Seed",
           "widget": {
             "name": "seed"
+          }
+        },
+        {
+          "name": "score_seconds",
+          "type": "FLOAT",
+          "link": 30,
+          "label": "Score seconds"
+        },
+        {
+          "name": "use_max_duration",
+          "type": "BOOLEAN",
+          "link": null,
+          "label": "Maximum duration",
+          "widget": {
+            "name": "use_max_duration"
           }
         },
         {
@@ -736,6 +752,7 @@
         "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM",
         "full",
         831001,
+        false,
         120.0,
         1.0,
         0.95,
@@ -1323,6 +1340,46 @@
         -1
       ],
       "title": "Visualizer video"
+    },
+    {
+      "id": 56,
+      "type": "bno84.ABCTimeline",
+      "pos": [
+        1170,
+        200
+      ],
+      "size": [
+        960,
+        246
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "abc",
+          "name": "abc",
+          "type": "STRING",
+          "link": 28
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "seconds",
+          "name": "seconds",
+          "type": "FLOAT",
+          "links": [
+            30
+          ]
+        }
+      ],
+      "title": "ABC timeline · score duration and sections",
+      "properties": {
+        "Node name for S&R": "bno84.ABCTimeline",
+        "cnr_id": "comfyui-abcpreview",
+        "ver": "0.2.0"
+      },
+      "widgets_values": []
     }
   ],
   "links": [
@@ -1517,6 +1574,22 @@
       55,
       1,
       "AUDIO"
+    ],
+    [
+      28,
+      30,
+      0,
+      56,
+      0,
+      "STRING"
+    ],
+    [
+      30,
+      56,
+      0,
+      31,
+      8,
+      "FLOAT"
     ]
   ],
   "groups": [],
@@ -3044,8 +3117,8 @@
         "version": 1,
         "state": {
           "lastGroupId": 0,
-          "lastNodeId": 10,
-          "lastLinkId": 27,
+          "lastNodeId": 58,
+          "lastLinkId": 33,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -3057,7 +3130,7 @@
             -360,
             80,
             128,
-            420
+            460
           ]
         },
         "outputNode": {
@@ -3176,6 +3249,32 @@
             ]
           },
           {
+            "id": "b321bf3a-097f-5b8e-9700-08bf39800595",
+            "name": "score_seconds",
+            "type": "FLOAT",
+            "linkIds": [
+              28
+            ],
+            "label": "Score seconds",
+            "pos": [
+              -256,
+              264
+            ]
+          },
+          {
+            "id": "9fd88e06-eaf7-551f-9a82-709a1bab03ba",
+            "name": "use_max_duration",
+            "type": "BOOLEAN",
+            "linkIds": [
+              29
+            ],
+            "label": "Maximum duration",
+            "pos": [
+              -256,
+              284
+            ]
+          },
+          {
             "id": "2a4e6c8a-f109-5c3f-9d8a-72660484481f",
             "name": "max_duration",
             "type": "FLOAT",
@@ -3185,7 +3284,7 @@
             "label": "Maximum seconds",
             "pos": [
               -256,
-              264
+              304
             ]
           },
           {
@@ -3198,7 +3297,7 @@
             "label": "Music temperature",
             "pos": [
               -256,
-              284
+              324
             ]
           },
           {
@@ -3211,7 +3310,7 @@
             "label": "Music top_p",
             "pos": [
               -256,
-              304
+              344
             ]
           },
           {
@@ -3224,7 +3323,7 @@
             "label": "Music top_k",
             "pos": [
               -256,
-              324
+              364
             ]
           },
           {
@@ -3237,7 +3336,7 @@
             "label": "Music repetition penalty",
             "pos": [
               -256,
-              344
+              384
             ]
           },
           {
@@ -3250,7 +3349,7 @@
             "label": "Music guidance",
             "pos": [
               -256,
-              364
+              404
             ]
           },
           {
@@ -3263,7 +3362,7 @@
             "label": "Acoustic steps",
             "pos": [
               -256,
-              384
+              424
             ]
           },
           {
@@ -3276,7 +3375,7 @@
             "label": "Acoustic CFG",
             "pos": [
               -256,
-              404
+              444
             ]
           },
           {
@@ -3289,7 +3388,7 @@
             "label": "Sampler",
             "pos": [
               -256,
-              424
+              464
             ]
           },
           {
@@ -3302,7 +3401,7 @@
             "label": "Scheduler",
             "pos": [
               -256,
-              444
+              484
             ]
           },
           {
@@ -3315,7 +3414,7 @@
             "label": "Denoise",
             "pos": [
               -256,
-              464
+              504
             ]
           }
         ],
@@ -3398,7 +3497,7 @@
               {
                 "name": "max_duration",
                 "type": "FLOAT",
-                "link": 16,
+                "link": 33,
                 "widget": {
                   "name": "max_duration"
                 }
@@ -3723,6 +3822,232 @@
               "ver": "0.38.0"
             },
             "widgets_values": []
+          },
+          {
+            "id": 57,
+            "type": "PrimitiveFloat",
+            "pos": [
+              560,
+              480
+            ],
+            "size": [
+              270,
+              58
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "value",
+                "name": "value",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "value"
+                },
+                "link": 16
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "FLOAT",
+                "name": "FLOAT",
+                "type": "FLOAT",
+                "links": [
+                  31
+                ]
+              }
+            ],
+            "title": "Maximum seconds",
+            "properties": {
+              "Node name for S&R": "PrimitiveFloat",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
+            },
+            "widgets_values": [
+              120.0
+            ]
+          },
+          {
+            "id": 58,
+            "type": "PrimitiveFloat",
+            "pos": [
+              560,
+              600
+            ],
+            "size": [
+              270,
+              58
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "value",
+                "name": "value",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "value"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "FLOAT",
+                "name": "FLOAT",
+                "type": "FLOAT",
+                "links": [
+                  30
+                ]
+              }
+            ],
+            "title": "Margin seconds",
+            "properties": {
+              "Node name for S&R": "PrimitiveFloat",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
+            },
+            "widgets_values": [
+              10.0
+            ]
+          },
+          {
+            "id": 13,
+            "type": "ComfyMathExpression",
+            "pos": [
+              880,
+              480
+            ],
+            "size": [
+              340,
+              190
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "a",
+                "name": "values.a",
+                "type": "FLOAT,INT,BOOLEAN",
+                "link": 28
+              },
+              {
+                "localized_name": "b",
+                "name": "values.b",
+                "shape": 7,
+                "type": "FLOAT,INT,BOOLEAN",
+                "link": 30
+              },
+              {
+                "localized_name": "c",
+                "name": "values.c",
+                "shape": 7,
+                "type": "FLOAT,INT,BOOLEAN",
+                "link": null
+              },
+              {
+                "localized_name": "expression",
+                "name": "expression",
+                "type": "STRING",
+                "widget": {
+                  "name": "expression"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "FLOAT",
+                "name": "FLOAT",
+                "type": "FLOAT",
+                "links": [
+                  32
+                ]
+              },
+              {
+                "localized_name": "INT",
+                "name": "INT",
+                "type": "INT",
+                "links": null
+              },
+              {
+                "localized_name": "BOOL",
+                "name": "BOOL",
+                "type": "BOOLEAN",
+                "links": null
+              }
+            ],
+            "title": "Score seconds + margin",
+            "properties": {
+              "Node name for S&R": "ComfyMathExpression",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
+            },
+            "widgets_values": [
+              "a + b"
+            ]
+          },
+          {
+            "id": 14,
+            "type": "ComfySwitchNode",
+            "pos": [
+              1280,
+              480
+            ],
+            "size": [
+              270,
+              78
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "on_false",
+                "name": "on_false",
+                "shape": 7,
+                "type": "FLOAT",
+                "link": 32
+              },
+              {
+                "localized_name": "on_true",
+                "name": "on_true",
+                "shape": 7,
+                "type": "FLOAT",
+                "link": 31
+              },
+              {
+                "localized_name": "switch",
+                "name": "switch",
+                "type": "BOOLEAN",
+                "widget": {
+                  "name": "switch"
+                },
+                "link": 29
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "output",
+                "name": "output",
+                "type": "FLOAT",
+                "links": [
+                  33
+                ]
+              }
+            ],
+            "title": "Maximum seconds or score estimate",
+            "properties": {
+              "Node name for S&R": "ComfySwitchNode",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
+            },
+            "widgets_values": [
+              false
+            ]
           }
         ],
         "groups": [],
@@ -3850,15 +4175,15 @@
           {
             "id": 16,
             "origin_id": -10,
-            "origin_slot": 8,
-            "target_id": 6,
-            "target_slot": 6,
+            "origin_slot": 10,
+            "target_id": 57,
+            "target_slot": 0,
             "type": "FLOAT"
           },
           {
             "id": 17,
             "origin_id": -10,
-            "origin_slot": 9,
+            "origin_slot": 11,
             "target_id": 6,
             "target_slot": 7,
             "type": "FLOAT"
@@ -3866,7 +4191,7 @@
           {
             "id": 18,
             "origin_id": -10,
-            "origin_slot": 10,
+            "origin_slot": 12,
             "target_id": 6,
             "target_slot": 8,
             "type": "FLOAT"
@@ -3874,7 +4199,7 @@
           {
             "id": 19,
             "origin_id": -10,
-            "origin_slot": 11,
+            "origin_slot": 13,
             "target_id": 6,
             "target_slot": 9,
             "type": "INT"
@@ -3882,7 +4207,7 @@
           {
             "id": 20,
             "origin_id": -10,
-            "origin_slot": 12,
+            "origin_slot": 14,
             "target_id": 6,
             "target_slot": 10,
             "type": "FLOAT"
@@ -3890,7 +4215,7 @@
           {
             "id": 21,
             "origin_id": -10,
-            "origin_slot": 13,
+            "origin_slot": 15,
             "target_id": 6,
             "target_slot": 11,
             "type": "FLOAT"
@@ -3898,7 +4223,7 @@
           {
             "id": 22,
             "origin_id": -10,
-            "origin_slot": 14,
+            "origin_slot": 16,
             "target_id": 9,
             "target_slot": 2,
             "type": "INT"
@@ -3906,7 +4231,7 @@
           {
             "id": 23,
             "origin_id": -10,
-            "origin_slot": 15,
+            "origin_slot": 17,
             "target_id": 9,
             "target_slot": 3,
             "type": "FLOAT"
@@ -3914,7 +4239,7 @@
           {
             "id": 24,
             "origin_id": -10,
-            "origin_slot": 16,
+            "origin_slot": 18,
             "target_id": 9,
             "target_slot": 4,
             "type": "COMBO"
@@ -3922,7 +4247,7 @@
           {
             "id": 25,
             "origin_id": -10,
-            "origin_slot": 17,
+            "origin_slot": 19,
             "target_id": 9,
             "target_slot": 5,
             "type": "COMBO"
@@ -3930,7 +4255,7 @@
           {
             "id": 26,
             "origin_id": -10,
-            "origin_slot": 18,
+            "origin_slot": 20,
             "target_id": 9,
             "target_slot": 9,
             "type": "FLOAT"
@@ -3942,6 +4267,54 @@
             "target_id": -20,
             "target_slot": 0,
             "type": "AUDIO"
+          },
+          {
+            "id": 28,
+            "origin_id": -10,
+            "origin_slot": 8,
+            "target_id": 13,
+            "target_slot": 0,
+            "type": "FLOAT"
+          },
+          {
+            "id": 29,
+            "origin_id": -10,
+            "origin_slot": 9,
+            "target_id": 14,
+            "target_slot": 2,
+            "type": "BOOLEAN"
+          },
+          {
+            "id": 30,
+            "origin_id": 58,
+            "origin_slot": 0,
+            "target_id": 13,
+            "target_slot": 1,
+            "type": "FLOAT"
+          },
+          {
+            "id": 31,
+            "origin_id": 57,
+            "origin_slot": 0,
+            "target_id": 14,
+            "target_slot": 1,
+            "type": "FLOAT"
+          },
+          {
+            "id": 32,
+            "origin_id": 13,
+            "origin_slot": 0,
+            "target_id": 14,
+            "target_slot": 0,
+            "type": "FLOAT"
+          },
+          {
+            "id": 33,
+            "origin_id": 14,
+            "origin_slot": 0,
+            "target_id": 6,
+            "target_slot": 6,
+            "type": "FLOAT"
           }
         ],
         "extra": {}

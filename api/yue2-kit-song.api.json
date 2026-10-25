@@ -207,6 +207,58 @@
       ]
     }
   },
+  "31:13": {
+    "_meta": {
+      "title": "Score seconds + margin"
+    },
+    "class_type": "ComfyMathExpression",
+    "inputs": {
+      "expression": "a + b",
+      "values.a": [
+        "56",
+        0
+      ],
+      "values.b": [
+        "31:58",
+        0
+      ]
+    }
+  },
+  "31:14": {
+    "_meta": {
+      "title": "Maximum seconds or score estimate"
+    },
+    "class_type": "ComfySwitchNode",
+    "inputs": {
+      "on_false": [
+        "31:13",
+        0
+      ],
+      "on_true": [
+        "31:57",
+        0
+      ],
+      "switch": false
+    }
+  },
+  "31:57": {
+    "_meta": {
+      "title": "Maximum seconds"
+    },
+    "class_type": "PrimitiveFloat",
+    "inputs": {
+      "value": 120
+    }
+  },
+  "31:58": {
+    "_meta": {
+      "title": "Margin seconds"
+    },
+    "class_type": "PrimitiveFloat",
+    "inputs": {
+      "value": 10
+    }
+  },
   "31:6": {
     "_meta": {
       "title": "Music tokens from ABC"
@@ -226,7 +278,10 @@
         "32",
         0
       ],
-      "max_duration": 120,
+      "max_duration": [
+        "31:14",
+        0
+      ],
       "mode": [
         "30:29",
         0
@@ -460,6 +515,18 @@
       "style": "bars",
       "trail": 0,
       "video_codec": "h265"
+    }
+  },
+  "56": {
+    "_meta": {
+      "title": "ABC timeline · score duration and sections"
+    },
+    "class_type": "bno84.ABCTimeline",
+    "inputs": {
+      "abc": [
+        "30:36:20",
+        0
+      ]
     }
   }
 }
