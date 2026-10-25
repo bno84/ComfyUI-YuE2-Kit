@@ -11,6 +11,9 @@ from unittest.mock import Mock, patch
 comfyui, pack = (Path(arg).resolve() for arg in sys.argv[1:])
 sys.path.insert(0, str(comfyui))
 sys.argv = [sys.argv[0], "--cpu"]
+# ComfyUI ignores sys.argv on library imports unless parsing is enabled first.
+import comfy.options
+comfy.options.enable_args_parsing()
 import execution
 import folder_paths
 import nodes
