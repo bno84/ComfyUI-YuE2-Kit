@@ -1,7 +1,7 @@
 {
   "id": "75140c3e-0999-5e9e-8139-ff1a6450053b",
   "revision": 1,
-  "last_node_id": 59,
+  "last_node_id": 60,
   "last_link_id": 32,
   "nodes": [
     {
@@ -1281,6 +1281,30 @@
         "(none)",
         1.0
       ]
+    },
+    {
+      "id": 60,
+      "type": "MarkdownNote",
+      "pos": [
+        2220,
+        1450
+      ],
+      "size": [
+        436.10507000681355,
+        174.01709282533625
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "NAR LoRA · usage and links",
+      "properties": {},
+      "widgets_values": [
+        "## Optional NAR LoRA\n\nSelect **(none)** or strength **0** to disable the LoRA.\n\n- [nar_lora_joint_v9_comfyui.safetensors](https://huggingface.co/Mothersuperior/yue2-mothersuperior-realaudio-tokenizer-v4/resolve/main/nar_lora_joint_v9_comfyui.safetensors)\n  <br>_CC BY-NC 4.0 (non-commercial)_\n  <br>Put it in `ComfyUI/models/loras/` or a subfolder. \n  <br>Pairs well with **Instrumental LoRA**.\n  <br>Start with strength `1.0`"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
     }
   ],
   "links": [
