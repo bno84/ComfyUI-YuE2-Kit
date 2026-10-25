@@ -73,9 +73,10 @@ jobs:
           python pack/.github/scripts/comfyui_smoke.py comfyui
           --pack ComfyUI-YuE2-Kit --cnr-id comfyui-yue2-kit
           --node bno84.SaveYuE2Bundle --node bno84.YuE2ExtendABC
-          --node bno84.OptionalLoadAudio --node bno84.ReferenceInput
+          --node bno84.OptionalLoadAudio --node bno84.ReferenceInput --node bno84.LyricsStyle
           --route /extensions/ComfyUI-YuE2-Kit/audio_widgets.js
           --route /extensions/ComfyUI-YuE2-Kit/branch_toggle.js
+          --route /extensions/ComfyUI-YuE2-Kit/lyrics_style.js
           --route /extensions/ComfyUI-YuE2-Kit/reference_input.js
           --route /extensions/ComfyUI-YuE2-Kit/reference_transcribe.js
           --workflow pack/example_workflows/yue2-kit-song.json

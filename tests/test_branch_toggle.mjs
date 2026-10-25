@@ -35,7 +35,9 @@ function fixture() {
         node.subgraph = graphFrom(definitions.get(node.type), graph.rootGraph);
         node.widgets = Object.entries(node.widgets_values_named ?? {}).map(([name, value]) => ({ name, value }));
       }
-      else if (node.type === "CustomCombo") {
+      else if (node.type === "bno84.LyricsStyle") {
+        node.widgets = ["instrumental", "lyrics", "style"].map((name, index) => ({ name, value: node.widgets_values[index] }));
+      } else if (node.type === "CustomCombo") {
         node.widgets = Object.entries(node.widgets_values_named).map(([name, value]) => ({ name, value }));
       } else if (node.type === "ComfyMathExpression") node.widgets = [{ name: "expression", value: node.widgets_values[0] }];
       else if (node.type === "PrimitiveBoolean") node.widgets = [{ name: "value", value: node.widgets_values[0] }];
@@ -126,7 +128,7 @@ test("compilation waits for reference file loading to finish", () => {
 });
 
 for (const enabled of [false, true]) {
-  test(`instrumental=${enabled}: compilation repairs LoRA bypass from the promoted control`, () => {
+  test(`instrumental=${enabled}: compilation repairs LoRA bypass from the prompt control`, () => {
     const { root, app } = fixture();
     const song = root.getNodeById(32);
     const models = root.getNodeById(34);
@@ -138,7 +140,7 @@ for (const enabled of [false, true]) {
   });
 }
 
-test("instrumental promoted control updates LoRA bypass live and preserves lyrics", () => {
+test("instrumental prompt control updates LoRA bypass live and preserves lyrics", () => {
   const { root, extension } = fixture();
   const song = root.getNodeById(32);
   const lora = root.getNodeById(34).subgraph.getNodeById(47);

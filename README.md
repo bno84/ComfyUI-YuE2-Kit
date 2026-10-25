@@ -7,6 +7,8 @@ example song workflow.
   beside it, under one incrementing filename.
 - **YuE2 Extend ABC:** continues a score with the native YuE2 planner,
   keeping the original as an unchanged prefix.
+- **Lyrics + style:** instrumental switch and editable prompt fields, with advisory
+  instrumental-format warnings linked to the LoRA prompt guide.
 - **Reference input:** one tabbed panel for no reference, editable/droppable ABC,
   or uploaded/dropped audio, with recording playback and optional extension.
 - **Load Audio (Optional):** the original audio helper, retained for older workflows.
@@ -53,13 +55,23 @@ the file is not needed for validation or execution.
 
 With Instrumental on, the LoRA is applied to the YuE2 language model at
 strength 1.0 for planning, extension, and music generation. The acoustic model
-and VAE stay unchanged. Use score mode **full**. The toggle sends
-`[instrumental]` as the section plan instead of vocal lyrics, preserving your
-lyrics for when you switch it off. To supply a structure, double-click Lyrics +
-style and edit **Instrumental section plan** using lowercase section tags
-such as `[intro]`, `[verse]`, `[chorus]`, and `[outro]`, with no sung text.
-Choose the desired instruments in Style. Existing reference ABC is retained;
-the toggle does not remove vocal notes or words from a supplied score.
+and VAE stay unchanged. Use score mode **full**. The **Lyrics + style** custom
+node passes both text fields through unchanged; Instrumental selects the LoRA
+without replacing your lyrics. When enabled, an amber outline and an advisory
+message flag lyrics outside the model card's three supported caption forms:
+
+- `[instrumental]` alone.
+- Lowercase section tags, one per line: `intro`, `verse`, `pre-chorus`, `chorus`,
+  `bridge`, or `outro`, each in brackets.
+- Those same tags with time ranges, for example `[intro 0:00-0:15]`, with every
+  section timed using `m:ss-m:ss`.
+
+Use real line breaks. Sung text, production notes inside brackets, mixed timed
+and untimed tags, and malformed time ranges trigger a warning. Warnings do not
+block queueing or modify text. With Instrumental off, ordinary vocal lyrics
+have no instrumental-format warning. Style stays a normal YuE2 tag string;
+choose the genre, instruments, mood, and BPM there. Existing reference ABC is
+retained; the toggle does not remove vocal notes or words from a supplied score.
 
 **Reference input** combines the reference inputs and controls in one node:
 
@@ -97,7 +109,7 @@ API examples in `api/` cover each path: `yue2-kit-song.api.json` (None),
 `yue2-kit-abc-reference.api.json`, and `yue2-kit-abc-extend.api.json`.
 Reference values live in node `33`: `source`, `abc`, `audio`, and `extend`.
 Instrumental variants are named `yue2-kit-instrumental-*.api.json`. Their
-control is `32:41.inputs.value`; the CLIP branch must also be rewired, so use
+control is `32.inputs.instrumental`; the CLIP branch must also be rewired, so use
 the matching instrumental snapshot rather than changing only that Boolean.
 These are compiled snapshots; use the corresponding file, since bypass
 rewiring happens in the UI before export.

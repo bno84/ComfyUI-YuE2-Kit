@@ -1,12 +1,12 @@
 {
   "id": "75140c3e-0999-5e9e-8139-ff1a6450053b",
   "revision": 1,
-  "last_node_id": 47,
+  "last_node_id": 50,
   "last_link_id": 25,
   "nodes": [
     {
       "id": 32,
-      "type": "1b902a40-154f-57b2-add9-4548fcddc281",
+      "type": "bno84.LyricsStyle",
       "pos": [
         110,
         400
@@ -21,10 +21,17 @@
       "title": "Lyrics + style",
       "inputs": [
         {
+          "name": "instrumental",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "instrumental"
+          }
+        },
+        {
           "name": "lyrics",
           "type": "STRING",
           "link": null,
-          "label": "Lyrics",
           "widget": {
             "name": "lyrics"
           }
@@ -33,18 +40,8 @@
           "name": "style",
           "type": "STRING",
           "link": null,
-          "label": "Style",
           "widget": {
             "name": "style"
-          }
-        },
-        {
-          "name": "instrumental",
-          "type": "BOOLEAN",
-          "link": null,
-          "label": "Instrumental",
-          "widget": {
-            "name": "instrumental"
           }
         }
       ],
@@ -74,18 +71,15 @@
         }
       ],
       "properties": {
-        "previewExposures": []
+        "Node name for S&R": "bno84.LyricsStyle",
+        "cnr_id": "comfyui-yue2-kit",
+        "ver": "0.2.1"
       },
       "widgets_values": [
+        false,
         "[Verse]\nNeon fades along the lane\nFootsteps keep the time of rain\nFold the night and leave it here\nMorning has a sky to clear\n\n[Chorus]\nLet the day come into view\nEvery road begins with you\nHold a little room for light\nWe will sing beyond the night",
-        "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM",
-        false
-      ],
-      "widgets_values_named": {
-        "lyrics": "[Verse]\nNeon fades along the lane\nFootsteps keep the time of rain\nFold the night and leave it here\nMorning has a sky to clear\n\n[Chorus]\nLet the day come into view\nEvery road begins with you\nHold a little room for light\nWe will sing beyond the night",
-        "style": "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM",
-        "instrumental": false
-      }
+        "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM"
+      ]
     },
     {
       "id": 3,
@@ -835,16 +829,19 @@
         500
       ],
       "flags": {},
-      "order": 8,
+      "order": 3,
       "mode": 0,
-      "color": "#432",
-      "bgcolor": "#653",
       "inputs": [],
       "outputs": [],
       "properties": {},
       "widgets_values": [
         "# YuE2 song\n\nReference input combines None, ABC, and Transcribe in one panel. None plans from lyrics and style. ABC accepts pasted text or a dropped .abc file. Transcribe accepts an uploaded or dropped recording with audio playback.\n\nExtend reference appears for ABC and Transcribe and continues the selected score through the shared planner. Tab changes retain both reference inputs. Connect the ABC output to a separate ABC Preview node when desired.\n\nThe selected ABC goes to the sheet/source preview, acoustic synthesis, and the paired FLAC + ABC exporter. As-is uses the reference score unchanged; extension preserves it as a prefix.\n\nSheetSage2 is needed only for Transcribe; choose it in Models. Native bypass keeps it out of validation and execution for None and ABC. Wired routing flags are synchronized before prompt compilation.\n\nLyrics and style remain separate. Choose the matching full/melody score mode. max_duration is an upper limit, not a target."
-      ]
+      ],
+      "widgets_values_named": {
+        "text": "# YuE2 song\n\nReference input combines None, ABC, and Transcribe in one panel. None plans from lyrics and style. ABC accepts pasted text or a dropped .abc file. Transcribe accepts an uploaded or dropped recording with audio playback.\n\nExtend reference appears for ABC and Transcribe and continues the selected score through the shared planner. Tab changes retain both reference inputs. Connect the ABC output to a separate ABC Preview node when desired.\n\nThe selected ABC goes to the sheet/source preview, acoustic synthesis, and the paired FLAC + ABC exporter. As-is uses the reference score unchanged; extension preserves it as a prefix.\n\nSheetSage2 is needed only for Transcribe; choose it in Models. Native bypass keeps it out of validation and execution for None and ABC. Wired routing flags are synchronized before prompt compilation.\n\nLyrics and style remain separate. Choose the matching full/melody score mode. max_duration is an upper limit, not a target."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
     },
     {
       "id": 22,
@@ -889,47 +886,137 @@
     {
       "id": 23,
       "type": "MarkdownNote",
-      "size": [
-        390,
-        126
-      ],
       "pos": [
         1740,
         1215
       ],
+      "size": [
+        390,
+        126
+      ],
       "flags": {},
-      "order": 9,
+      "order": 4,
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "color": "#432",
-      "bgcolor": "#653",
+      "title": "Optional soundfont",
       "properties": {},
       "widgets_values": [
         "## Preview playback needs your own soundfont\n\nDownload a General MIDI `.sf2` yourself, for example [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS). Put it in `ComfyUI/models/soundfonts/`, refresh the browser, and choose it on the ABC node.\n\nWithout one, sheet music and source still work; only playback is off."
-      ]
+      ],
+      "widgets_values_named": {
+        "text": "## Preview playback needs your own soundfont\n\nDownload a General MIDI `.sf2` yourself, for example [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS). Put it in `ComfyUI/models/soundfonts/`, refresh the browser, and choose it on the ABC node.\n\nWithout one, sheet music and source still work; only playback is off."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
     },
     {
       "id": 46,
       "type": "MarkdownNote",
-      "title": "Instrumental download and usage",
       "pos": [
         690,
         1650
       ],
       "size": [
-        600,
-        440
+        464.7128597391777,
+        188.08601468674442
       ],
       "flags": {},
-      "order": 0,
+      "order": 5,
       "mode": 0,
       "inputs": [],
       "outputs": [],
+      "title": "Using optional models",
       "properties": {},
       "widgets_values": [
-        "## Optional instrumental LoRA\n\nEnable **Instrumental** in Lyrics + style to apply the AR LoRA to the language model at strength 1.0. Off needs no LoRA file.\n\nDownload **ar_lora_inst_v3abc_comfyui.safetensors** from [Mothersuperior/YuE2-instrumental-cot-full-loras](https://huggingface.co/Mothersuperior/YuE2-instrumental-cot-full-loras), put it in `ComfyUI/models/loras/`, refresh, and select it in Models.\n\nWeights are **CC BY-NC 4.0 (non-commercial)** and are not bundled or downloaded automatically.\n\nUse score mode **full**. Instrumental sends `[instrumental]` instead of vocal lyrics; your lyrics remain saved for when you switch it off. Double-click Lyrics + style to edit the instrumental section plan. Use bare lowercase section tags, with no sung text. Adjust Style for the instruments you want."
-      ]
+        "## Optional models\n\n- **Instrumental LoRA:** [Mothersuperior/YuE2-instrumental-cot-full-loras](https://huggingface.co/Mothersuperior/YuE2-instrumental-cot-full-loras)\n  <br>_CC BY-NC 4.0 (non-commercial)_\n  <br>Download `ar_lora_inst_v3abc_comfyui.safetensors`\n  <br>Save in `ComfyUI/models/loras/`\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Optional models\n\n- **Instrumental LoRA:** [Mothersuperior/YuE2-instrumental-cot-full-loras](https://huggingface.co/Mothersuperior/YuE2-instrumental-cot-full-loras)\n  <br>_CC BY-NC 4.0 (non-commercial)_\n  <br>Download `ar_lora_inst_v3abc_comfyui.safetensors`\n  <br>Save in `ComfyUI/models/loras/`\n"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 48,
+      "type": "MarkdownNote",
+      "pos": [
+        -316.5894294124945,
+        401.25552460959585
+      ],
+      "size": [
+        396.5536132582505,
+        695.111629369897
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Prompting cheat sheet",
+      "properties": {},
+      "widgets_values": [
+        "# Normal YuE2\n\n### Lyrics\n\n```\n[verse]\nFootsteps in the morning rain\nTake me down this road again\n\n[chorus]\nLet the daylight carry through\nEvery road leads back to you\n```\n\n### Style\n\nDescribe the genre, instruments, vocals, mood, and tempo.\n\n```\nwarm piano pop, female vocals, acoustic piano,\nrounded bass, light drums, hopeful, 88 BPM\n```\n\n_Note: using reference ABC/Transcription will force a different tempo._\n\nNatural language can be mixed in.\n\n```\njazz, 110 BPM, relaxed saxophone with gradual introduction of drums, acoustic piano, rounded bass and light drums, dynamic composition, experimental\n```\n\n---\n\n# Instrumental LoRA\n\n### Lyrics\n\n```\n[intro]\n[verse]\n[chorus]\n[outro]\n```\n\nSupports timed tags, but **guidance only**. The LoRA tends toward _3–5 minute songs_ and section timing is not exact.\n\n```\n[intro 0:00-0:15]\n[verse 0:15-0:45]\n[chorus 0:45-1:10]\n```\n\n### Style\n\nStays the same as normal YuE2."
+      ],
+      "widgets_values_named": {
+        "text": "# Normal YuE2\n\n### Lyrics\n\n```\n[verse]\nFootsteps in the morning rain\nTake me down this road again\n\n[chorus]\nLet the daylight carry through\nEvery road leads back to you\n```\n\n### Style\n\nDescribe the genre, instruments, vocals, mood, and tempo.\n\n```\nwarm piano pop, female vocals, acoustic piano,\nrounded bass, light drums, hopeful, 88 BPM\n```\n\n_Note: using reference ABC/Transcription will force a different tempo._\n\nNatural language can be mixed in.\n\n```\njazz, 110 BPM, relaxed saxophone with gradual introduction of drums, acoustic piano, rounded bass and light drums, dynamic composition, experimental\n```\n\n---\n\n# Instrumental LoRA\n\n### Lyrics\n\n```\n[intro]\n[verse]\n[chorus]\n[outro]\n```\n\nSupports timed tags, but **guidance only**. The LoRA tends toward _3–5 minute songs_ and section timing is not exact.\n\n```\n[intro 0:00-0:15]\n[verse 0:15-0:45]\n[chorus 0:45-1:10]\n```\n\n### Style\n\nStays the same as normal YuE2."
+      },
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 49,
+      "type": "MarkdownNote",
+      "pos": [
+        690.596921671742,
+        310.8460796136969
+      ],
+      "size": [
+        382.15931599306964,
+        145.68714258216312
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Planner tips",
+      "properties": {},
+      "widgets_values": [
+        "### Interesting chord progressions and melodies\n\nIf they are boring / repetitive, check if the ABC produced already has this problem, then address it in the planner.\n\n- **Increase planner temperature** for example `1.10`.\n- Adjust the style prompt to encourage more bold, surprising composition and melodies."
+      ],
+      "widgets_values_named": {
+        "text": "### Interesting chord progressions and melodies\n\nIf they are boring / repetitive, check if the ABC produced already has this problem, then address it in the planner.\n\n- **Increase planner temperature** for example `1.10`.\n- Adjust the style prompt to encourage more bold, surprising composition and melodies."
+      },
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 50,
+      "type": "MarkdownNote",
+      "pos": [
+        2228.9989087576737,
+        241.91456002323372
+      ],
+      "size": [
+        421.7740964042439,
+        203.48619407096044
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Acoustic tips",
+      "properties": {},
+      "widgets_values": [
+        "### Stronger style adherence\n\n- Set **Music guidance** above `1.0`, for example between 2-3.\n<br>(This will generate slower.)\n\n### More detail and layered instruments\n\nTry **Music temperature** first.\nFine tune with `top_p` (lower for more variance).\n\n- Increased temperature, for example `1.20`\n  <br>More variance and layered instruments but deviates from ABC and style prompt more.\n- Decreased temperature, for example `0.80`\n  <br>Stronger ABC and style adherence but can sound clinical and flat."
+      ],
+      "widgets_values_named": {
+        "text": "### Stronger style adherence\n\n- Set **Music guidance** above `1.0`, for example between 2-3.\n<br>(This will generate slower.)\n\n### More detail and layered instruments\n\nTry **Music temperature** first.\nFine tune with `top_p` (lower for more variance).\n\n- Increased temperature, for example `1.20`\n  <br>More variance and layered instruments but deviates from ABC and style prompt more.\n- Decreased temperature, for example `0.80`\n  <br>Stronger ABC and style adherence but can sound clinical and flat."
+      },
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
     }
   ],
   "links": [
@@ -1113,422 +1200,6 @@
   "groups": [],
   "definitions": {
     "subgraphs": [
-      {
-        "id": "1b902a40-154f-57b2-add9-4548fcddc281",
-        "version": 1,
-        "state": {
-          "lastGroupId": 0,
-          "lastNodeId": 43,
-          "lastLinkId": 10,
-          "lastRerouteId": 0
-        },
-        "revision": 0,
-        "config": {},
-        "name": "Lyrics + style",
-        "inputNode": {
-          "id": -10,
-          "bounding": [
-            -260,
-            90,
-            128,
-            100
-          ]
-        },
-        "outputNode": {
-          "id": -20,
-          "bounding": [
-            570,
-            70,
-            128,
-            80
-          ]
-        },
-        "inputs": [
-          {
-            "id": "6a72293f-ffac-5c42-a1ff-82bd0e18e5e3",
-            "name": "lyrics",
-            "type": "STRING",
-            "linkIds": [
-              1
-            ],
-            "label": "Lyrics",
-            "pos": [
-              -256,
-              104
-            ]
-          },
-          {
-            "id": "d1693861-b59c-5519-ba95-5716c917c368",
-            "name": "style",
-            "type": "STRING",
-            "linkIds": [
-              2
-            ],
-            "label": "Style",
-            "pos": [
-              -256,
-              124
-            ]
-          },
-          {
-            "id": "e471c513-067d-5176-9da5-9887aab524c8",
-            "name": "instrumental",
-            "type": "BOOLEAN",
-            "linkIds": [
-              5
-            ],
-            "label": "Instrumental",
-            "pos": [
-              -256,
-              144
-            ]
-          }
-        ],
-        "outputs": [
-          {
-            "id": "13ac66b3-e26d-5e16-b5da-88b0064664dc",
-            "name": "Lyrics",
-            "type": "STRING",
-            "linkIds": [
-              9
-            ],
-            "pos": [
-              2144,
-              104
-            ]
-          },
-          {
-            "id": "d5f8acc2-0247-5a80-9a58-ceb3f00d6f6f",
-            "name": "Style",
-            "type": "STRING",
-            "linkIds": [
-              4
-            ],
-            "pos": [
-              2144,
-              124
-            ]
-          },
-          {
-            "id": "bc426b2e-3bc2-50f4-aa92-11865a5657cb",
-            "name": "Instrumental",
-            "type": "BOOLEAN",
-            "linkIds": [
-              10
-            ],
-            "label": "Instrumental",
-            "pos": [
-              2144,
-              144
-            ]
-          }
-        ],
-        "widgets": [],
-        "nodes": [
-          {
-            "id": 2,
-            "type": "PrimitiveStringMultiline",
-            "pos": [
-              0,
-              80
-            ],
-            "size": [
-              410,
-              420
-            ],
-            "flags": {},
-            "order": 1,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "value",
-                "type": "STRING",
-                "link": 1,
-                "widget": {
-                  "name": "value"
-                }
-              }
-            ],
-            "outputs": [
-              {
-                "name": "STRING",
-                "type": "STRING",
-                "links": [
-                  7
-                ]
-              }
-            ],
-            "title": "Lyrics — still supplied separately",
-            "properties": {
-              "Node name for S&R": "PrimitiveStringMultiline",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              "[Verse]\nNeon fades along the lane\nFootsteps keep the time of rain\nFold the night and leave it here\nMorning has a sky to clear\n\n[Chorus]\nLet the day come into view\nEvery road begins with you\nHold a little room for light\nWe will sing beyond the night"
-            ]
-          },
-          {
-            "id": 1,
-            "type": "PrimitiveStringMultiline",
-            "pos": [
-              0,
-              550
-            ],
-            "size": [
-              410,
-              200
-            ],
-            "flags": {},
-            "order": 0,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "value",
-                "type": "STRING",
-                "link": 2,
-                "widget": {
-                  "name": "value"
-                }
-              }
-            ],
-            "outputs": [
-              {
-                "name": "STRING",
-                "type": "STRING",
-                "links": [
-                  4
-                ]
-              }
-            ],
-            "title": "Style",
-            "properties": {
-              "Node name for S&R": "PrimitiveStringMultiline",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM"
-            ]
-          },
-          {
-            "id": 41,
-            "type": "PrimitiveBoolean",
-            "title": "Instrumental",
-            "pos": [
-              0,
-              820
-            ],
-            "size": [
-              400,
-              80
-            ],
-            "flags": {},
-            "order": 0,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "value",
-                "type": "BOOLEAN",
-                "link": 5,
-                "widget": {
-                  "name": "value"
-                }
-              }
-            ],
-            "outputs": [
-              {
-                "name": "BOOLEAN",
-                "type": "BOOLEAN",
-                "links": [
-                  6,
-                  10
-                ]
-              }
-            ],
-            "properties": {
-              "Node name for S&R": "PrimitiveBoolean",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              false
-            ]
-          },
-          {
-            "id": 42,
-            "type": "ComfySwitchNode",
-            "title": "Lyrics or instrumental section plan",
-            "pos": [
-              560,
-              80
-            ],
-            "size": [
-              400,
-              180
-            ],
-            "flags": {},
-            "order": 0,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "switch",
-                "type": "BOOLEAN",
-                "link": 6,
-                "widget": {
-                  "name": "switch"
-                }
-              },
-              {
-                "name": "on_false",
-                "type": "COMFY_MATCHTYPE_V3",
-                "link": 7
-              },
-              {
-                "name": "on_true",
-                "type": "COMFY_MATCHTYPE_V3",
-                "link": 8
-              }
-            ],
-            "outputs": [
-              {
-                "name": "output",
-                "type": "STRING",
-                "links": [
-                  9
-                ]
-              }
-            ],
-            "properties": {
-              "Node name for S&R": "ComfySwitchNode",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              false
-            ]
-          },
-          {
-            "id": 43,
-            "type": "PrimitiveStringMultiline",
-            "title": "Instrumental section plan",
-            "pos": [
-              0,
-              970
-            ],
-            "size": [
-              410,
-              140
-            ],
-            "flags": {},
-            "order": 0,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "value",
-                "type": "STRING",
-                "link": null,
-                "widget": {
-                  "name": "value"
-                }
-              }
-            ],
-            "outputs": [
-              {
-                "name": "STRING",
-                "type": "STRING",
-                "links": [
-                  8
-                ]
-              }
-            ],
-            "properties": {
-              "Node name for S&R": "PrimitiveStringMultiline",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              "[instrumental]"
-            ]
-          }
-        ],
-        "groups": [],
-        "links": [
-          {
-            "id": 1,
-            "origin_id": -10,
-            "origin_slot": 0,
-            "target_id": 2,
-            "target_slot": 0,
-            "type": "STRING"
-          },
-          {
-            "id": 2,
-            "origin_id": -10,
-            "origin_slot": 1,
-            "target_id": 1,
-            "target_slot": 0,
-            "type": "STRING"
-          },
-          {
-            "id": 4,
-            "origin_id": 1,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 1,
-            "type": "STRING"
-          },
-          {
-            "id": 5,
-            "origin_id": -10,
-            "origin_slot": 2,
-            "target_id": 41,
-            "target_slot": 0,
-            "type": "BOOLEAN"
-          },
-          {
-            "id": 6,
-            "origin_id": 41,
-            "origin_slot": 0,
-            "target_id": 42,
-            "target_slot": 0,
-            "type": "BOOLEAN"
-          },
-          {
-            "id": 7,
-            "origin_id": 2,
-            "origin_slot": 0,
-            "target_id": 42,
-            "target_slot": 1,
-            "type": "STRING"
-          },
-          {
-            "id": 8,
-            "origin_id": 43,
-            "origin_slot": 0,
-            "target_id": 42,
-            "target_slot": 2,
-            "type": "STRING"
-          },
-          {
-            "id": 9,
-            "origin_id": 42,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 0,
-            "type": "STRING"
-          },
-          {
-            "id": 10,
-            "origin_id": 41,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 2,
-            "type": "BOOLEAN"
-          }
-        ],
-        "extra": {}
-      },
       {
         "id": "cd99ff70-b0eb-5b1e-8240-b763082c1efd",
         "version": 1,

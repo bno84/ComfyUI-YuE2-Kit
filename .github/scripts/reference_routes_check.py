@@ -94,6 +94,12 @@ with patch.object(folder_paths, "get_filename_list", side_effect=filenames), \
      patch.object(nodes.NODE_CLASS_MAPPINGS["SheetSage2AudioToABC"], "execute", new=recorded("transcribe", lambda _: [transcribed])), \
      patch.object(nodes.NODE_CLASS_MAPPINGS["YuE2GenerateABC"], "execute", new=recorded("fresh", lambda _: fresh)), \
      patch.object(nodes.NODE_CLASS_MAPPINGS["bno84.YuE2ExtendABC"], "execute", new=recorded("extend", lambda args: args["abc"] + "EXTENDED\n")):
+    lyrics_style = nodes.NODE_CLASS_MAPPINGS["bno84.LyricsStyle"]
+    # Warnings belong to the frontend; even nonstandard text must pass through.
+    for instrumental in (False, True):
+        assert lyrics_style.execute(instrumental, "[Intro]\nSung words", "piano, 88 BPM").result == (
+            "[Intro]\nSung words", "piano, 88 BPM", instrumental,
+        )
     reference = nodes.NODE_CLASS_MAPPINGS["bno84.ReferenceInput"]
     assert reference.validate_inputs("None", "stale ABC", "missing.wav") is True
     assert reference.fingerprint_inputs("None", "missing.wav") is None
@@ -152,7 +158,7 @@ with patch.object(folder_paths, "get_filename_list", side_effect=filenames), \
         score, clip, lyrics = Capture.values[-1]
         assert score == expected + ("EXTENDED\n" if extend else ""), (suffix, Capture.values)
         assert clip is (instrumental_clip if instrumental else base_clip), suffix
-        expected_lyrics = "[instrumental]" if instrumental else data["32:2"]["inputs"]["value"]
+        expected_lyrics = "[instrumental]" if instrumental else data["32"]["inputs"]["lyrics"]
         assert lyrics == expected_lyrics, (suffix, lyrics)
         assert calls.count("instrumental") == int(instrumental), (suffix, calls)
         assert calls.count("extend") == int(extend), (suffix, calls)

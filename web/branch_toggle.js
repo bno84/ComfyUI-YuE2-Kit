@@ -38,6 +38,7 @@ function knownBoolean(node, outputIndex) {
     if (!["None", "ABC", "Transcribe"].includes(source)) return undefined;
     return { 2: source !== "None", 3: source === "Transcribe", 4: source !== "None" && extend }[outputIndex];
   }
+  if (node.comfyClass === "bno84.LyricsStyle") return outputIndex === 2 ? effectiveWidgetValue(node, "instrumental") : undefined;
   if (node.comfyClass === "PrimitiveBoolean") return effectiveWidgetValue(node, "value");
   if (node.comfyClass !== "ComfyMathExpression") return undefined;
   // These native comparisons derive Boolean flags from a native Custom Combo's
@@ -114,7 +115,7 @@ function syncSubgraph(node, synced, required) {
         throw new Error("Reference input: wait for the file to finish loading before queueing or exporting.");
       }
       if (child.properties?.["bno84.enabledInput"]) required?.push(child);
-      if (["PrimitiveBoolean", "ComfyMathExpression", "bno84.ReferenceInput"].includes(child.comfyClass)) syncBranch(child, synced);
+      if (["PrimitiveBoolean", "ComfyMathExpression", "bno84.ReferenceInput", "bno84.LyricsStyle"].includes(child.comfyClass)) syncBranch(child, synced);
       if (child.subgraph) pending.push(child.subgraph);
     }
   }
@@ -176,7 +177,7 @@ app.registerExtension({
       bindPromotedControls(node);
       return;
     }
-    const widgetName = { PrimitiveBoolean: "value", CustomCombo: "choice", ComfyMathExpression: "expression", "bno84.ReferenceInput": "source" }[node.comfyClass];
+    const widgetName = { PrimitiveBoolean: "value", CustomCombo: "choice", ComfyMathExpression: "expression", "bno84.ReferenceInput": "source", "bno84.LyricsStyle": "instrumental" }[node.comfyClass];
     if (!widgetName) return;
     const control = node.widgets?.find((widget) => widget.name === widgetName);
     if (!control) return;

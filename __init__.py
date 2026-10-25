@@ -12,6 +12,33 @@ from .planning import extend_abc
 WEB_DIRECTORY = "./web"
 
 
+class LyricsStyle(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(
+            node_id="bno84.LyricsStyle",
+            display_name="Lyrics + style",
+            category="audio/YuE2",
+            description="Lyrics or an instrumental section plan, style, and the optional instrumental LoRA control. Instrumental format warnings are advisory; text is passed through unchanged.",
+            inputs=[
+                io.Boolean.Input("instrumental", default=False),
+                io.String.Input("lyrics", multiline=True, default="", dynamic_prompts=False,
+                                tooltip="Instrumental: [instrumental], lowercase section tags, or timed tags such as [intro 0:00-0:15]. One tag per line; no sung words or production notes."),
+                io.String.Input("style", multiline=True, default="", dynamic_prompts=False,
+                                tooltip="YuE2 style tags: genre, instruments, mood, and BPM."),
+            ],
+            outputs=[
+                io.String.Output("lyrics", display_name="Lyrics"),
+                io.String.Output("style", display_name="Style"),
+                io.Boolean.Output("instrumental", display_name="Instrumental"),
+            ],
+        )
+
+    @classmethod
+    def execute(cls, instrumental, lyrics, style):
+        return io.NodeOutput(lyrics, style, instrumental)
+
+
 class OptionalLoadAudio(LoadAudio):
     @classmethod
     def define_schema(cls):
@@ -150,7 +177,7 @@ class SaveYuE2Bundle(io.ComfyNode):
 
 class YuE2KitExtension(ComfyExtension):
     async def get_node_list(self):
-        return [SaveYuE2Bundle, OptionalLoadAudio, ReferenceInput, YuE2ExtendABC]
+        return [SaveYuE2Bundle, OptionalLoadAudio, ReferenceInput, YuE2ExtendABC, LyricsStyle]
 
 
 async def comfy_entrypoint():
