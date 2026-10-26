@@ -210,7 +210,7 @@ with patch.object(folder_paths, "get_filename_list", side_effect=filenames), \
                     print(f"PASS {name}: blocked before queueing")
                     continue
                 # Optional models never block validation, installed or not.
-                assert valid[0], (name, valid)
+                assert valid[0] and "55" in valid[2], (name, valid)
                 calls.clear()
                 executor = execution.PromptExecutor(Mock(client_id=None), cache_args={"ram": 0, "ram_inactive": 0})
                 executor.execute(prompt, name, execute_outputs=valid[2])

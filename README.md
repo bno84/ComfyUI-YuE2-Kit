@@ -17,7 +17,7 @@ comfy-cli, then restart ComfyUI:
 - [ABC Preview](https://registry.comfy.org/publishers/bno84/nodes/comfyui-abcpreview)
   0.3.0+ for notation, playback, and the score timeline.
 - [Audio Visualizer](https://registry.comfy.org/publishers/bno84/nodes/comfyui-audiovisualizer)
-  0.2.0+ for optional video export.
+  0.4.0+ for optional video export.
 
 ## Example workflow
 
