@@ -754,8 +754,7 @@
           "name": "AUDIO",
           "type": "AUDIO",
           "links": [
-            18,
-            27
+            18
           ]
         }
       ],
@@ -843,6 +842,18 @@
       "outputs": [
         {
           "name": "files",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            27
+          ]
+        },
+        {
+          "name": "abc",
           "type": "STRING",
           "links": []
         }
@@ -1549,8 +1560,8 @@
     ],
     [
       27,
-      31,
-      0,
+      11,
+      1,
       55,
       1,
       "AUDIO"

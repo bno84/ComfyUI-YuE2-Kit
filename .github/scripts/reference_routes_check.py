@@ -12,8 +12,10 @@ import importlib
 import importlib.util
 import json
 import sys
+import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
+from types import SimpleNamespace
 
 comfyui, pack = (Path(arg).resolve() for arg in sys.argv[1:])
 sys.path.insert(0, str(comfyui))
@@ -24,7 +26,7 @@ comfy.options.enable_args_parsing()
 import execution
 import folder_paths
 import nodes
-from comfy_api.latest import io
+from comfy_api.latest import io, ui
 from server import PromptServer
 
 
@@ -75,6 +77,30 @@ class Capture:
 
 asyncio.run(register())
 nodes.NODE_CLASS_MAPPINGS["TestCapture"] = Capture
+# Export outputs become available only after both files have been written.
+import torch
+bundle = nodes.NODE_CLASS_MAPPINGS["bno84.SaveYuE2Bundle"]
+audio = {"waveform": torch.zeros(1, 2, 4410), "sample_rate": 44100}
+abc = "X:1\nK:C\nC4 |\n"
+with tempfile.TemporaryDirectory() as output, \
+     patch.object(folder_paths, "get_output_directory", return_value=output), \
+     patch.object(bundle, "hidden", SimpleNamespace(prompt=None, extra_pnginfo=None)):
+    result = bundle.execute(audio, abc, "song")
+    files, returned_audio, returned_abc = result.result
+    flac, score = (Path(name) for name in files.splitlines())
+    assert flac.is_file() and flac.stat().st_size > 0
+    assert score.read_text() == abc
+    assert returned_audio is audio and returned_abc == abc
+    # Saving failure must propagate, leaving downstream consumers unexecuted.
+    with patch.object(ui.AudioSaveHelper, "save_audio", side_effect=OSError("save failed")):
+        try:
+            bundle.execute(audio, abc, "song")
+        except OSError as error:
+            assert str(error) == "save failed"
+        else:
+            raise AssertionError("Export failure was swallowed")
+print("PASS bundle: FLAC + ABC saved before returning audio and score")
+
 original_names = folder_paths.get_filename_list
 file_exists = folder_paths.exists_annotated_filepath
 # Loading the kit copied its default still into the input folder.
@@ -137,7 +163,7 @@ assert data["59"]["class_type"] == "bno84.OptionalModelLora"
 assert data["59"]["inputs"] == {"model": ["34:4", 0], "lora_name": "(none)", "strength_model": 1.0}
 assert not any(node["class_type"] == "bno84.ModelStatus" for node in data.values())
 visualizer = next(node for node in data.values() if node["class_type"] == "AudioVisualizer")
-assert visualizer["inputs"]["enabled"] is False and visualizer["inputs"]["audio"] == data["11"]["inputs"]["audio"]
+assert visualizer["inputs"]["enabled"] is False and visualizer["inputs"]["audio"] == ["11", 1]
 assert data[visualizer["inputs"]["image"][0]]["inputs"]["image"] == "yue2-kit-still.png"
 # Generation length: the timeline's estimate plus a margin, unless Maximum duration is on.
 limit = data[music_inputs["max_duration"][0]]["inputs"]
@@ -149,6 +175,8 @@ assert data[estimate["values.b"][0]]["inputs"]["value"] == 10
 
 def route_prompt(source, extend, instrumental):
     prompt = {key: copy.deepcopy(value) for key, value in data.items() if key not in ("11", "22")}
+    # These routing checks omit final export; keep the disabled visualizer valid.
+    prompt["55"]["inputs"]["audio"] = copy.deepcopy(data["11"]["inputs"]["audio"])
     prompt["capture"] = {"class_type": "TestCapture", "inputs": {
         "value": data["11"]["inputs"]["abc"], "clip": music_inputs["clip"], "lyrics": music_inputs["lyrics"],
         "max_duration": music_inputs["max_duration"], "model": acoustic_model,

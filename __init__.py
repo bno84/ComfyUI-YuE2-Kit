@@ -291,7 +291,11 @@ class SaveYuE2Bundle(io.ComfyNode):
                 io.String.Input("filename_prefix", default="audio/yue2/song"),
             ],
             hidden=[io.Hidden.prompt, io.Hidden.extra_pnginfo],
-            outputs=[io.String.Output("files")],
+            outputs=[
+                io.String.Output("files"),
+                io.Audio.Output("audio"),
+                io.String.Output("abc"),
+            ],
             is_output_node=True,
         )
 
@@ -315,7 +319,7 @@ class SaveYuE2Bundle(io.ComfyNode):
             with score.open("x", encoding="utf-8") as handle:
                 handle.write(abc)
             files.extend([str(path), str(score)])
-        return io.NodeOutput("\n".join(files), ui=ui.SavedAudios(saved))
+        return io.NodeOutput("\n".join(files), audio, abc, ui=ui.SavedAudios(saved))
 
 
 class YuE2KitExtension(ComfyExtension):

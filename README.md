@@ -62,6 +62,10 @@ soundfont subfolders. Supply your own [GeneralUser GS](https://github.com/mrbump
 or choose another General MIDI `.sf2` in `models/soundfonts/`. Missing fonts
 leave notation available. Select **(none)** to disable playback.
 
+Final outputs also passes through the saved audio and ABC. The template feeds
+its audio output to the visualizer so the FLAC and ABC finish saving before
+video rendering starts.
+
 **Visualizer video:** turn **enabled** on and choose an image in **Visualizer
 still**, or use the supplied artwork. The image sets the video resolution.
 For smaller files, use H.265/Opus, a smaller image, or 30 FPS. Video export
