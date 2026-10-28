@@ -96,7 +96,7 @@ test("selections cover whole sections and snap to group boundaries", () => {
   assert.equal(lib.nearestBoundary(GROUPS, 5.9), 1);
   assert.equal(lib.nearestBoundary(GROUPS, 6.1), 2);
   assert.equal(lib.nearestBoundary(GROUPS, 13.5), 4);
-  assert.deepEqual(lib.rangeInfo(GROUPS, [1, 4]), { firstBar: 5, lastBar: 14, bars: 10, labels: ["verse", "chorus"], seconds: 8 });
+  assert.deepEqual(lib.rangeInfo(GROUPS, [1, 4]), { firstBar: 5, lastBar: 14, bars: 10, labels: ["verse", "chorus"], seconds: 8, duration: 19 });
 });
 
 test("dragging selects every group between press and release, in either direction", () => {

@@ -173,6 +173,7 @@ export function rangeInfo(groups, [start, end]) {
   return {
     firstBar: first.bar + 1, lastBar: last.bar + last.bars, bars: last.bar + last.bars - first.bar, labels,
     seconds: groups.slice(0, start).reduce((total, group) => total + group.seconds, 0),
+    duration: groups.slice(start, end).reduce((total, group) => total + group.seconds, 0),
   };
 }
 
@@ -700,7 +701,8 @@ class SongHistoryPanel {
     const whole = this.selection[0] === 0 && this.selection[1] === groups.length;
     const text = element("span", "info");
     text.append(element("b", "", whole ? "Whole song" : `Bars ${info.firstBar}–${info.lastBar}`),
-      ` · ${info.labels.join(", ") || "no sections"} · ${info.bars} bars`);
+      ` · ${info.labels.join(", ") || "no sections"} · ${info.bars} bars · ≈${clock(info.duration)}`);
+    text.title = "The duration follows the score's tempo and meter. The rendered audio can differ by seconds.";
     const ready = this.slice && !this.slice.error && this.slice.range[0] === this.selection[0] && this.slice.range[1] === this.selection[1];
     const previews = nodesOfClass(rootGraph(), "bno84.ABCPreview").filter((node) => node.abcPreview);
     const preview = button("Show in ABC Preview", () => {
