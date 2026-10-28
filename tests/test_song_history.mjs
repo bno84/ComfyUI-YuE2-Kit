@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const source = readFileSync(new URL("../web/song_history.js", import.meta.url), "utf8");
-const NAMES = ["clock", "ago", "savesSong", "cutText", "resolveInput", "runSettings", "pastValueFor", "compareSettings", "samplingText", "sectionRange",
+const NAMES = ["clock", "ago", "savesSong", "cutText", "scoreShare", "resolveInput", "runSettings", "pastValueFor", "compareSettings", "samplingText", "sectionRange",
   "extendRange", "nearestBoundary", "groupAt", "dragRange", "rangeInfo", "findNode", "setInput"];
 const lib = new Function("app", "api",
   source.replace(/^import .*;$/gm, "").replaceAll("export function", "function").replaceAll("export const", "const")
@@ -126,6 +126,13 @@ test("audio longer than the ABC explains the duration mismatch", () => {
   assert.equal(lib.cutText({ audio_end_bar: null, audio_extra_seconds: 92, seconds: 28, bars: 14 }, 120),
     "The score runs ≈0:28, but the FLAC runs 2:00 (≈1:32 longer). The ABC does not cover the full audio.");
   assert.equal(lib.cutText({ audio_end_bar: null, audio_extra_seconds: null, seconds: 28 }, 34), "");
+});
+
+test("the score leaves proportional space for audio beyond the ABC", () => {
+  assert.equal(lib.scoreShare({ seconds: 30, audio_extra_seconds: 90 }), 0.25);
+  assert.equal(lib.scoreShare({ seconds: 30, audio_extra_seconds: null }), 1);
+  assert.equal(lib.scoreShare({ seconds: 120, audio_end_bar: 16 }), 1);
+  assert.equal(lib.scoreShare({ seconds: 0, audio_extra_seconds: 90 }), 0);
 });
 
 test("clock and age read naturally", () => {

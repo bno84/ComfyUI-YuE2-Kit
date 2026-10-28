@@ -290,6 +290,7 @@ function styles() {
 .yue2-history .h-progress b {position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:#76a5eb;}
 .yue2-history .h-zoom {background:#2c3644;border-radius:0 0 4px 4px;padding:8px 8px 10px;margin-bottom:6px;cursor:default;}
 .yue2-history .h-strip {position:relative;height:34px;border-radius:4px;overflow:hidden;background:#252525;user-select:none;touch-action:none;}
+.yue2-history .h-score {position:relative;height:34px;}
 .yue2-history .h-block {position:absolute;top:0;bottom:0;box-sizing:border-box;border-left:1px solid #0006;padding:0 4px;color:#fff;line-height:34px;white-space:nowrap;overflow:hidden;cursor:pointer;}
 .yue2-history .h-cut {position:absolute;top:0;bottom:0;right:0;box-sizing:border-box;border-left:2px solid #ffcf7a;background:repeating-linear-gradient(135deg,#000b 0 4px,#0007 4px 8px);pointer-events:none;}
 .yue2-history .h-mini .h-cut {border-left-width:1px;}
@@ -355,18 +356,35 @@ export function cutText(score, seconds) {
   return `The score runs ≈${clock(score.seconds)}, but the render stopped at ${clock(seconds)}, about bar ${Math.floor(score.audio_end_bar) + 1} of ${score.bars}.`;
 }
 
-function miniStrip(sections, color, audioEnd = null) {
+// Preserve bar spacing within the score, leaving a proportional gap for extra audio.
+export function scoreShare(score) {
+  return score.audio_extra_seconds != null
+    ? score.seconds / (score.seconds + score.audio_extra_seconds) : 1;
+}
+
+function scoreGap(score, label = "") {
+  const overlay = element("div", "h-cut");
+  overlay.style.left = `${100 * scoreShare(score)}%`;
+  overlay.title = `Not in the ABC: the score ends at ≈${clock(score.seconds)}; the FLAC continues for ≈${clock(score.audio_extra_seconds)}.`;
+  if (label) overlay.append(element("span", "", label));
+  return overlay;
+}
+
+function miniStrip(score, color) {
+  const sections = score.sections;
+  const share = scoreShare(score);
   const strip = element("div", "h-mini");
   const total = sections.reduce((sum, section) => sum + section.bars, 0) || 1;
   for (const section of sections) {
     const block = element("i");
     Object.assign(block.style, {
-      left: `${(100 * section.bar) / total}%`, width: `${(100 * section.bars) / total}%`, background: color(section.label),
+      left: `${(100 * share * section.bar) / total}%`, width: `${(100 * share * section.bars) / total}%`, background: color(section.label),
     });
     block.title = `${section.label || "(unnamed)"} · ${section.bars} bars`;
     strip.append(block);
   }
-  if (audioEnd != null) strip.append(cutOverlay(audioEnd, total));
+  if (score.audio_end_bar != null) strip.append(cutOverlay(score.audio_end_bar, total));
+  if (score.audio_extra_seconds != null) strip.append(scoreGap(score));
   return strip;
 }
 
@@ -454,9 +472,9 @@ class SongHistoryPanel {
       const track = element("div", "h-track");
       const progress = element("div", "h-progress");
       progress.append(element("b"));
-      track.append(miniStrip(song.score.sections, this.color, song.score.audio_end_bar), progress);
+      track.append(miniStrip(song.score, this.color), progress);
       const warning = cutText(song.score, song.seconds);
-      const length = element("span", warning ? "cut" : "muted", song.seconds ? `${clock(song.seconds)}${song.score.audio_extra_seconds != null ? " · ABC shorter" : ""}` : "–");
+      const length = element("span", warning ? "cut" : "muted", song.seconds ? clock(song.seconds) : "–");
       length.title = warning || "Length of the FLAC";
       row.append(play, name, track, length);
       row.onclick = () => this.toggleOpen(song);
@@ -605,7 +623,10 @@ class SongHistoryPanel {
     }
     const groups = detail.score.groups;
     const total = detail.score.bars || 1;
-    const strip = element("div", "h-strip");
+    const timeline = element("div", "h-strip");
+    const strip = element("div", "h-score");
+    strip.style.width = `${100 * scoreShare(detail.score)}%`;
+    timeline.append(strip);
     const sections = [];
     groups.forEach((group, index) => {
       if (group.starts_section || !sections.length) sections.push({ label: group.label, start: index, bar: group.bar, bars: 0 });
@@ -674,7 +695,9 @@ class SongHistoryPanel {
       strip.onpointercancel = () => { strip.onpointermove = strip.onpointerup = strip.onpointercancel = null; };
     };
 
+    if (detail.score.audio_extra_seconds != null) timeline.append(scoreGap(detail.score, "not in ABC"));
     const axis = element("div", "h-bars");
+    axis.style.width = `${100 * scoreShare(detail.score)}%`;
     const step = [4, 8, 16, 32, 64].find((value) => total / value <= 12) ?? 128;
     for (let barNumber = 0; barNumber < total; barNumber += step) {
       const label = element("span", "", String(barNumber + 1));
@@ -689,9 +712,7 @@ class SongHistoryPanel {
       this.statusElement.textContent = this.status.text;
       this.statusElement.dataset.error = String(this.status.error);
     }
-    const notes = detail.score.audio_extra_seconds != null
-      ? [element("div", "h-note cut", cutText(detail.score, detail.seconds))] : [];
-    parts.zoom.replaceChildren(strip, axis, ...notes, this.selectionBar, settings, this.statusElement);
+    parts.zoom.replaceChildren(timeline, axis, this.selectionBar, settings, this.statusElement);
     this.renderSelection();
   }
 
