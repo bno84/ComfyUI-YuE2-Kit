@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const source = readFileSync(new URL("../web/song_history.js", import.meta.url), "utf8");
-const NAMES = ["clock", "ago", "savesSong", "resolveInput", "runSettings", "pastValueFor", "compareSettings", "samplingText", "sectionRange",
+const NAMES = ["clock", "ago", "savesSong", "cutText", "resolveInput", "runSettings", "pastValueFor", "compareSettings", "samplingText", "sectionRange",
   "extendRange", "nearestBoundary", "groupAt", "dragRange", "rangeInfo", "findNode", "setInput"];
 const lib = new Function("app", "api",
   source.replace(/^import .*;$/gm, "").replaceAll("export function", "function").replaceAll("export const", "const")
@@ -114,6 +114,12 @@ test("only outputs that saved a FLAC to the output folder refresh the list", () 
   assert.equal(lib.savesSong({ audio: [{ filename: "song.wav", type: "output" }] }), false);
   assert.equal(lib.savesSong({ images: [] }), false);
   assert.equal(lib.savesSong(undefined), false);
+});
+
+test("a cut-short render says where the audio stops", () => {
+  assert.equal(lib.cutText({ audio_end_bar: 72.5, seconds: 268.2, bars: 140 }, 120),
+    "The score runs ≈4:28, but the render stopped at 2:00, about bar 73 of 140.");
+  assert.equal(lib.cutText({ audio_end_bar: null, seconds: 27.4, bars: 16 }, 27.1), "");
 });
 
 test("clock and age read naturally", () => {

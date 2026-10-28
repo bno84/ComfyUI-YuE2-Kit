@@ -94,6 +94,15 @@ class ScoreTests(unittest.TestCase):
         score = history.parse_score(HEADER + "V: Vocal\nZ4|z16|\nV: Ins\nZ5|\n")
         self.assertEqual(score["groups"][0]["bars"], {"Vocal": 5, "Ins": 5})
 
+    def test_marks_where_audio_stops_only_when_cut_well_short(self):
+        groups = history.parse_score(SCORE)["groups"]
+        # 12 bars of 4/4 at 120 take 24 seconds, then 2 bars of 3/4 at 90 take 4.
+        self.assertIsNone(history.audio_end_bar(groups, 28))
+        self.assertIsNone(history.audio_end_bar(groups, 28 - history.CUT_MARGIN))
+        self.assertEqual(history.audio_end_bar(groups, 10), 5.0)
+        self.assertIsNone(history.audio_end_bar(groups, None))
+        self.assertEqual(history.summary(history.parse_score(SCORE), 10)["audio_end_bar"], 5.0)
+
     def test_rejects_ranges_outside_the_score(self):
         for start, end in [(-1, 1), (2, 2), (0, 9)]:
             with self.assertRaises(ValueError):

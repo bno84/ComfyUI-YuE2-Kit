@@ -290,6 +290,10 @@ function styles() {
 .yue2-history .h-zoom {background:#2c3644;border-radius:0 0 4px 4px;padding:8px 8px 10px;margin-bottom:6px;cursor:default;}
 .yue2-history .h-strip {position:relative;height:34px;border-radius:4px;overflow:hidden;background:#252525;user-select:none;touch-action:none;}
 .yue2-history .h-block {position:absolute;top:0;bottom:0;box-sizing:border-box;border-left:1px solid #0006;padding:0 4px;color:#fff;line-height:34px;white-space:nowrap;overflow:hidden;cursor:pointer;}
+.yue2-history .h-cut {position:absolute;top:0;bottom:0;right:0;box-sizing:border-box;border-left:2px solid #ffcf7a;background:repeating-linear-gradient(135deg,#000b 0 4px,#0007 4px 8px);pointer-events:none;}
+.yue2-history .h-mini .h-cut {border-left-width:1px;}
+.yue2-history .h-strip .h-cut span {position:absolute;left:4px;top:0;color:#ffcf7a;font-size:11px;line-height:34px;white-space:nowrap;}
+.yue2-history .cut {color:#ffcf7a;opacity:1;}
 .yue2-history .h-grid {position:absolute;top:0;bottom:0;width:1px;background:#0004;pointer-events:none;}
 .yue2-history .h-sel {position:absolute;top:0;bottom:0;box-sizing:border-box;border:2px solid #fff;border-radius:3px;box-shadow:0 0 0 999px #0008;pointer-events:none;}
 .yue2-history .h-handle {position:absolute;top:50%;width:8px;height:20px;margin-top:-10px;background:#fff;border-radius:2px;pointer-events:auto;cursor:ew-resize;}
@@ -333,7 +337,21 @@ function button(text, onClick, className = "") {
   return node;
 }
 
-function miniStrip(sections, color) {
+// Hatching over the bars after the audio stops, when the render was cut short.
+function cutOverlay(audioEnd, total, label = "") {
+  const overlay = element("div", "h-cut");
+  overlay.style.left = `${(100 * audioEnd) / total}%`;
+  overlay.title = `Not in the FLAC: the render stopped at about bar ${Math.floor(audioEnd) + 1} of ${total}.`;
+  if (label) overlay.append(element("span", "", label));
+  return overlay;
+}
+
+export function cutText(score, seconds) {
+  if (score.audio_end_bar == null) return "";
+  return `The score runs ≈${clock(score.seconds)}, but the render stopped at ${clock(seconds)}, about bar ${Math.floor(score.audio_end_bar) + 1} of ${score.bars}.`;
+}
+
+function miniStrip(sections, color, audioEnd = null) {
   const strip = element("div", "h-mini");
   const total = sections.reduce((sum, section) => sum + section.bars, 0) || 1;
   for (const section of sections) {
@@ -344,6 +362,7 @@ function miniStrip(sections, color) {
     block.title = `${section.label || "(unnamed)"} · ${section.bars} bars`;
     strip.append(block);
   }
+  if (audioEnd != null) strip.append(cutOverlay(audioEnd, total));
   return strip;
 }
 
@@ -431,8 +450,10 @@ class SongHistoryPanel {
       const track = element("div", "h-track");
       const progress = element("div", "h-progress");
       progress.append(element("b"));
-      track.append(miniStrip(song.score.sections, this.color), progress);
-      row.append(play, name, track, element("span", "muted", song.seconds ? clock(song.seconds) : "–"));
+      track.append(miniStrip(song.score.sections, this.color, song.score.audio_end_bar), progress);
+      const length = element("span", song.score.audio_end_bar != null ? "cut" : "muted", song.seconds ? clock(song.seconds) : "–");
+      length.title = cutText(song.score, song.seconds) || "Length of the FLAC";
+      row.append(play, name, track, length);
       row.onclick = () => this.toggleOpen(song);
       items.push(row);
       const zoom = element("div", "h-zoom");
@@ -598,6 +619,7 @@ class SongHistoryPanel {
       line.style.left = `${(100 * group.bar) / total}%`;
       strip.append(line);
     }
+    if (detail.score.audio_end_bar != null) strip.append(cutOverlay(detail.score.audio_end_bar, total, "not in FLAC"));
     this.selectionElement = element("div", "h-sel");
     const handles = [element("div", "h-handle"), element("div", "h-handle")];
     handles[0].style.left = "-5px";
@@ -689,8 +711,12 @@ class SongHistoryPanel {
     preview.title = previews.length ? "Show this selection's score in the workflow's ABC Preview" : "Add an ABC Preview node to the workflow";
     const song = this.songs.find((entry) => entry.path === detail.path);
     const from = Math.max(0, info.seconds - PREROLL);
-    const flac = button(`▶ FLAC from ≈${clock(from)}`, () => this.play(song, from));
-    flac.title = "Score time and audio time can differ, so playback starts a little early.";
+    const audioEnd = detail.score.audio_end_bar;
+    const afterAudio = audioEnd != null && info.firstBar - 1 >= audioEnd;
+    const flac = button(afterAudio ? "Not in the FLAC" : `▶ FLAC from ≈${clock(from)}`, () => this.play(song, from));
+    flac.disabled = afterAudio;
+    flac.title = afterAudio ? cutText(detail.score, detail.seconds)
+      : "Score time and audio time can differ, so playback starts a little early.";
     const copy = button("Copy ABC", async () => {
       try {
         await navigator.clipboard.writeText(this.slice.abc);
@@ -738,9 +764,9 @@ class SongHistoryPanel {
     const scoreBox = element("div", "h-box");
     scoreBox.append(element("h4", "", "Score"));
     const scoreKv = element("div", "h-kv");
-    const fact = (label, value, mono = false) => {
-      const shown = element("span", `v${mono ? " mono" : ""}`, value);
-      shown.title = value;
+    const fact = (label, value, mono = false, warning = "") => {
+      const shown = element("span", `v${mono ? " mono" : ""}${warning ? " cut" : ""}`, value);
+      shown.title = warning || value;
       scoreKv.append(element("span", "muted", label), shown, element("span"));
     };
     const reference = settings.reference;
@@ -749,7 +775,9 @@ class SongHistoryPanel {
     const fields = detail.score.fields;
     const tempo = /(\d+(?:\.\d+)?)\s*$/.exec(fields.Q ?? "")?.[1];
     fact("Score", `${detail.score.bars} bars · ≈${clock(detail.score.seconds)}${tempo ? ` at Q:${tempo}` : ""}`);
-    fact("Audio", detail.seconds ? `FLAC ${clock(detail.seconds)}` : "–");
+    fact("Audio", !detail.seconds ? "–" : detail.score.audio_end_bar == null ? `FLAC ${clock(detail.seconds)}`
+      : `FLAC ${clock(detail.seconds)} · stops ≈ bar ${Math.floor(detail.score.audio_end_bar) + 1}`, false,
+      detail.score.audio_end_bar != null ? cutText(detail.score, detail.seconds) : "");
     fact("Header", ["M", "K"].filter((name) => fields[name]).map((name) => `${name}:${fields[name]}`).join(" · ") || "–", true);
     scoreBox.append(scoreKv);
     columns.append(runBox, scoreBox);

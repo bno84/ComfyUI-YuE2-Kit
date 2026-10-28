@@ -28,6 +28,10 @@ REST_BARS = re.compile(r"^Z(\d*)$")
 TIE_OUT = re.compile(r"-\s*(?:[:|\]]+\s*)?$")
 STATE_FIELDS = ("M", "L", "Q", "K")
 DEFAULT_TEMPO = 120
+# Audio drifts from the score by seconds; across 158 saved songs, by at most
+# 4.8. A larger shortfall means the render stopped early, at its maximum
+# duration. The smallest such cut seen was 7.7 seconds short.
+CUT_MARGIN = 6.0
 
 
 def flac_info(path):
@@ -227,8 +231,24 @@ def parse_score(abc):
     return {"header": header, "voices": voices, "groups": groups, "bars": start_bar}
 
 
-def summary(score):
-    """Groups and sections without the raw lines, for the browser."""
+def audio_end_bar(groups, audio_seconds):
+    """The nominal bar where audio stops, when it stops well before the score; else None."""
+    total = sum(group["seconds"] for group in groups)
+    if audio_seconds is None or total - audio_seconds <= CUT_MARGIN:
+        return None
+    elapsed = 0.0
+    for group in groups:
+        if group["seconds"] and elapsed + group["seconds"] >= audio_seconds:
+            return round(group["bar"] + group["first_bars"] * (audio_seconds - elapsed) / group["seconds"], 2)
+        elapsed += group["seconds"]
+    return None
+
+
+def summary(score, audio_seconds=None):
+    """Groups and sections without the raw lines, for the browser.
+
+    ``audio_end_bar`` marks where the audio stops when the render was cut short.
+    """
     groups = [{
         "label": g["label"], "starts_section": g["label_line"], "bar": g["bar"], "bars": g["first_bars"],
         "seconds": round(g["seconds"], 3),
@@ -246,6 +266,7 @@ def summary(score):
     return {
         "bars": score["bars"], "seconds": round(sum(g["seconds"] for g in groups), 3),
         "groups": groups, "sections": [s for s in sections if s["bars"]], "fields": fields,
+        "audio_end_bar": audio_end_bar(score["groups"], audio_seconds),
     }
 
 
@@ -319,12 +340,12 @@ class SongIndex:
             return cached[1]
         seconds, tags = flac_info(flac)
         prompt = embedded_prompt(tags)
-        score = summary(parse_score(score_path.read_text(encoding="utf-8", errors="replace")))
+        score = summary(parse_score(score_path.read_text(encoding="utf-8", errors="replace")), seconds)
         relative = flac.relative_to(root).as_posix()
         entry = {
             "path": relative, "name": flac.stem, "mtime": stats[0].st_mtime, "seconds": seconds,
             "has_prompt": prompt is not None, **lyrics_style(prompt),
-            "score": {k: score[k] for k in ("bars", "seconds", "sections", "fields")},
+            "score": {k: score[k] for k in ("bars", "seconds", "sections", "fields", "audio_end_bar")},
         }
         self.cache[flac] = (key, entry)
         return entry
@@ -366,5 +387,5 @@ def song_detail(root, relative):
     abc = score_path.read_text(encoding="utf-8", errors="replace")
     return {
         "path": flac.relative_to(Path(root).resolve()).as_posix(), "name": flac.stem, "seconds": seconds,
-        "abc": abc, "score": summary(parse_score(abc)), "prompt": embedded_prompt(tags),
+        "abc": abc, "score": summary(parse_score(abc), seconds), "prompt": embedded_prompt(tags),
     }
