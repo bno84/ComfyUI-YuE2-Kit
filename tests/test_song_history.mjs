@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const source = readFileSync(new URL("../web/song_history.js", import.meta.url), "utf8");
-const NAMES = ["clock", "ago", "resolveInput", "runSettings", "pastValueFor", "compareSettings", "samplingText", "sectionRange",
+const NAMES = ["clock", "ago", "savesSong", "resolveInput", "runSettings", "pastValueFor", "compareSettings", "samplingText", "sectionRange",
   "extendRange", "nearestBoundary", "groupAt", "dragRange", "rangeInfo", "findNode", "setInput"];
 const lib = new Function("app", "api",
   source.replace(/^import .*;$/gm, "").replaceAll("export function", "function").replaceAll("export const", "const")
@@ -106,6 +106,14 @@ test("dragging selects every group between press and release, in either directio
   assert.deepEqual(lib.dragRange(GROUPS, 5, 9), [1, 3]);
   assert.deepEqual(lib.dragRange(GROUPS, 13, 2), [0, 4]);
   assert.deepEqual(lib.dragRange(GROUPS, 6, 6.5), [1, 2]);
+});
+
+test("only outputs that saved a FLAC to the output folder refresh the list", () => {
+  assert.equal(lib.savesSong({ audio: [{ filename: "song_00211.flac", subfolder: "audio/yue2", type: "output" }] }), true);
+  assert.equal(lib.savesSong({ audio: [{ filename: "preview.flac", type: "temp" }] }), false);
+  assert.equal(lib.savesSong({ audio: [{ filename: "song.wav", type: "output" }] }), false);
+  assert.equal(lib.savesSong({ images: [] }), false);
+  assert.equal(lib.savesSong(undefined), false);
 });
 
 test("clock and age read naturally", () => {

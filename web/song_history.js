@@ -40,6 +40,11 @@ export function sectionColors() {
   };
 }
 
+// A node's executed output that saved a FLAC to the output folder, as Final outputs does.
+export function savesSong(output) {
+  return (output?.audio ?? []).some((file) => file?.type === "output" && /\.flac$/i.test(file?.filename ?? ""));
+}
+
 const scalar = (value) => value === null || ["string", "number", "boolean"].includes(typeof value);
 const isLink = (value) => Array.isArray(value) && value.length === 2 && typeof value[0] === "string";
 
@@ -363,11 +368,11 @@ class SongHistoryPanel {
     this.filter.placeholder = "Filter by name, style or lyrics…";
     this.filter.setAttribute("aria-label", "Filter songs");
     this.filter.oninput = () => { clearTimeout(this.filterTimer); this.filterTimer = setTimeout(() => this.load(), 250); };
-    const refresh = button("↻", () => this.load());
+    const refresh = button("↻", () => this.load("refresh"));
     refresh.title = "Refresh the list";
     bar.append(this.filter, refresh);
     this.list = element("div", "h-list");
-    this.more = button(`Show ${PAGE} more`, () => this.load(true), "h-more");
+    this.more = button(`Show ${PAGE} more`, () => this.load("more"), "h-more");
     this.root.append(bar, this.list, this.more);
     this.audio = new Audio();
     this.audio.preload = "none";
@@ -380,12 +385,22 @@ class SongHistoryPanel {
     });
     this.widget.serialize = false;
     if (node.size[0] < 620 || node.size[1] < 560) node.setSize([Math.max(node.size[0], 620), Math.max(node.size[1], 560)]);
+    // A finished run that saved a song refreshes the list, keeping what is shown.
+    this.onExecuted = ({ detail }) => {
+      if (!savesSong(detail?.output)) return;
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = setTimeout(() => this.load("refresh"), 300);
+    };
+    api.addEventListener("executed", this.onExecuted);
     this.load();
   }
 
-  async load(append = false) {
+  // "first" page, "more" songs after those shown, or "refresh" as many as are shown.
+  async load(mode = "first") {
+    const append = mode === "more";
     const offset = append ? this.songs.length : 0;
-    const query = new URLSearchParams({ q: this.filter.value, offset, limit: PAGE });
+    const limit = mode === "refresh" ? Math.min(100, Math.max(PAGE, this.songs.length)) : PAGE;
+    const query = new URLSearchParams({ q: this.filter.value, offset, limit });
     const request = ++this.request;
     try {
       const response = await api.fetchApi(`/yue2-kit/history?${query}`);
@@ -425,11 +440,13 @@ class SongHistoryPanel {
       items.push(zoom);
       this.rows.set(song.path, { row, play, progress, zoom });
     }
+    const scroll = this.list.scrollTop;
     this.list.replaceChildren(...items);
     this.more.hidden = this.songs.length >= this.total;
     this.more.textContent = `Show ${Math.min(PAGE, this.total - this.songs.length)} more`;
     this.renderPlayState();
     this.renderOpen();
+    this.list.scrollTop = scroll;
   }
 
   songUrl(path) {
@@ -827,6 +844,8 @@ class SongHistoryPanel {
 
   destroy() {
     this.destroyed = true;
+    clearTimeout(this.refreshTimer);
+    api.removeEventListener("executed", this.onExecuted);
     this.audio.pause();
     this.audio.removeAttribute("src");
     this.root.remove();
