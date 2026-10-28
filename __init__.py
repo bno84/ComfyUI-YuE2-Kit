@@ -1,5 +1,6 @@
 """YuE2-Kit: score continuation, optional audio input, optional model files, and paired song/score export."""
 
+import asyncio
 import json
 import logging
 import shutil
@@ -12,6 +13,7 @@ from comfy_extras.nodes_audio import LoadAudio
 from comfy_extras.nodes_yue2 import YuE2GenerateABC
 from server import PromptServer
 
+from .history import SongIndex, resolve_song, slice_score, song_detail
 from .model_files import file_choices, missing_message, resolve, workflow_models
 from .planning import extend_abc
 from .optional_lora import load_optional_lora
@@ -144,6 +146,66 @@ if getattr(PromptServer, "instance", None) is not None:
                 "folder": folder, "installed": resolve(str(item.get("name", "")), folder_paths.get_filename_list(folder)),
             })
         return web.json_response(found)
+
+
+class SongHistory(io.ComfyNode):
+    """Display only: the frontend lists saved songs and restores their settings into the graph."""
+
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(
+            node_id="bno84.SongHistory",
+            display_name="Song history",
+            category="audio/YuE2",
+            description=(
+                "Lists songs saved as FLAC + ABC pairs, newest first. Play them, select bars to reuse as a "
+                "reference, and restore the seed, lyrics and style they were made with. Not part of the prompt."
+            ),
+            inputs=[],
+            outputs=[],
+        )
+
+    @classmethod
+    def execute(cls):
+        return io.NodeOutput()
+
+
+SONGS = SongIndex()
+
+
+def _bad_request(error):
+    return web.json_response({"error": str(error)}, status=400)
+
+
+if getattr(PromptServer, "instance", None) is not None:
+    @PromptServer.instance.routes.get("/yue2-kit/history")
+    async def list_songs(request):
+        try:
+            offset = max(0, int(request.query.get("offset", 0)))
+            limit = min(100, max(1, int(request.query.get("limit", 20))))
+        except ValueError as error:
+            return _bad_request(error)
+        found = await asyncio.to_thread(
+            SONGS.list, folder_paths.get_output_directory(), request.query.get("q", ""), offset, limit)
+        return web.json_response(found)
+
+    @PromptServer.instance.routes.get("/yue2-kit/history/song")
+    async def get_song(request):
+        try:
+            return web.json_response(await asyncio.to_thread(
+                song_detail, folder_paths.get_output_directory(), request.query.get("path", "")))
+        except (OSError, ValueError) as error:
+            return _bad_request(error)
+
+    @PromptServer.instance.routes.post("/yue2-kit/history/slice")
+    async def slice_song(request):
+        try:
+            body = await request.json()
+            _, score = resolve_song(folder_paths.get_output_directory(), str(body.get("path", "")))
+            abc, warnings = slice_score(score.read_text(encoding="utf-8"), int(body["start"]), int(body["end"]))
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            return _bad_request(error)
+        return web.json_response({"abc": abc, "warnings": warnings})
 
 
 class LyricsStyle(io.ComfyNode):
@@ -327,6 +389,7 @@ class YuE2KitExtension(ComfyExtension):
         return [
             SaveYuE2Bundle, OptionalLoadAudio, ReferenceInput, YuE2ExtendABC, LyricsStyle,
             CheckpointFile, OptionalAudioEncoderFile, OptionalLoraFile, OptionalModelLora, ModelStatus,
+            SongHistory,
         ]
 
 

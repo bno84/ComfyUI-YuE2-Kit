@@ -53,6 +53,19 @@ With **Extend reference** off, the chosen score is used as-is and planning is
 skipped. With it on, planning continues the reference as the start of the song.
 Lyrics and style still apply.
 
+**Song history:** browse songs saved as FLAC + ABC pairs, newest first. It
+sits above Reference input in the template. Press ▶ to play a song. Click a row to open
+it: click a section to select it, shift-click to extend the selection, or drag
+the handles. Selections snap to the score's groups of up to four bars.
+**Use as reference** puts the selected bars in Reference input and leaves
+Extend reference as it is. **Show in ABC Preview** shows them in the workflow's
+preview until the next run. The restore buttons use the prompt that ComfyUI
+embeds in each FLAC: **Restore seed** also sets the seed to fixed, and
+**Restore all** also restores sampling and uses the whole score with Extend
+off. Badges compare each setting with the current graph. Sections are measured
+in bars, and the audio can drift from the score by seconds, so **FLAC from ≈**
+starts playback a little early.
+
 **NAR LoRA:** an optional acoustic adapter that pairs well with Instrumental.
 Start at strength **1.0**; select **(none)** or strength **0** to disable it.
 Use the ComfyUI export linked in the workflow. No extra tokenizer is needed here.

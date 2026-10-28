@@ -280,6 +280,8 @@ app.registerExtension({
       if (widget.options.getHeight) widget.options.getHeight = () => 0;
     }
     const panel = new ReferencePanel(node);
+    // Song history writes the hidden widgets, then asks the panel to redraw.
+    node.yue2ReferencePanel = panel;
     const configured = node.onGraphConfigured;
     node.onGraphConfigured = function (...args) { const result = configured?.apply(this, args); panel.render(); panel.ensureMinimumSize(); return result; };
     const removed = node.onRemoved;

@@ -1,7 +1,7 @@
 {
   "id": "75140c3e-0999-5e9e-8139-ff1a6450053b",
   "revision": 1,
-  "last_node_id": 62,
+  "last_node_id": 64,
   "last_link_id": 32,
   "nodes": [
     {
@@ -1368,6 +1368,56 @@
       "properties": {},
       "widgets_values": [
         "Creates a video from a still image with a bar or dots spectrum.\n<br>Turn **enabled** on to export a video with your generated song.\n\nChoose the image in **Visualizer still**.\n<br>_The video resolution will match the input image._\n\nAdjust the visualizer options with a mock preview of your settings below.\n\n\n## Reducing file size\n\nIf you're looking for smaller files:\n1. Use the h265/opus codecs (large difference vs h265/flac).\n2. Lower the resolution by picking a smaller input image.\n3. Use 30 fps (small difference).\n\nRequires FFmpeg, with `showcqt` and support for your selected codec.\n"
+      ],
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 63,
+      "type": "bno84.SongHistory",
+      "pos": [
+        110,
+        -780
+      ],
+      "size": [
+        1045,
+        560
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Song history",
+      "properties": {
+        "Node name for S&R": "bno84.SongHistory",
+        "cnr_id": "comfyui-yue2-kit",
+        "ver": "0.6.2"
+      },
+      "widgets_values": [],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 64,
+      "type": "MarkdownNote",
+      "pos": [
+        -309.7603798869784,
+        -780
+      ],
+      "size": [
+        388.92889425187366,
+        300
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Song history · usage",
+      "properties": {},
+      "widgets_values": [
+        "Browse earlier songs saved by **Final outputs**, newest first.\n\n- ▶ plays the FLAC. Click a row to open its score.\n- Click a section, shift-click to extend, or drag the handles to select bars.\n- **Use as reference** sends the selection to Reference input. Turn on \"extend reference\" to continue from it.\n- **Restore seed** sets the seed to fixed. **Restore all** brings back the seed, lyrics, style and sampling, with the whole score as reference.\n\nSections are counted in bars; the audio can drift from the score by a few seconds."
       ],
       "color": "#2a363b",
       "bgcolor": "#3f5159"
