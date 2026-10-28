@@ -1417,7 +1417,7 @@
       "title": "Song history · usage",
       "properties": {},
       "widgets_values": [
-        "Browse earlier songs saved by **Final outputs**, newest first.\n\n- ▶ plays the FLAC. Click a row to open its score.\n- Click a section, shift-click to extend, or drag the handles to select bars.\n- **Use as reference** sends the selection to Reference input. Turn on \"extend reference\" to continue from it.\n- **Restore seed** sets the seed to fixed. **Restore all** brings back the seed, lyrics, style and sampling, with the whole score as reference.\n\nSections are counted in bars; the audio can drift from the score by a few seconds."
+        "Browse earlier songs saved by **Final outputs**, newest first.\n\n- ▶ plays the FLAC. Click a row to open its score.\n- Click a section, shift-click to extend, or drag the handles to select bars.\n- **Use as reference** sends the selection to Reference input. Turn on \"extend reference\" to continue from it.\n- **Restore seed** sets the seed to fixed. **Restore all** brings back the seed, lyrics, style and sampling, with the whole score as reference.\n\nSections are counted in bars; the audio can drift from the score by a few seconds.\n\n## Alignment gotcha\n\nFLAC and ABC don't always align. If maximum duration is set, the ABC may be longer than the FLAC.\n\nDuring generation the FLAC may also drift and become longer than the ABC.\n\nThe history will try to visualize the differences but is not perfectly aligning the score with audio."
       ],
       "color": "#2a363b",
       "bgcolor": "#3f5159"
