@@ -122,6 +122,12 @@ test("a cut-short render says where the audio stops", () => {
   assert.equal(lib.cutText({ audio_end_bar: null, seconds: 27.4, bars: 16 }, 27.1), "");
 });
 
+test("audio longer than the ABC explains the duration mismatch", () => {
+  assert.equal(lib.cutText({ audio_end_bar: null, audio_extra_seconds: 92, seconds: 28, bars: 14 }, 120),
+    "The score runs ≈0:28, but the FLAC runs 2:00 (≈1:32 longer). The ABC does not cover the full audio.");
+  assert.equal(lib.cutText({ audio_end_bar: null, audio_extra_seconds: null, seconds: 28 }, 34), "");
+});
+
 test("clock and age read naturally", () => {
   assert.equal(lib.clock(89.6), "1:30");
   assert.equal(lib.ago(1000, 1000 + 150), "2 min ago");

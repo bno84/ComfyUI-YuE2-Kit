@@ -103,6 +103,14 @@ class ScoreTests(unittest.TestCase):
         self.assertIsNone(history.audio_end_bar(groups, None))
         self.assertEqual(history.summary(history.parse_score(SCORE), 10)["audio_end_bar"], 5.0)
 
+    def test_flags_audio_longer_than_the_score_beyond_the_drift_margin(self):
+        score = history.parse_score(SCORE)
+        for seconds in (None, 28, 28 + history.CUT_MARGIN, 10):
+            self.assertIsNone(history.summary(score, seconds)["audio_extra_seconds"])
+        result = history.summary(score, 120)
+        self.assertEqual(result["audio_extra_seconds"], 92)
+        self.assertIsNone(result["audio_end_bar"])
+
     def test_rejects_ranges_outside_the_score(self):
         for start, end in [(-1, 1), (2, 2), (0, 9)]:
             with self.assertRaises(ValueError):
@@ -142,6 +150,18 @@ class SongTests(unittest.TestCase):
         self.assertEqual([s["path"] for s in found["songs"]], ["audio/yue2/song_00002.flac", "audio/yue2/song_00001.flac"])
         self.assertEqual(found["songs"][0]["style"], "dark rave")
         self.assertEqual(found["songs"][0]["score"]["bars"], 14)
+
+    def test_long_audio_warning_is_in_both_list_and_detail(self):
+        path = self.root / "audio/yue2/song_00002.abc"
+        path.write_text(HEADER + "V: Vocal\nz1|\n", encoding="utf-8")
+        # A short score paired with the fixture's 2.5-second FLAC stays within drift.
+        self.assertIsNone(history.song_detail(self.root, "audio/yue2/song_00002.flac")["score"]["audio_extra_seconds"])
+        flac = path.with_suffix(".flac")
+        flac.write_bytes(flac_bytes(seconds=120))
+        listed = history.SongIndex().entry(self.root, flac)["score"]
+        detail = history.song_detail(self.root, "audio/yue2/song_00002.flac")["score"]
+        self.assertGreater(listed["audio_extra_seconds"], history.CUT_MARGIN)
+        self.assertEqual(listed["audio_extra_seconds"], detail["audio_extra_seconds"])
 
     def test_filters_by_name_style_or_lyrics_and_pages(self):
         index = history.SongIndex()

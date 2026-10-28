@@ -348,6 +348,9 @@ function cutOverlay(audioEnd, total, label = "") {
 }
 
 export function cutText(score, seconds) {
+  if (score.audio_extra_seconds != null) {
+    return `The score runs ≈${clock(score.seconds)}, but the FLAC runs ${clock(seconds)} (≈${clock(score.audio_extra_seconds)} longer). The ABC does not cover the full audio.`;
+  }
   if (score.audio_end_bar == null) return "";
   return `The score runs ≈${clock(score.seconds)}, but the render stopped at ${clock(seconds)}, about bar ${Math.floor(score.audio_end_bar) + 1} of ${score.bars}.`;
 }
@@ -452,8 +455,9 @@ class SongHistoryPanel {
       const progress = element("div", "h-progress");
       progress.append(element("b"));
       track.append(miniStrip(song.score.sections, this.color, song.score.audio_end_bar), progress);
-      const length = element("span", song.score.audio_end_bar != null ? "cut" : "muted", song.seconds ? clock(song.seconds) : "–");
-      length.title = cutText(song.score, song.seconds) || "Length of the FLAC";
+      const warning = cutText(song.score, song.seconds);
+      const length = element("span", warning ? "cut" : "muted", song.seconds ? `${clock(song.seconds)}${song.score.audio_extra_seconds != null ? " · ABC shorter" : ""}` : "–");
+      length.title = warning || "Length of the FLAC";
       row.append(play, name, track, length);
       row.onclick = () => this.toggleOpen(song);
       items.push(row);
@@ -685,7 +689,9 @@ class SongHistoryPanel {
       this.statusElement.textContent = this.status.text;
       this.statusElement.dataset.error = String(this.status.error);
     }
-    parts.zoom.replaceChildren(strip, axis, this.selectionBar, settings, this.statusElement);
+    const notes = detail.score.audio_extra_seconds != null
+      ? [element("div", "h-note cut", cutText(detail.score, detail.seconds))] : [];
+    parts.zoom.replaceChildren(strip, axis, ...notes, this.selectionBar, settings, this.statusElement);
     this.renderSelection();
   }
 
@@ -700,7 +706,7 @@ class SongHistoryPanel {
     });
     const whole = this.selection[0] === 0 && this.selection[1] === groups.length;
     const text = element("span", "info");
-    text.append(element("b", "", whole ? "Whole song" : `Bars ${info.firstBar}–${info.lastBar}`),
+    text.append(element("b", "", whole ? "Whole score" : `Bars ${info.firstBar}–${info.lastBar}`),
       ` · ${info.labels.join(", ") || "no sections"} · ${info.bars} bars · ≈${clock(info.duration)}`);
     text.title = "The duration follows the score's tempo and meter. The rendered audio can differ by seconds.";
     const ready = this.slice && !this.slice.error && this.slice.range[0] === this.selection[0] && this.slice.range[1] === this.selection[1];
@@ -779,7 +785,7 @@ class SongHistoryPanel {
     fact("Score", `${detail.score.bars} bars · ≈${clock(detail.score.seconds)}${tempo ? ` at Q:${tempo}` : ""}`);
     fact("Audio", !detail.seconds ? "–" : detail.score.audio_end_bar == null ? `FLAC ${clock(detail.seconds)}`
       : `FLAC ${clock(detail.seconds)} · stops ≈ bar ${Math.floor(detail.score.audio_end_bar) + 1}`, false,
-      detail.score.audio_end_bar != null ? cutText(detail.score, detail.seconds) : "");
+      cutText(detail.score, detail.seconds));
     fact("Header", ["M", "K"].filter((name) => fields[name]).map((name) => `${name}:${fields[name]}`).join(" · ") || "–", true);
     scoreBox.append(scoreKv);
     columns.append(runBox, scoreBox);

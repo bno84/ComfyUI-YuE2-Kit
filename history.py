@@ -248,6 +248,7 @@ def summary(score, audio_seconds=None):
     """Groups and sections without the raw lines, for the browser.
 
     ``audio_end_bar`` marks where the audio stops when the render was cut short.
+    ``audio_extra_seconds`` flags audio substantially longer than the score.
     """
     groups = [{
         "label": g["label"], "starts_section": g["label_line"], "bar": g["bar"], "bars": g["first_bars"],
@@ -258,6 +259,8 @@ def summary(score, audio_seconds=None):
         if group["starts_section"] or not sections:
             sections.append({"label": group["label"], "bar": group["bar"], "bars": 0})
         sections[-1]["bars"] += group["bars"]
+    score_seconds = sum(g["seconds"] for g in score["groups"])
+    extra_seconds = None if audio_seconds is None else audio_seconds - score_seconds
     fields = {}
     for line in score["header"]:
         field = FIELD.match(line)
@@ -267,6 +270,7 @@ def summary(score, audio_seconds=None):
         "bars": score["bars"], "seconds": round(sum(g["seconds"] for g in groups), 3),
         "groups": groups, "sections": [s for s in sections if s["bars"]], "fields": fields,
         "audio_end_bar": audio_end_bar(score["groups"], audio_seconds),
+        "audio_extra_seconds": round(extra_seconds, 3) if extra_seconds is not None and extra_seconds > CUT_MARGIN else None,
     }
 
 
@@ -345,7 +349,7 @@ class SongIndex:
         entry = {
             "path": relative, "name": flac.stem, "mtime": stats[0].st_mtime, "seconds": seconds,
             "has_prompt": prompt is not None, **lyrics_style(prompt),
-            "score": {k: score[k] for k in ("bars", "seconds", "sections", "fields", "audio_end_bar")},
+            "score": {k: score[k] for k in ("bars", "seconds", "sections", "fields", "audio_end_bar", "audio_extra_seconds")},
         }
         self.cache[flac] = (key, entry)
         return entry
