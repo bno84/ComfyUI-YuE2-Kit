@@ -293,6 +293,7 @@ function styles() {
 .yue2-history .h-score {position:relative;height:34px;}
 .yue2-history .h-block {position:absolute;top:0;bottom:0;box-sizing:border-box;border-left:1px solid #0006;padding:0 4px;color:#fff;line-height:34px;white-space:nowrap;overflow:hidden;cursor:pointer;}
 .yue2-history .h-cut {position:absolute;top:0;bottom:0;right:0;box-sizing:border-box;border-left:2px solid #ffcf7a;background:repeating-linear-gradient(135deg,#000b 0 4px,#0007 4px 8px);pointer-events:none;}
+.yue2-history .h-extra {background:repeating-linear-gradient(135deg,#ffcf7a38 0 4px,#ffcf7a59 4px 8px);}
 .yue2-history .h-mini .h-cut {border-left-width:1px;}
 .yue2-history .h-strip .h-cut span {position:absolute;left:4px;top:0;color:#ffcf7a;font-size:11px;line-height:34px;white-space:nowrap;}
 .yue2-history .cut {color:#ffcf7a;opacity:1;}
@@ -363,7 +364,7 @@ export function scoreShare(score) {
 }
 
 function scoreGap(score, label = "") {
-  const overlay = element("div", "h-cut");
+  const overlay = element("div", "h-cut h-extra");
   overlay.style.left = `${100 * scoreShare(score)}%`;
   overlay.title = `Not in the ABC: the score ends at ≈${clock(score.seconds)}; the FLAC continues for ≈${clock(score.audio_extra_seconds)}.`;
   if (label) overlay.append(element("span", "", label));
