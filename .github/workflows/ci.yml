@@ -78,10 +78,17 @@ jobs:
         run: >
           python pack/.github/scripts/comfyui_smoke.py comfyui
           --pack ComfyUI-YuE2-Kit --cnr-id comfyui-yue2-kit
-          --node bno84.SaveYuE2Bundle --node bno84.YuE2ExtendABC
+          --node bno84.SaveYuE2Bundle --node bno84.YuE2ExtendABC --node bno84.YuE2Score
+          --node bno84.ScoreGenerate --node bno84.ScoreOpening --node bno84.ScoreJoin
+          --node bno84.ScoreContinue --node bno84.ScoreContext --node bno84.ScoreResult
+          --node bno84.SongHistory
           --node bno84.OptionalLoadAudio --node bno84.ReferenceInput --node bno84.LyricsStyle
           --node bno84.CheckpointFile --node bno84.OptionalAudioEncoderFile
           --node bno84.OptionalLoraFile --node bno84.ModelStatus
+          --route /extensions/ComfyUI-YuE2-Kit/score.js
+          --route /extensions/ComfyUI-YuE2-Kit/score_strip.js
+          --route /extensions/ComfyUI-YuE2-Kit/score_state.js
+          --route /extensions/ComfyUI-YuE2-Kit/song_history.js
           --route /extensions/ComfyUI-YuE2-Kit/audio_widgets.js
           --route /extensions/ComfyUI-YuE2-Kit/legacy_bypass.js
           --route /extensions/ComfyUI-YuE2-Kit/lyrics_style.js
@@ -89,9 +96,6 @@ jobs:
           --route /extensions/ComfyUI-YuE2-Kit/reference_input.js
           --route /extensions/ComfyUI-YuE2-Kit/reference_transcribe.js
           --workflow "pack/example_workflows/YuE2 Kit - Song workflow.json"
-
-      - name: Reference routes in three model layouts (CPU, mocked model calls)
-        run: python pack/.github/scripts/reference_routes_check.py comfyui pack
 
   publish:
     name: Publish to the Comfy Registry

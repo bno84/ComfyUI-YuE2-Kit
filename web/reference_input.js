@@ -248,7 +248,7 @@ export function assertNoUploads(graph) {
     if (!current || seen.has(current)) continue;
     seen.add(current);
     for (const node of current._nodes ?? []) {
-      if (node.comfyClass === NODE && node.isUploading) {
+      if ([NODE, "bno84.YuE2Score"].includes(node.comfyClass) && node.isUploading) {
         throw new Error("Reference input: wait for the file to finish loading before queueing or exporting.");
       }
       if (node.subgraph) pending.push(node.subgraph);

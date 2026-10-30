@@ -267,7 +267,7 @@ def summary(score, audio_seconds=None):
         if field and field[1] in ("M", "Q", "K", "L"):
             fields[field[1]] = field[2].strip()
     return {
-        "bars": score["bars"], "seconds": round(sum(g["seconds"] for g in groups), 3),
+        "bars": score["bars"], "seconds": round(score_seconds, 3),
         "groups": groups, "sections": [s for s in sections if s["bars"]], "fields": fields,
         "audio_end_bar": audio_end_bar(score["groups"], audio_seconds),
         "audio_extra_seconds": round(extra_seconds, 3) if extra_seconds is not None and extra_seconds > CUT_MARGIN else None,
@@ -329,6 +329,44 @@ def find_songs(root):
     return found
 
 
+def planner_spans(prompt, total):
+    """Saved stage boundaries from public widgets, with no generation/model work."""
+    def value(node, name, default=None):
+        result = node.get("inputs", {}).get(name, default)
+        seen = set()
+        while isinstance(result, list) and len(result) == 2:
+            key = str(result[0])
+            if key in seen:
+                return default
+            seen.add(key)
+            upstream = (prompt or {}).get(key, {})
+            inputs = upstream.get("inputs", {})
+            result = inputs.get(name, inputs.get("value"))
+        return result
+    for node in (prompt or {}).values():
+        if node.get("class_type") != "bno84.YuE2Score" or "header_mode" not in node.get("inputs", {}):
+            continue
+        if not value(node, "anchor_use", False):
+            return [dict(stage="Song", start=0, end=total, color="#456185")]
+        source = value(node, "abc", value(node, "anchor_abc", ""))
+        if not isinstance(source, str) or not source.strip():
+            return []
+        try:
+            count = parse_score(source)["bars"]
+            if not count:
+                return []
+            start = int(value(node, "anchor_start", 1))
+            end = int(value(node, "anchor_end", 0)) or count
+            opening = min(total, int(value(node, "opening_bars", 0))) if value(node, "opening_generate", False) else 0
+            anchor = max(0, min(total-opening, end-start+1))
+        except (ValueError, TypeError):
+            return []  # An unresolved source cannot justify a made-up boundary.
+        return [dict(stage=stage, start=a, end=b, color=color) for stage,a,b,color in (
+            ("Opening",0,opening,"#7165ac"),("Anchor",opening,opening+anchor,"#287d66"),
+            ("Continuation",opening+anchor,total,"#456185")) if b>a]
+    return []
+
+
 class SongIndex:
     """Song summaries, cached until the FLAC or ABC file changes."""
 
@@ -345,11 +383,12 @@ class SongIndex:
         seconds, tags = flac_info(flac)
         prompt = embedded_prompt(tags)
         score = summary(parse_score(score_path.read_text(encoding="utf-8", errors="replace")), seconds)
+        score["planner_spans"] = planner_spans(prompt, score["bars"])
         relative = flac.relative_to(root).as_posix()
         entry = {
             "path": relative, "name": flac.stem, "mtime": stats[0].st_mtime, "seconds": seconds,
             "has_prompt": prompt is not None, **lyrics_style(prompt),
-            "score": {k: score[k] for k in ("bars", "seconds", "sections", "fields", "audio_end_bar", "audio_extra_seconds")},
+            "score": {k: score[k] for k in ("bars", "seconds", "sections", "fields", "audio_end_bar", "audio_extra_seconds", "planner_spans")},
         }
         self.cache[flac] = (key, entry)
         return entry
@@ -389,7 +428,10 @@ def song_detail(root, relative):
     flac, score_path = resolve_song(root, relative)
     seconds, tags = flac_info(flac)
     abc = score_path.read_text(encoding="utf-8", errors="replace")
+    facts = summary(parse_score(abc), seconds)
+    prompt = embedded_prompt(tags)
+    facts["planner_spans"] = planner_spans(prompt, facts["bars"])
     return {
         "path": flac.relative_to(Path(root).resolve()).as_posix(), "name": flac.stem, "seconds": seconds,
-        "abc": abc, "score": summary(parse_score(abc), seconds), "prompt": embedded_prompt(tags),
+        "abc": abc, "score": facts, "prompt": prompt,
     }

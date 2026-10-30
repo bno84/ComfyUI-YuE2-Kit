@@ -5,13 +5,16 @@
 // FLAC embeds.
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
+import { SCORE_DEFAULTS, readValues, setValues, valuesPlan } from "./score_state.js";
+
+import {fillStrip, barAxis, selectionOverlay, releaseStrip, sectionColor} from "./score_strip.js";
 
 const NODE = "bno84.SongHistory";
 const PAGE = 20;
 const PREROLL = 2;
-const COLORS = ["#7f77dd", "#1d9e75", "#d85a30", "#d4537e", "#378add", "#ba7517", "#639922"];
-const UNNAMED = "#666";
-const SAMPLERS = ["YuE2GenerateMusic", "YuE2GenerateABC", "bno84.YuE2ExtendABC"];
+const SCORE = "bno84.YuE2Score";
+const SCORE_SAMPLING = { temperature: 0.7, top_p: 0.9, top_k: 30, repetition_penalty: 1.005, penalty_window: 100 };
+const SAMPLERS = [SCORE, "YuE2GenerateMusic", "YuE2GenerateABC", "bno84.YuE2ExtendABC"];
 
 export function clock(seconds) {
   const whole = Math.max(0, Math.round(seconds));
@@ -27,18 +30,7 @@ export function ago(seconds, now = Date.now() / 1000) {
   return new Date(seconds * 1000).toLocaleDateString();
 }
 
-// Section names compare without case or trailing numbers: "Verse 2" matches "verse".
-const kind = (label) => (label ?? "").toLowerCase().replace(/[\s\d]+$/, "");
-
-export function sectionColors() {
-  const colors = new Map();
-  return (label) => {
-    const name = kind(label);
-    if (!name) return UNNAMED;
-    if (!colors.has(name)) colors.set(name, COLORS[colors.size % COLORS.length]);
-    return colors.get(name);
-  };
-}
+export function sectionColors() { return sectionColor; }
 
 // A node's executed output that saved a FLAC to the output folder, as Final outputs does.
 export function savesSong(output) {
@@ -67,14 +59,14 @@ const RESTORED = ["seed", "lyrics", "style"];
 // Seed, lyrics and style list one source per sampler, so separate sources are all restored.
 export function runSettings(prompt) {
   const nodes = Object.entries(prompt ?? {});
-  const settings = { values: { seed: [], lyrics: [], style: [], instrumental: [] }, reference: null, sampling: [] };
+  const settings = { values: { seed: [], lyrics: [], style: [], instrumental: [] }, reference: null, sampling: [], planners: [] };
   const samplers = nodes.filter(([, node]) => SAMPLERS.includes(node.class_type))
     .sort(([, a], [, b]) => SAMPLERS.indexOf(a.class_type) - SAMPLERS.indexOf(b.class_type));
-  const sources = samplers.length ? samplers : nodes.filter(([, node]) => "seed" in (node.inputs ?? {})).slice(0, 1);
+  const sources = samplers.length ? samplers : nodes.filter(([, node]) => !node.class_type?.startsWith("bno84.Score") && "seed" in (node.inputs ?? {})).slice(0, 1);
   for (const name of RESTORED) {
     for (const [id, node] of sources) {
       const found = resolveInput(prompt, id, name);
-      if (found) settings.values[name].push({ sampler: node.class_type, ...found });
+      if (found) settings.values[name].push({ sampler: node.class_type, samplerId: id, ...found });
     }
   }
   for (const [id, node] of nodes) {
@@ -83,6 +75,13 @@ export function runSettings(prompt) {
       settings.values.instrumental.push({ sampler: "", id, input: "instrumental", value: inputs.instrumental, title: node._meta?.title ?? "" });
     } else if (node.class_type === "bno84.ReferenceInput" && !settings.reference) {
       settings.reference = { id, source: inputs.source, extend: !!inputs.extend };
+    } else if (node.class_type === SCORE) {
+      const values = Object.fromEntries(Object.entries(SCORE_DEFAULTS).map(([name, fallback]) => [name, resolveInput(prompt,id,name)?.value ?? fallback]));
+      let error = "";
+      if (!("header_mode" in inputs)) error = "Original standard-widget Score settings are unavailable.";
+      const plan = valuesPlan(values);
+      settings.planners.push({id, plan, values, mode: values.mode, error, source: plan.source});
+      if (!error) settings.sampling.push({id, class_type:SCORE, values:Object.fromEntries(Object.keys(SCORE_SAMPLING).map(name => [name, values[name]]))});
     } else if (SAMPLERS.includes(node.class_type)) {
       const values = Object.fromEntries(Object.entries(inputs).filter(([name, value]) => !RESTORED.includes(name) && scalar(value)));
       settings.sampling.push({ id, class_type: node.class_type, values });
@@ -98,6 +97,8 @@ export const shown = (settings, name) => settings.values[name][0] ?? null;
 // The past value for one of the current graph's sources: same sampler, else the first.
 export function pastValueFor(past, name, entry) {
   const sources = past.values[name];
+  const exact = sources.find(source => source.sampler === entry.sampler && source.id === entry.id && source.input === entry.input);
+  if (exact) return exact.value;
   return (sources.find((source) => source.sampler === entry.sampler) ?? sources[0])?.value;
 }
 
@@ -201,6 +202,42 @@ export function nodesOfClass(root, type) {
   return found;
 }
 
+// Paths are option values: local IDs alone collide across subgraphs.
+export function plannerTargets(root) {
+  const found = [];
+  function visit(graph, path, ancestors) {
+    if (!graph || ancestors.has(graph)) return;
+    const seen = new Set(ancestors).add(graph);
+    for (const node of graph._nodes ?? []) {
+      const id = [...path, String(node.id)].join(":");
+      if (node.comfyClass === SCORE || node.type === SCORE) found.push({ id, node });
+      if (node.subgraph) visit(node.subgraph, [...path, String(node.id)], seen);
+    }
+  }
+  visit(root, [], new Set());
+  return found;
+}
+
+
+function showPlan(node) {
+  const panel = node.yue2ScorePanel;
+  panel?.refresh();
+}
+
+export function flashPlanner(node) {
+  const root = node.yue2ScorePanel?.root;
+  root?.animate?.([{ outline: "3px solid #ffd890" }, { outline: "3px solid transparent" }], { duration: 1400 });
+  node.graph?.setDirtyCanvas?.(true, true);
+}
+
+export function useInPlanner(node, abc, saved = false) {
+  node.graph?.beforeChange?.();
+  setValues(node, {anchor_use:true,anchor_abc:abc,anchor_start:1,anchor_end:0,
+    ...(saved ? {opening_generate:false,continue_generate:false,header_mode:"from anchor"} : {})});
+  node.graph?.afterChange?.();
+  showPlan(node); flashPlanner(node);
+}
+
 const rootGraph = () => app.rootGraph ?? app.graph;
 
 function setWidget(node, name, value) {
@@ -268,7 +305,7 @@ function styles() {
   style.textContent = `
 .yue2-history {box-sizing:border-box;display:flex;flex-direction:column;gap:6px;width:100%;height:100%;min-height:0;color:var(--input-text,#ddd);font:12px/1.45 sans-serif;padding:4px;}
 .yue2-history [hidden] {display:none!important;}
-.yue2-history button,.yue2-history input {font:inherit;color:inherit;background:var(--comfy-input-bg,#252525);border:1px solid var(--border-color,#555);border-radius:4px;padding:4px 8px;}
+.yue2-history button,.yue2-history input,.yue2-history select {font:inherit;color:inherit;background:var(--comfy-input-bg,#252525);border:1px solid var(--border-color,#555);border-radius:4px;padding:4px 8px;}
 .yue2-history button {cursor:pointer;white-space:nowrap;}
 .yue2-history button:disabled {opacity:.45;cursor:default;}
 .yue2-history button.primary {background:var(--p-button-primary-background,#405c83);border-color:transparent;color:var(--p-button-primary-color,#fff);}
@@ -286,11 +323,12 @@ function styles() {
 .yue2-history .h-track {display:flex;flex-direction:column;gap:3px;min-width:0;}
 .yue2-history .h-mini {position:relative;height:12px;border-radius:2px;overflow:hidden;background:#252525;}
 .yue2-history .h-mini i {position:absolute;top:0;bottom:0;border-left:1px solid #0006;}
+.yue2-history .h-stage-box {position:absolute;top:0;bottom:0;box-sizing:border-box;border:2px solid;border-radius:3px;box-shadow:inset 0 0 0 1px #000a;pointer-events:none;}
 .yue2-history .h-progress {position:relative;height:3px;border-radius:2px;background:#252525;}
 .yue2-history .h-progress b {position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:#76a5eb;}
 .yue2-history .h-zoom {background:#2c3644;border-radius:0 0 4px 4px;padding:8px 8px 10px;margin-bottom:6px;cursor:default;}
-.yue2-history .h-strip {position:relative;height:34px;border-radius:4px;overflow:hidden;background:#252525;user-select:none;touch-action:none;}
-.yue2-history .h-score {position:relative;height:34px;}
+.yue2-history .h-strip {position:relative;height:38px;border-radius:4px;overflow:hidden;background:#252525;user-select:none;touch-action:none;}
+.yue2-history .h-score {position:relative;height:38px;}
 .yue2-history .h-block {position:absolute;top:0;bottom:0;box-sizing:border-box;border-left:1px solid #0006;padding:0 4px;color:#fff;line-height:34px;white-space:nowrap;overflow:hidden;cursor:pointer;}
 .yue2-history .h-cut {position:absolute;top:0;bottom:0;right:0;box-sizing:border-box;border-left:2px solid #ffcf7a;background:repeating-linear-gradient(135deg,#000b 0 4px,#0007 4px 8px);pointer-events:none;}
 .yue2-history .h-extra {border-left-color:#edece5;background:#edece538 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='12' viewBox='0 0 48 12'%3E%3Cpath d='M0 6h3l2-2 2 4 3-6 3 8 3-7 2 5 2-2h5l2-2 2 4 3-6 3 8 3-7 2 5 2-2h6' fill='none' stroke='%23edece5' stroke-opacity='.45' stroke-width='1'/%3E%3C/svg%3E") repeat-x center;}
@@ -373,20 +411,30 @@ function scoreGap(score, label = "") {
   return overlay;
 }
 
-function miniStrip(score, color) {
-  const sections = score.sections;
-  const share = scoreShare(score);
-  const strip = element("div", "h-mini");
-  const total = sections.reduce((sum, section) => sum + section.bars, 0) || 1;
-  for (const section of sections) {
-    const block = element("i");
-    Object.assign(block.style, {
-      left: `${(100 * share * section.bar) / total}%`, width: `${(100 * share * section.bars) / total}%`, background: color(section.label),
-    });
-    block.title = `${section.label || "(unnamed)"} · ${section.bars} bars`;
-    strip.append(block);
+function stageSpans(score) {
+  const spans = score.planner_spans ?? [];
+  return spans.length === 1 && ["Song", "fresh"].includes(spans[0].stage) ? [] : spans;
+}
+// Stages outline their bars on the section strip rather than taking a band of their own.
+// Light tints of the Score timeline's stage colours, which vanish against the sections.
+const STAGE_OUTLINE = { Opening: "#c4baff", Anchor: "#74e8c0", Continuation: "#a8cdf7" };
+function stageOutlines(lane, score) {
+  for (const span of stageSpans(score)) {
+    const box = element("div", "h-stage-box");
+    Object.assign(box.style, { left: `${(100 * span.start) / score.bars}%`, width: `${(100 * (span.end - span.start)) / score.bars}%`, borderColor: STAGE_OUTLINE[span.stage] ?? "#edf5ff" });
+    box.title = span.stage;
+    lane.append(box);
   }
-  if (score.audio_end_bar != null) strip.append(cutOverlay(score.audio_end_bar, total));
+}
+function miniStrip(score, color) {
+  const strip = element("div", "h-mini");
+  strip.style.height="16px";
+  const lane=element("div", "h-mini-score");
+  lane.style.width=`${100*scoreShare(score)}%`;
+  fillStrip(lane,score.sections,score.bars,{color,compact:true});
+  stageOutlines(lane, score);
+  strip.append(lane);
+  if (score.audio_end_bar != null) lane.append(cutOverlay(score.audio_end_bar, score.bars));
   if (score.audio_extra_seconds != null) strip.append(scoreGap(score));
   return strip;
 }
@@ -475,7 +523,8 @@ class SongHistoryPanel {
       const track = element("div", "h-track");
       const progress = element("div", "h-progress");
       progress.append(element("b"));
-      track.append(miniStrip(song.score, this.color), progress);
+      track.append(miniStrip(song.score, this.color));
+      track.append(progress);
       const warning = cutText(song.score, song.seconds);
       const length = element("span", warning ? "cut" : "muted", song.seconds ? clock(song.seconds) : "–");
       length.title = warning || "Length of the FLAC";
@@ -488,6 +537,7 @@ class SongHistoryPanel {
       this.rows.set(song.path, { row, play, progress, zoom });
     }
     const scroll = this.list.scrollTop;
+    releaseStrip(this.list);
     this.list.replaceChildren(...items);
     this.more.hidden = this.songs.length >= this.total;
     this.more.textContent = `Show ${Math.min(PAGE, this.total - this.songs.length)} more`;
@@ -615,7 +665,7 @@ class SongHistoryPanel {
       const open = path === this.open;
       parts.row.classList.toggle("open", open);
       parts.zoom.hidden = !open;
-      if (!open) parts.zoom.replaceChildren();
+      if (!open) { releaseStrip(parts.zoom); parts.zoom.replaceChildren(); }
     }
     const parts = this.rows?.get(this.open);
     if (!parts) return;
@@ -632,27 +682,20 @@ class SongHistoryPanel {
     timeline.append(strip);
     const sections = [];
     groups.forEach((group, index) => {
-      if (group.starts_section || !sections.length) sections.push({ label: group.label, start: index, bar: group.bar, bars: 0 });
-      sections.at(-1).bars += group.bars;
+      if (group.starts_section || !sections.length) sections.push({ label: group.label, start: index, bar: group.bar, bars: 0, seconds:0 });
+      sections.at(-1).bars += group.bars; sections.at(-1).seconds += group.seconds;
     });
-    for (const section of sections) {
-      const block = element("div", "h-block", section.label || "");
-      Object.assign(block.style, {
-        left: `${(100 * section.bar) / total}%`, width: `${(100 * section.bars) / total}%`, background: this.color(section.label),
-      });
-      block.title = `${section.label || "(unnamed)"} · bars ${section.bar + 1}–${section.bar + section.bars}`;
-      strip.append(block);
-    }
+    fillStrip(strip,sections,total,{color:this.color});
+    stageOutlines(strip, detail.score);
     for (const group of groups.slice(1)) {
       const line = element("div", "h-grid");
       line.style.left = `${(100 * group.bar) / total}%`;
       strip.append(line);
     }
     if (detail.score.audio_end_bar != null) strip.append(cutOverlay(detail.score.audio_end_bar, total, "not in FLAC"));
-    this.selectionElement = element("div", "h-sel");
-    const handles = [element("div", "h-handle"), element("div", "h-handle")];
-    handles[0].style.left = "-5px";
-    handles[1].style.right = "-5px";
+    releaseStrip(parts.zoom);
+    const {outline,handles}=selectionOverlay(strip);
+    this.selectionElement=outline;
     handles.forEach((handle, side) => {
       handle.title = "Drag to change the selection";
       handle.onpointerdown = (event) => {
@@ -670,8 +713,6 @@ class SongHistoryPanel {
         handle.onpointerup = handle.onpointercancel = () => { handle.onpointermove = null; };
       };
     });
-    this.selectionElement.append(...handles);
-    strip.append(this.selectionElement);
     // Press and drag to select groups; a click without dragging picks a section.
     const barAt = (event) => {
       const box = strip.getBoundingClientRect();
@@ -699,14 +740,8 @@ class SongHistoryPanel {
     };
 
     if (detail.score.audio_extra_seconds != null) timeline.append(scoreGap(detail.score, "not in ABC"));
-    const axis = element("div", "h-bars");
+    const axis = barAxis(total);
     axis.style.width = `${100 * scoreShare(detail.score)}%`;
-    const step = [4, 8, 16, 32, 64].find((value) => total / value <= 12) ?? 128;
-    for (let barNumber = 0; barNumber < total; barNumber += step) {
-      const label = element("span", "", String(barNumber + 1));
-      label.style.left = `${(100 * barNumber) / total}%`;
-      axis.append(label);
-    }
 
     this.selectionBar = element("div", "h-selbar");
     const settings = this.renderSettings(detail);
@@ -717,6 +752,35 @@ class SongHistoryPanel {
     }
     parts.zoom.replaceChildren(timeline, axis, this.selectionBar, settings, this.statusElement);
     this.renderSelection();
+  }
+
+  plannerTarget() {
+    const targets = plannerTargets(rootGraph());
+    if (!targets.some(entry => entry.id === this.plannerId)) this.plannerId = targets[0]?.id;
+    return targets.find(entry => entry.id === this.plannerId);
+  }
+
+  targetSelect() {
+    const targets = plannerTargets(rootGraph());
+    this.plannerTarget();
+    const select = element("select"); select.setAttribute("aria-label", "Planner destination");
+    for (const { id, node } of targets) {
+      const option = element("option", "", `${node.title || "YuE2 Score"} · ${id}`);
+      option.value = id; select.append(option);
+    }
+    select.value = this.plannerId;
+    select.onchange = () => { this.plannerId = select.value; this.renderOpen(); };
+    return select;
+  }
+
+  usePlanner(abc, saved = false) {
+    try {
+      const target = this.plannerTarget();
+      if (!target) throw new Error("Add a YuE2 Score node to use this selection in a planner.");
+      useInPlanner(target.node, abc, saved);
+      this.message(`Score sent to ${target.node.title || "YuE2 Score"} · ${target.id}.`);
+      this.compare();
+    } catch (error) { this.message(error.message, true); }
   }
 
   renderSelection() {
@@ -758,10 +822,25 @@ class SongHistoryPanel {
       }
     });
     copy.disabled = !ready;
-    const use = button("Use as reference", () => this.useAsReference(this.slice.abc, null), "primary");
-    use.disabled = !ready;
-    use.title = "Put this score in Reference input as ABC. The Extend reference setting is kept.";
-    const items = [text, preview, flac, copy, use];
+    const planners = plannerTargets(rootGraph());
+    const items = [text, preview, flac, copy];
+    if (planners.length) {
+      const use = button("Use in planner", () => this.usePlanner(this.slice.abc), "primary");
+      use.disabled = !ready;
+      use.title = "Load the selected ABC as the anchor; keep the plan settings.";
+      if (planners.length > 1) items.push(this.targetSelect());
+      items.push(use);
+    } else {
+      const use = button("Use as reference", () => this.useAsReference(this.slice.abc, null), "primary");
+      use.disabled = !ready;
+      use.title = "Put this score in Reference input as ABC. The Extend reference setting is kept.";
+      const references = nodesOfClass(rootGraph(), "bno84.ReferenceInput");
+      if (references.length) items.push(use);
+      else {
+        const use = button("Use in planner", () => {}); use.disabled = true;
+        use.title = "Add a YuE2 Score node to the workflow."; items.push(use);
+      }
+    }
     if (this.slice?.error) items.push(element("div", "h-warn", `⚠ ${this.slice.error}`));
     for (const warning of ready ? this.slice.warnings : []) items.push(element("div", "h-warn", `⚠ ${warning}`));
     this.selectionBar.replaceChildren(...items);
@@ -802,7 +881,7 @@ class SongHistoryPanel {
       scoreKv.append(element("span", "muted", label), shown, element("span"));
     };
     const reference = settings.reference;
-    fact("Source", !reference ? "–" : reference.source === "None" ? "Planned from lyrics + style"
+    fact("Source", settings.planners.length ? settings.planners.map(entry => entry.error ? "Unavailable plan" : entry.plan.source.kind === "none" ? "Lyrics + style" : `${entry.plan.source.kind} source`).join(" / ") : !reference ? "–" : reference.source === "None" ? "Planned from lyrics + style"
       : `${reference.source} reference · extend ${reference.extend ? "on" : "off"}`);
     const fields = detail.score.fields;
     const tempo = /(\d+(?:\.\d+)?)\s*$/.exec(fields.Q ?? "")?.[1];
@@ -817,14 +896,29 @@ class SongHistoryPanel {
     const actions = element("div", "h-actions");
     const seed = button("Restore seed (fixed)", () => this.restore({ seed: true }), "primary");
     seed.disabled = !settings.values.seed.length;
-    const score = button("Score → Reference input", () => this.useAsReference(detail.abc, false));
-    score.title = "Use the whole saved score as ABC, with Extend reference off.";
+    const planners = plannerTargets(rootGraph());
+    const saved = button(planners.length ? "Use saved score" : "Score → Reference input", () => planners.length ? this.usePlanner(detail.abc, true) : this.useAsReference(detail.abc, false));
+    saved.title = "Load final ABC as source, opening 0 and continuation off.";
     const lyrics = button("Restore lyrics + style", () => this.restore({ lyricsStyle: true }));
     lyrics.disabled = !settings.values.lyrics.length && !settings.values.style.length;
-    const all = button("Restore all", () => this.restore({ seed: true, lyricsStyle: true, score: true, sampling: true }));
-    all.title = "Seed, lyrics, style, sampling settings, and the whole score as the reference with Extend off.";
-    all.disabled = !detail.prompt;
-    actions.append(seed, score, lyrics, element("span", "spacer"), all);
+    const all = button("Restore all", () => this.restore({ seed: true, lyricsStyle: true, plan: true, sampling: true }));
+    all.title = settings.planners.length || !planners.length ? "Restore plan, mode, fixed seed, lyrics, style, instrumental and sampling."
+      : "Older run without Score settings: restores the saved final ABC as-is, plus seed, lyrics, style, instrumental and sampling.";
+    all.disabled = !detail.prompt || (settings.planners.length > 0 && settings.planners.every(entry => entry.error));
+    if (planners.length > 1) actions.append(this.targetSelect());
+    if (settings.planners.length > 1) {
+      const select = element("select"); select.setAttribute("aria-label", "Recorded planner");
+      for (const entry of settings.planners) {
+        const option = element("option", "", `Saved planner · ${entry.id}`); option.value = entry.id; select.append(option);
+      }
+      const match = settings.planners.find(entry => entry.id === this.plannerTarget()?.id);
+      if (!settings.planners.some(entry => entry.id === this.recordedId)) this.recordedId = match?.id ?? settings.planners[0].id;
+      select.value = this.recordedId;
+      select.onchange = () => { this.recordedId = select.value; };
+      actions.append(select);
+    }
+    actions.append(seed, saved, lyrics, element("span", "spacer"), all);
+    for (const entry of settings.planners.filter(entry => entry.error)) container.append(element("div", "h-warn", entry.error));
     container.append(columns, actions);
     return container;
   }
@@ -855,6 +949,12 @@ class SongHistoryPanel {
       return this.message(`Cannot read the current graph: ${error.message ?? error}`, true);
     }
     const root = rootGraph();
+    const target = this.plannerTarget();
+    const planners = detail.settings.planners;
+    const recorded = planners.find(entry => entry.id === this.recordedId) ?? planners.find(entry => entry.id === target?.id) ?? (planners.length === 1 ? planners[0] : null);
+    if (what.plan && planners.length && (!target || !recorded || recorded.error)) {
+      return this.message(recorded?.error ?? "Choose a matching recorded planner; multiple saved planners cannot be mapped automatically.", true);
+    }
     const done = [], missing = [];
     changeGraph(() => {
       const past = detail.settings;
@@ -865,12 +965,23 @@ class SongHistoryPanel {
           all.findIndex((other) => other.id === entry.id && other.input === entry.input) === index);
         let set = 0;
         for (const entry of targets) {
-          const node = setInput(root, entry.id, entry.input, pastValueFor(past, name, entry));
+          const publicValue = recorded && past.values[name].find(source => source.samplerId === recorded.id);
+          const node = setInput(root, entry.id, entry.input, publicValue ? publicValue.value : pastValueFor(past, name, entry));
           if (node) { set++; after?.(node, entry); }
         }
         if (set) done.push(label(set));
         else missing.push(name);
       };
+      if (what.plan && recorded && !recorded.error) {
+        for (const [name,value] of Object.entries(recorded.values)) {
+          if (!setInput(root,target.id,name,value)) missing.push(name);
+        }
+        showPlan(target.node); flashPlanner(target.node); done.push("Score widgets");
+      }
+      if (what.plan && !planners.length && target) {
+        useInPlanner(target.node, detail.abc, true);
+        done.push("saved final ABC as-is (original settings unavailable)");
+      }
       if (what.seed) {
         restore("seed", (count) => `seed ${[...new Set(past.values.seed.map((entry) => entry.value))].join(" / ")} (fixed${count > 1 ? `, ${count} sources` : ""})`,
           (node, entry) => fixControl(node, entry.input));
@@ -882,7 +993,7 @@ class SongHistoryPanel {
       }
       if (what.sampling) {
         let changed = 0;
-        for (const entry of past.sampling) {
+        for (const entry of past.sampling.filter(entry => entry.class_type !== SCORE)) {
           const target = current.sampling.find((other) => other.id === entry.id && other.class_type === entry.class_type)
             ?? current.sampling.find((other) => other.class_type === entry.class_type);
           if (!target) continue;
@@ -893,10 +1004,6 @@ class SongHistoryPanel {
         done.push(changed ? `${changed} sampling setting${changed === 1 ? "" : "s"}` : "sampling (already the same)");
       }
     });
-    if (what.score) {
-      this.useAsReference(detail.abc, false);
-      done.push("the score as reference, extend off");
-    }
     const text = done.length ? `Restored ${done.join(", ")}.` : "Nothing restored.";
     this.message(missing.length ? `${text} Not found in this workflow: ${missing.join(", ")}.` : text, !done.length);
     this.compare();
@@ -908,7 +1015,7 @@ class SongHistoryPanel {
     api.removeEventListener("executed", this.onExecuted);
     this.audio.pause();
     this.audio.removeAttribute("src");
-    this.root.remove();
+    releaseStrip(this.root); this.root.remove();
   }
 }
 

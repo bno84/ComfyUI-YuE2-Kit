@@ -18,12 +18,11 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-PORT = 8188
 FRONTEND_ONLY = {"MarkdownNote", "Note", "Reroute", "PrimitiveNode"}
 
 
-def get(path):
-    with urllib.request.urlopen(f"http://127.0.0.1:{PORT}{path}", timeout=10) as response:
+def get(path, port):
+    with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}", timeout=10) as response:
         return response.status, response.read()
 
 
@@ -47,12 +46,13 @@ def main():
     parser.add_argument("--route", action="append", default=[], help="GET path that must answer 200")
     parser.add_argument("--workflow", action="append", default=[], help="Editor workflow to check")
     parser.add_argument("--timeout", type=int, default=600)
+    parser.add_argument("--port", type=int, default=8188)
     args = parser.parse_args()
 
     log_path = Path("comfyui.log")
     with log_path.open("w") as log:
         server = subprocess.Popen(
-            [sys.executable, "main.py", "--cpu", "--listen", "127.0.0.1", "--port", str(PORT),
+            [sys.executable, "main.py", "--cpu", "--listen", "127.0.0.1", "--port", str(args.port),
              "--disable-auto-launch"],
             cwd=args.comfyui, stdout=log, stderr=subprocess.STDOUT,
         )
@@ -62,7 +62,7 @@ def main():
         info = None
         while time.monotonic() < deadline and server.poll() is None:
             try:
-                info = json.loads(get("/object_info")[1])
+                info = json.loads(get("/object_info", args.port)[1])
                 break
             except (urllib.error.URLError, ConnectionError, TimeoutError):
                 time.sleep(2)
@@ -77,7 +77,7 @@ def main():
                     failures.append(f"node type not registered: {node}")
             for route in args.route:
                 try:
-                    status, _ = get(route)
+                    status, _ = get(route, args.port)
                 except urllib.error.HTTPError as error:
                     status = error.code
                 if status != 200:

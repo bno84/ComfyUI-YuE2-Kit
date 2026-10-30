@@ -13,10 +13,12 @@ from comfy_extras.nodes_audio import LoadAudio
 from comfy_extras.nodes_yue2 import YuE2GenerateABC
 from server import PromptServer
 
-from .history import SongIndex, resolve_song, slice_score, song_detail
+from .history import SongIndex, parse_score, resolve_song, slice_score, song_detail, summary
 from .model_files import file_choices, missing_message, resolve, workflow_models
-from .planning import extend_abc
+from .planning import check_music_context, extend_abc
 from .optional_lora import load_optional_lora
+from .score import preview as score_preview
+from .score_nodes import SCORE_NODES
 
 WEB_DIRECTORY = "./web"
 
@@ -178,6 +180,14 @@ def _bad_request(error):
 
 
 if getattr(PromptServer, "instance", None) is not None:
+    @PromptServer.instance.routes.post("/yue2-kit/score/preview")
+    async def preview_score(request):
+        try:
+            body = await request.json()
+            return web.json_response(score_preview(**body))
+        except (ValueError, TypeError, KeyError, ZeroDivisionError) as error:
+            return _bad_request(error)
+
     @PromptServer.instance.routes.get("/yue2-kit/history")
     async def list_songs(request):
         try:
@@ -337,7 +347,10 @@ class YuE2ExtendABC(io.ComfyNode):
 
     @classmethod
     def execute(cls, **kwargs):
-        return io.NodeOutput(extend_abc(**kwargs))
+        abc = extend_abc(**kwargs)
+        tokens = kwargs["clip"].tokenize(kwargs["style"], lyrics=kwargs["lyrics"], cot=kwargs["mode"], abc=abc)
+        check_music_context(tokens, summary(parse_score(abc))["seconds"])
+        return io.NodeOutput(abc)
 
 
 class SaveYuE2Bundle(io.ComfyNode):
@@ -389,7 +402,7 @@ class YuE2KitExtension(ComfyExtension):
         return [
             SaveYuE2Bundle, OptionalLoadAudio, ReferenceInput, YuE2ExtendABC, LyricsStyle,
             CheckpointFile, OptionalAudioEncoderFile, OptionalLoraFile, OptionalModelLora, ModelStatus,
-            SongHistory,
+            SongHistory, *SCORE_NODES,
         ]
 
 

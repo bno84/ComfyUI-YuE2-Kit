@@ -21,8 +21,8 @@ export function referenceExecutionId(root, node) {
   return matches[0];
 }
 
-export function buildTranscriptionPrompt(prompt, referenceId, nodeDefs = {}) {
-  const reference = prompt[referenceId];
+export function buildTranscriptionPrompt(prompt, referenceId, nodeDefs = {}, settings = null) {
+  const reference = settings ? { class_type: REFERENCE, inputs: { source: "Transcribe", audio: settings.audio, transcription_model: settings.encoder, transcription_mode: settings.mode } } : prompt[referenceId];
   if (reference?.class_type !== REFERENCE || reference.inputs.source !== "Transcribe") {
     throw new Error("Select the Transcribe tab first.");
   }
@@ -52,9 +52,9 @@ export function buildTranscriptionPrompt(prompt, referenceId, nodeDefs = {}) {
   // ComfyUI keys native node progress by execution ID. Run the dedicated
   // transcriber under the reference's ID so its real progress appears there.
   const scoreId = referenceId;
-  output[audioId] = { class_type: "LoadAudio", inputs: { audio: structuredClone(reference.inputs.audio) } };
+  if (!settings?.audioIsLoaded) output[audioId] = { class_type: "LoadAudio", inputs: { audio: structuredClone(reference.inputs.audio) } };
   const modelType = isLink(model) ? nodeDefs[prompt[model[0]]?.class_type]?.output?.[model[1]] : "STRING";
-  const loadedEncoder = modelType === "AUDIO_ENCODER";
+  const loadedEncoder = settings?.encoderIsLoaded || modelType === "AUDIO_ENCODER";
   if (modelType && !["AUDIO_ENCODER", "STRING", "*", "COMBO"].includes(modelType) && !Array.isArray(modelType)) {
     throw new Error("Transcription model must be an audio encoder file or a loaded AUDIO_ENCODER.");
   }
@@ -62,7 +62,7 @@ export function buildTranscriptionPrompt(prompt, referenceId, nodeDefs = {}) {
     output[modelId] = { class_type: "AudioEncoderLoader", inputs: { audio_encoder_name: structuredClone(model) } };
   }
   output[scoreId] = { class_type: "SheetSage2AudioToABC", inputs: {
-    audio: [audioId, 0], audio_encoder: loadedEncoder ? structuredClone(model) : [modelId, 0], mode: structuredClone(mode),
+    audio: settings?.audioIsLoaded ? structuredClone(reference.inputs.audio) : [audioId, 0], audio_encoder: loadedEncoder ? structuredClone(model) : [modelId, 0], mode: structuredClone(mode),
   } };
   output[sinkId] = { class_type: "PreviewAny", inputs: { source: [scoreId, 0] } };
   return { output, sinkId };
