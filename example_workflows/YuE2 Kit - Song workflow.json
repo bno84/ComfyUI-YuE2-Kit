@@ -1,24 +1,23 @@
 {
   "id": "75140c3e-0999-5e9e-8139-ff1a6450053b",
   "revision": 1,
-  "last_node_id": 64,
-  "last_link_id": 32,
+  "last_node_id": 89,
+  "last_link_id": 85,
   "nodes": [
     {
       "id": 32,
       "type": "bno84.LyricsStyle",
       "pos": [
-        110,
-        400
+        -615.6193943999641,
+        1659.8618177946164
       ],
       "size": [
-        480,
-        690
+        460.31253069107913,
+        677.5626422038914
       ],
       "flags": {},
       "order": 0,
       "mode": 0,
-      "title": "Lyrics + style",
       "inputs": [
         {
           "name": "instrumental",
@@ -50,23 +49,21 @@
           "name": "Lyrics",
           "type": "STRING",
           "links": [
-            1,
-            5
+            1
           ]
         },
         {
           "name": "Style",
           "type": "STRING",
           "links": [
-            2,
-            6
+            2
           ]
         },
         {
           "name": "Instrumental",
           "type": "BOOLEAN",
           "links": [
-            25
+            83
           ]
         }
       ],
@@ -79,18 +76,24 @@
         false,
         "[Verse]\nNeon fades along the lane\nFootsteps keep the time of rain\nFold the night and leave it here\nMorning has a sky to clear\n\n[Chorus]\nLet the day come into view\nEvery road begins with you\nHold a little room for light\nWe will sing beyond the night",
         "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM"
-      ]
+      ],
+      "widgets_values_named": {
+        "instrumental": true,
+        "lyrics": "[Verse]\nNeon fades along the lane\nFootsteps keep the time of rain\nFold the night and leave it here\nMorning has a sky to clear\n\n[Chorus]\nLet the day come into view\nEvery road begins with you\nHold a little room for light\nWe will sing beyond the night",
+        "style": "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM"
+      },
+      "title": "Lyrics + style"
     },
     {
       "id": 3,
       "type": "PrimitiveInt",
       "pos": [
-        110,
-        1135
+        -615.3936027274417,
+        2396.129194819526
       ],
       "size": [
-        480,
-        95
+        459.892686238484,
+        139.06044754683762
       ],
       "flags": {},
       "order": 1,
@@ -110,12 +113,11 @@
           "name": "INT",
           "type": "INT",
           "links": [
-            3,
-            7
+            3
           ]
         }
       ],
-      "title": "Seed — shared",
+      "title": "Seed \u2014 shared",
       "properties": {
         "Node name for S&R": "PrimitiveInt",
         "cnr_id": "comfy-core",
@@ -123,143 +125,27 @@
       },
       "widgets_values": [
         831001,
-        "randomize"
-      ]
-    },
-    {
-      "id": 33,
-      "type": "bno84.ReferenceInput",
-      "pos": [
-        110,
-        -150
-      ],
-      "size": [
-        480,
-        378
-      ],
-      "flags": {},
-      "order": 2,
-      "mode": 0,
-      "title": "Reference input",
-      "inputs": [
-        {
-          "name": "source",
-          "type": "COMBO",
-          "link": null,
-          "widget": {
-            "name": "source"
-          }
-        },
-        {
-          "name": "abc",
-          "type": "STRING",
-          "link": null,
-          "widget": {
-            "name": "abc"
-          }
-        },
-        {
-          "name": "audio",
-          "type": "COMBO",
-          "link": null,
-          "widget": {
-            "name": "audio"
-          }
-        },
-        {
-          "name": "extend",
-          "type": "BOOLEAN",
-          "link": null,
-          "widget": {
-            "name": "extend"
-          }
-        },
-        {
-          "name": "transcription_mode",
-          "type": "COMBO",
-          "link": null,
-          "widget": {
-            "name": "transcription_mode"
-          }
-        },
-        {
-          "name": "transcription_model",
-          "type": "*",
-          "link": 31
-        }
-      ],
-      "outputs": [
-        {
-          "name": "ABC",
-          "type": "STRING",
-          "links": [
-            24
-          ]
-        },
-        {
-          "name": "Audio",
-          "type": "AUDIO",
-          "links": [
-            10
-          ]
-        },
-        {
-          "name": "Use reference",
-          "type": "BOOLEAN",
-          "links": [
-            21
-          ]
-        },
-        {
-          "name": "Transcribe",
-          "type": "BOOLEAN",
-          "links": [
-            23
-          ]
-        },
-        {
-          "name": "Extend",
-          "type": "BOOLEAN",
-          "links": [
-            12
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "bno84.ReferenceInput",
-        "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.6.2"
-      },
-      "widgets_values": [
-        "None",
-        "",
-        "",
-        false,
-        "full"
+        "fixed"
       ],
       "widgets_values_named": {
-        "source": "None",
-        "abc": "",
-        "audio": "",
-        "extend": false,
-        "transcription_mode": "full"
+        "value": 831001,
+        "fixed": "fixed"
       }
     },
     {
       "id": 34,
       "type": "cd99ff70-b0eb-5b1e-8240-b763082c1efd",
       "pos": [
-        690,
-        1350
+        -5.702825341838242,
+        2655.0827658079997
       ],
       "size": [
-        465,
-        235
+        400,
+        190
       ],
       "flags": {},
-      "order": 3,
+      "order": 12,
       "mode": 0,
-      "title": "Models",
       "inputs": [
         {
           "name": "yue2",
@@ -291,45 +177,41 @@
         {
           "name": "instrumental",
           "type": "BOOLEAN",
-          "link": 25,
-          "label": "Instrumental"
+          "link": 83,
+          "label": "Instrumental",
+          "widget": {
+            "name": "instrumental"
+          }
         }
       ],
       "outputs": [
         {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            16
-          ]
-        },
-        {
           "name": "CLIP",
           "type": "CLIP",
           "links": [
-            4,
-            8
+            12,
+            84
+          ]
+        },
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            13
           ]
         },
         {
           "name": "VAE",
           "type": "VAE",
           "links": [
-            17
-          ]
-        },
-        {
-          "name": "SheetSage2",
-          "type": "AUDIO_ENCODER",
-          "links": [
-            22
+            14
           ]
         },
         {
           "name": "SheetSage2 file",
           "type": "*",
           "links": [
-            31
+            26
           ]
         }
       ],
@@ -344,409 +226,187 @@
       ],
       "widgets_values_named": {
         "yue2": "yue2_3b_bf16.safetensors",
-        "sheetsage2": "sheetsage2_bf16.safetensors",
         "instrumental_lora": "ar_lora_inst_v3abc_comfyui.safetensors",
         "instrumental": false
-      }
-    },
-    {
-      "id": 30,
-      "type": "22655449-5c3f-53cc-a93e-8ebfaa6f293a",
-      "pos": [
-        690,
-        510
-      ],
-      "size": [
-        390,
-        700
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "title": "Planning",
-      "inputs": [
-        {
-          "name": "lyrics",
-          "type": "STRING",
-          "link": 1,
-          "label": "Lyrics",
-          "widget": {
-            "name": "lyrics"
-          }
-        },
-        {
-          "name": "style",
-          "type": "STRING",
-          "link": 2,
-          "label": "Style",
-          "widget": {
-            "name": "style"
-          }
-        },
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "link": 4,
-          "label": "YuE2 language model"
-        },
-        {
-          "name": "reference_audio",
-          "type": "AUDIO",
-          "link": 10,
-          "label": "Reference audio"
-        },
-        {
-          "name": "extend",
-          "type": "BOOLEAN",
-          "link": 12,
-          "label": "Extend source ABC",
-          "widget": {
-            "name": "extend"
-          }
-        },
-        {
-          "name": "seed",
-          "type": "INT",
-          "link": 3,
-          "label": "Seed",
-          "widget": {
-            "name": "seed"
-          }
-        },
-        {
-          "name": "mode",
-          "type": "COMBO",
-          "link": null,
-          "label": "mode",
-          "widget": {
-            "name": "mode"
-          }
-        },
-        {
-          "name": "max_abc_tokens",
-          "type": "INT",
-          "link": null,
-          "label": "max_abc_tokens",
-          "widget": {
-            "name": "max_abc_tokens"
-          }
-        },
-        {
-          "name": "temperature",
-          "type": "FLOAT",
-          "link": null,
-          "label": "temperature",
-          "widget": {
-            "name": "temperature"
-          }
-        },
-        {
-          "name": "top_p",
-          "type": "FLOAT",
-          "link": null,
-          "label": "top_p",
-          "widget": {
-            "name": "top_p"
-          }
-        },
-        {
-          "name": "top_k",
-          "type": "INT",
-          "link": null,
-          "label": "top_k",
-          "widget": {
-            "name": "top_k"
-          }
-        },
-        {
-          "name": "repetition_penalty",
-          "type": "FLOAT",
-          "link": null,
-          "label": "repetition_penalty",
-          "widget": {
-            "name": "repetition_penalty"
-          }
-        },
-        {
-          "name": "penalty_window",
-          "type": "INT",
-          "link": null,
-          "label": "penalty_window",
-          "widget": {
-            "name": "penalty_window"
-          }
-        },
-        {
-          "name": "use_reference",
-          "type": "BOOLEAN",
-          "link": 21,
-          "label": "Use reference",
-          "widget": {
-            "name": "use_reference"
-          }
-        },
-        {
-          "name": "audio_encoder",
-          "type": "AUDIO_ENCODER",
-          "link": 22,
-          "label": "SheetSage2 model"
-        },
-        {
-          "name": "reference_abc",
-          "type": "STRING",
-          "link": 24,
-          "label": "Reference ABC"
-        },
-        {
-          "name": "use_audio",
-          "type": "BOOLEAN",
-          "link": 23,
-          "label": "Transcribe audio"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "ABC",
-          "type": "STRING",
-          "links": [
-            15,
-            19,
-            20,
-            28
-          ]
-        },
-        {
-          "name": "Score mode",
-          "type": "COMBO",
-          "links": [
-            14
-          ]
-        }
-      ],
-      "properties": {
-        "previewExposures": []
       },
-      "widgets_values": [
-        "[Verse]\nNeon fades along the lane\nFootsteps keep the time of rain\nFold the night and leave it here\nMorning has a sky to clear\n\n[Chorus]\nLet the day come into view\nEvery road begins with you\nHold a little room for light\nWe will sing beyond the night",
-        "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM",
-        false,
-        831001,
-        "full",
-        8192,
-        0.7,
-        0.9,
-        30,
-        1.005,
-        100,
-        false
-      ],
-      "widgets_values_named": {
-        "lyrics": "[Verse]\nNeon fades along the lane\nFootsteps keep the time of rain\nFold the night and leave it here\nMorning has a sky to clear\n\n[Chorus]\nLet the day come into view\nEvery road begins with you\nHold a little room for light\nWe will sing beyond the night",
-        "style": "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM",
-        "extend": false,
-        "seed": 831001,
-        "mode": "full",
-        "max_abc_tokens": 8192,
-        "temperature": 0.7,
-        "top_p": 0.9,
-        "top_k": 30,
-        "repetition_penalty": 1.005,
-        "penalty_window": 100,
-        "use_reference": false
-      }
+      "title": "Models"
     },
     {
       "id": 31,
       "type": "dd490ce2-d47f-535c-a496-35b797e075ba",
       "pos": [
-        2220,
-        510
+        1608.285549479632,
+        1991.714450520368
       ],
       "size": [
-        440,
-        670
+        435.3040709232496,
+        555.7775530250087
       ],
       "flags": {},
-      "order": 6,
+      "order": 17,
       "mode": 0,
-      "title": "Acoustic",
       "inputs": [
         {
           "name": "abc",
           "type": "STRING",
-          "link": 15,
-          "label": "ABC",
-          "widget": {
-            "name": "abc"
-          }
+          "link": 6,
+          "label": "ABC"
         },
         {
           "name": "lyrics",
           "type": "STRING",
-          "link": 5,
-          "label": "Lyrics",
-          "widget": {
-            "name": "lyrics"
-          }
+          "link": 9,
+          "label": "Lyrics"
         },
         {
           "name": "style",
           "type": "STRING",
-          "link": 6,
-          "label": "Style",
-          "widget": {
-            "name": "style"
-          }
+          "link": 10,
+          "label": "Style"
         },
         {
           "name": "clip",
           "type": "CLIP",
-          "link": 8,
+          "link": 12,
           "label": "YuE2 language model"
         },
         {
           "name": "model",
           "type": "MODEL",
-          "link": 32,
+          "link": 23,
           "label": "YuE2 acoustic model"
         },
         {
           "name": "vae",
           "type": "VAE",
-          "link": 17,
+          "link": 14,
           "label": "Audio VAE"
         },
         {
           "name": "mode",
           "type": "COMBO",
-          "link": 14,
-          "label": "Shared score mode",
-          "widget": {
-            "name": "mode"
-          }
+          "link": 7,
+          "label": "Shared score mode"
         },
         {
           "name": "seed",
           "type": "INT",
-          "link": 7,
-          "label": "Seed",
-          "widget": {
-            "name": "seed"
-          }
+          "link": 11,
+          "label": "Seed"
         },
         {
           "name": "score_seconds",
           "type": "FLOAT",
-          "link": 30,
+          "link": 8,
           "label": "Score seconds"
         },
         {
           "name": "use_max_duration",
           "type": "BOOLEAN",
           "link": null,
-          "label": "Maximum duration",
           "widget": {
             "name": "use_max_duration"
-          }
+          },
+          "label": "Maximum duration"
         },
         {
           "name": "max_duration",
           "type": "FLOAT",
           "link": null,
-          "label": "Maximum seconds",
           "widget": {
             "name": "max_duration"
-          }
+          },
+          "label": "Maximum seconds"
         },
         {
           "name": "temperature",
           "type": "FLOAT",
           "link": null,
-          "label": "Music temperature",
           "widget": {
             "name": "temperature"
-          }
+          },
+          "label": "Music temperature"
         },
         {
           "name": "top_p",
           "type": "FLOAT",
           "link": null,
-          "label": "Music top_p",
           "widget": {
             "name": "top_p"
-          }
+          },
+          "label": "Music top_p"
         },
         {
           "name": "top_k",
           "type": "INT",
           "link": null,
-          "label": "Music top_k",
           "widget": {
             "name": "top_k"
-          }
+          },
+          "label": "Music top_k"
         },
         {
           "name": "repetition_penalty",
           "type": "FLOAT",
           "link": null,
-          "label": "Music repetition penalty",
           "widget": {
             "name": "repetition_penalty"
-          }
+          },
+          "label": "Music repetition penalty"
         },
         {
           "name": "cfg_scale",
           "type": "FLOAT",
           "link": null,
-          "label": "Music guidance",
           "widget": {
             "name": "cfg_scale"
-          }
+          },
+          "label": "Music guidance"
         },
         {
           "name": "steps",
           "type": "INT",
           "link": null,
-          "label": "Acoustic steps",
           "widget": {
             "name": "steps"
-          }
+          },
+          "label": "Acoustic steps"
         },
         {
           "name": "cfg",
           "type": "FLOAT",
           "link": null,
-          "label": "Acoustic CFG",
           "widget": {
             "name": "cfg"
-          }
+          },
+          "label": "Acoustic CFG"
         },
         {
           "name": "sampler_name",
           "type": "COMBO",
           "link": null,
-          "label": "Sampler",
           "widget": {
             "name": "sampler_name"
-          }
+          },
+          "label": "Sampler"
         },
         {
           "name": "scheduler",
           "type": "COMBO",
           "link": null,
-          "label": "Scheduler",
           "widget": {
             "name": "scheduler"
-          }
+          },
+          "label": "Scheduler"
         },
         {
           "name": "denoise",
           "type": "FLOAT",
           "link": null,
-          "label": "Denoise",
           "widget": {
             "name": "denoise"
-          }
+          },
+          "label": "Denoise"
         }
       ],
       "outputs": [
@@ -754,7 +414,14 @@
           "name": "AUDIO",
           "type": "AUDIO",
           "links": [
-            18
+            16
+          ]
+        },
+        {
+          "name": "abc",
+          "type": "STRING",
+          "links": [
+            17
           ]
         }
       ],
@@ -768,11 +435,6 @@
         ]
       },
       "widgets_values": [
-        "",
-        "[Verse]\nNeon fades along the lane\nFootsteps keep the time of rain\nFold the night and leave it here\nMorning has a sky to clear\n\n[Chorus]\nLet the day come into view\nEvery road begins with you\nHold a little room for light\nWe will sing beyond the night",
-        "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM",
-        "full",
-        831001,
         false,
         120.0,
         1.0,
@@ -787,48 +449,45 @@
         1.0
       ],
       "widgets_values_named": {
-        "abc": "",
-        "lyrics": "[Verse]\nNeon fades along the lane\nFootsteps keep the time of rain\nFold the night and leave it here\nMorning has a sky to clear\n\n[Chorus]\nLet the day come into view\nEvery road begins with you\nHold a little room for light\nWe will sing beyond the night",
-        "style": "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM",
-        "mode": "full",
-        "seed": 831001,
-        "max_duration": 120.0,
-        "temperature": 1.0,
+        "use_max_duration": false,
+        "max_duration": 120,
+        "cfg_scale": 1,
+        "steps": 32,
+        "temperature": 1,
         "top_p": 0.95,
         "top_k": 100,
         "repetition_penalty": 1.2,
-        "cfg_scale": 1.0,
-        "steps": 32,
-        "cfg": 1.0,
+        "cfg": 1,
         "sampler_name": "dpm_2",
         "scheduler": "sgm_uniform",
-        "denoise": 1.0
-      }
+        "denoise": 1
+      },
+      "title": "Acoustic"
     },
     {
       "id": 11,
       "type": "bno84.SaveYuE2Bundle",
       "pos": [
-        2760,
-        510
+        2100,
+        1992.838917949747
       ],
       "size": [
-        440,
-        300
+        330,
+        180
       ],
       "flags": {},
-      "order": 7,
+      "order": 19,
       "mode": 0,
       "inputs": [
         {
           "name": "audio",
           "type": "AUDIO",
-          "link": 18
+          "link": 16
         },
         {
           "name": "abc",
           "type": "STRING",
-          "link": 19
+          "link": 17
         },
         {
           "name": "filename_prefix",
@@ -849,7 +508,7 @@
           "name": "audio",
           "type": "AUDIO",
           "links": [
-            27
+            18
           ]
         },
         {
@@ -858,7 +517,7 @@
           "links": []
         }
       ],
-      "title": "Final outputs · ABC + FLAC",
+      "title": "Final outputs \u00b7 ABC + FLAC",
       "properties": {
         "Node name for S&R": "bno84.SaveYuE2Bundle",
         "cnr_id": "comfyui-yue2-kit",
@@ -866,55 +525,30 @@
       },
       "widgets_values": [
         "audio/yue2/song"
-      ]
-    },
-    {
-      "id": 12,
-      "type": "MarkdownNote",
-      "pos": [
-        110,
-        1350
-      ],
-      "size": [
-        482.92119749489007,
-        585.7429654126879
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "properties": {},
-      "widgets_values": [
-        "## YuE2 Kit - Song workflow\n\n_An intuitive workflow for YuE2 power users._\n\nThis workflow tries to give you access to all the cool things YuE2 can do, without getting complicated.\n\n## Basic usage\n\nTurn lyrics and a style prompt into music, with an ABC score.\n\n1. Set **Lyrics + style** and the **Seed**.\n2. Choose a reference, or **None** for a fresh score.\n3. Check **Model files**, then run.\n\nPreview the score in the center of the workflow.\n<br>**Final outputs** saves the song as FLAC and ABC files.\n\n### Instrumental LoRA\n\n1. Above the lyrics input set `instrumental: true`.\n2. Follow the cheat sheet hints, for instrumental prompts.\n3. Make sure you have the LoRA downloaded 👉\n\n### Reference input\n\nSupports input ABC and Transcribing from audio/video files.\n<br>See the \"Reference input\" section on the top left.\n\n### Visualizer video\n\nAn optional video can be created with a visualizer.\n<br>See \"Visualizer video\" on the right of the workflow.\n\n## Using custom nodes\n\nNot every custom node is fully stable yet, but you can use them in your own workflows.\nIt's best to use them from the registry:\n\n- [YuE2-Kit](https://registry.comfy.org/publishers/bno84/nodes/comfyui-yue2-kit)\n- [ABC Preview](https://registry.comfy.org/publishers/bno84/nodes/comfyui-abcpreview)\n- [Audio Visualizer](https://registry.comfy.org/publishers/bno84/nodes/comfyui-audiovisualizer)"
       ],
       "widgets_values_named": {
-        "text": "## YuE2 Kit - Song workflow\n\n_An intuitive workflow for YuE2 power users._\n\nThis workflow tries to give you access to all the cool things YuE2 can do, without getting complicated.\n\n## Basic usage\n\nTurn lyrics and a style prompt into music, with an ABC score.\n\n1. Set **Lyrics + style** and the **Seed**.\n2. Choose a reference, or **None** for a fresh score.\n3. Check **Model files**, then run.\n\nPreview the score in the center of the workflow.\n<br>**Final outputs** saves the song as FLAC and ABC files.\n\n### Instrumental LoRA\n\n1. Above the lyrics input set `instrumental: true`.\n2. Follow the cheat sheet hints, for instrumental prompts.\n3. Make sure you have the LoRA downloaded 👉\n\n### Reference input\n\nSupports input ABC and Transcribing from audio/video files.\n<br>See the \"Reference input\" section on the top left.\n\n### Visualizer video\n\nAn optional video can be created with a visualizer.\n<br>See \"Visualizer video\" on the right of the workflow.\n\n## Using custom nodes\n\nNot every custom node is fully stable yet, but you can use them in your own workflows.\nIt's best to use them from the registry:\n\n- [YuE2-Kit](https://registry.comfy.org/publishers/bno84/nodes/comfyui-yue2-kit)\n- [ABC Preview](https://registry.comfy.org/publishers/bno84/nodes/comfyui-abcpreview)\n- [Audio Visualizer](https://registry.comfy.org/publishers/bno84/nodes/comfyui-audiovisualizer)"
-      },
-      "color": "#232",
-      "bgcolor": "#353",
-      "title": "About and usage"
+        "filename_prefix": "audio/yue2/song"
+      }
     },
     {
       "id": 22,
       "type": "bno84.ABCPreview",
       "pos": [
-        1170,
-        510
+        780.8679050991083,
+        1984.7067838652406
       ],
       "size": [
-        960,
-        650
+        792.6717712635166,
+        563.5010895583491
       ],
       "flags": {},
-      "order": 5,
+      "order": 15,
       "mode": 0,
-      "title": "ABC · sheet music, source, preview playback",
       "inputs": [
         {
           "name": "abc",
           "type": "STRING",
-          "link": 20
+          "link": 15
         },
         {
           "name": "soundfont",
@@ -926,6 +560,7 @@
         }
       ],
       "outputs": [],
+      "title": "ABC \u00b7 sheet music, source, preview playback",
       "properties": {
         "Node name for S&R": "bno84.ABCPreview",
         "cnr_id": "comfyui-abcpreview",
@@ -933,155 +568,51 @@
       },
       "widgets_values": [
         "GeneralUser-GS.sf2"
-      ]
-    },
-    {
-      "id": 23,
-      "type": "MarkdownNote",
-      "pos": [
-        1740,
-        1215
-      ],
-      "size": [
-        390,
-        126
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Optional soundfont",
-      "properties": {},
-      "widgets_values": [
-        "## Optional preview soundfont\n\nThe preview tries `GeneralUser-GS.sf2` automatically, including inside soundfont subfolders. Download [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS) yourself and put it in `ComfyUI/models/soundfonts/` or a subfolder, then refresh.\n\nWithout it, sheet music and source still work; only playback is off. Choose another installed soundfont, or select **(none)** to disable playback."
       ],
       "widgets_values_named": {
-        "text": "## Optional preview soundfont\n\nThe preview tries `GeneralUser-GS.sf2` automatically, including inside soundfont subfolders. Download [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS) yourself and put it in `ComfyUI/models/soundfonts/` or a subfolder, then refresh.\n\nWithout it, sheet music and source still work; only playback is off. Choose another installed soundfont, or select **(none)** to disable playback."
-      },
-      "color": "#432",
-      "bgcolor": "#653"
+        "soundfont": "GeneralUser-GS.sf2"
+      }
     },
     {
       "id": 46,
       "type": "bno84.ModelStatus",
       "pos": [
-        690,
-        1650
+        -3.150876102111539,
+        2950.655915086031
       ],
       "size": [
-        465,
-        380
+        400,
+        420
       ],
       "flags": {},
-      "order": 5,
+      "order": 2,
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "title": "Model files",
       "properties": {
         "Node name for S&R": "bno84.ModelStatus",
         "cnr_id": "comfyui-yue2-kit",
         "ver": "0.6.2"
       },
       "widgets_values": [],
+      "widgets_values_named": {},
       "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 48,
-      "type": "MarkdownNote",
-      "pos": [
-        -316.5894294124945,
-        401.25552460959585
-      ],
-      "size": [
-        396.5536132582505,
-        695.111629369897
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Prompting cheat sheet",
-      "properties": {},
-      "widgets_values": [
-        "# Normal YuE2\n\n### Lyrics\n\n```\n[verse]\nFootsteps in the morning rain\nTake me down this road again\n\n[chorus]\nLet the daylight carry through\nEvery road leads back to you\n```\n\n### Style\n\nDescribe the genre, instruments, vocals, mood, and tempo.\n\n```\nwarm piano pop, female vocals, acoustic piano,\nrounded bass, light drums, hopeful, 88 BPM\n```\n\n_Note: using reference ABC/Transcription will force a different tempo._\n\nNatural language can be mixed in.\n\n```\njazz, 110 BPM, relaxed saxophone with gradual introduction of drums, acoustic piano, rounded bass and light drums, dynamic composition, experimental\n```\n\n---\n\n# Instrumental LoRA\n\n### Lyrics\n\n```\n[intro]\n[verse]\n[chorus]\n[outro]\n```\n\nSupports timed tags, but **guidance only**. The LoRA tends toward _3–5 minute songs_ and section timing is not exact.\n\n```\n[intro 0:00-0:15]\n[verse 0:15-0:45]\n[chorus 0:45-1:10]\n```\n\n### Style\n\nStays the same as normal YuE2."
-      ],
-      "widgets_values_named": {
-        "text": "# Normal YuE2\n\n### Lyrics\n\n```\n[verse]\nFootsteps in the morning rain\nTake me down this road again\n\n[chorus]\nLet the daylight carry through\nEvery road leads back to you\n```\n\n### Style\n\nDescribe the genre, instruments, vocals, mood, and tempo.\n\n```\nwarm piano pop, female vocals, acoustic piano,\nrounded bass, light drums, hopeful, 88 BPM\n```\n\n_Note: using reference ABC/Transcription will force a different tempo._\n\nNatural language can be mixed in.\n\n```\njazz, 110 BPM, relaxed saxophone with gradual introduction of drums, acoustic piano, rounded bass and light drums, dynamic composition, experimental\n```\n\n---\n\n# Instrumental LoRA\n\n### Lyrics\n\n```\n[intro]\n[verse]\n[chorus]\n[outro]\n```\n\nSupports timed tags, but **guidance only**. The LoRA tends toward _3–5 minute songs_ and section timing is not exact.\n\n```\n[intro 0:00-0:15]\n[verse 0:15-0:45]\n[chorus 0:45-1:10]\n```\n\n### Style\n\nStays the same as normal YuE2."
-      },
-      "color": "#2a363b",
-      "bgcolor": "#3f5159"
-    },
-    {
-      "id": 49,
-      "type": "MarkdownNote",
-      "pos": [
-        690.596921671742,
-        310.8460796136969
-      ],
-      "size": [
-        382.15931599306964,
-        145.68714258216312
-      ],
-      "flags": {},
-      "order": 7,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Planning tips",
-      "properties": {},
-      "widgets_values": [
-        "### Interesting chord progressions and melodies\n\nIf they are boring / repetitive, check if the ABC produced already has this problem, then address it in the planner.\n\n- **Increase planner temperature** for example `1.10`.\n- Adjust the style prompt to encourage more bold, surprising composition and melodies."
-      ],
-      "widgets_values_named": {
-        "text": "### Interesting chord progressions and melodies\n\nIf they are boring / repetitive, check if the ABC produced already has this problem, then address it in the planner.\n\n- **Increase planner temperature** for example `1.10`.\n- Adjust the style prompt to encourage more bold, surprising composition and melodies."
-      },
-      "color": "#2a363b",
-      "bgcolor": "#3f5159"
-    },
-    {
-      "id": 50,
-      "type": "MarkdownNote",
-      "pos": [
-        2228.9989087576737,
-        241.91456002323372
-      ],
-      "size": [
-        421.7740964042439,
-        203.48619407096044
-      ],
-      "flags": {},
-      "order": 8,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Acoustic tips",
-      "properties": {},
-      "widgets_values": [
-        "### Stronger style adherence\n\n- Set **Music guidance** above `1.0`, for example between 2-3.\n<br>(This will generate slower.)\n\n### More detail and layered instruments\n\nTry **Music temperature** first.\nFine tune with `top_p` (lower for more variance).\n\n- Increased temperature, for example `1.20`\n  <br>More variance and layered instruments but deviates from ABC and style prompt more.\n- Decreased temperature, for example `0.80`\n  <br>Stronger ABC and style adherence but can sound clinical and flat."
-      ],
-      "widgets_values_named": {
-        "text": "### Stronger style adherence\n\n- Set **Music guidance** above `1.0`, for example between 2-3.\n<br>(This will generate slower.)\n\n### More detail and layered instruments\n\nTry **Music temperature** first.\nFine tune with `top_p` (lower for more variance).\n\n- Increased temperature, for example `1.20`\n  <br>More variance and layered instruments but deviates from ABC and style prompt more.\n- Decreased temperature, for example `0.80`\n  <br>Stronger ABC and style adherence but can sound clinical and flat."
-      },
-      "color": "#2a363b",
-      "bgcolor": "#3f5159"
+      "bgcolor": "#653",
+      "title": "Model files"
     },
     {
       "id": 54,
       "type": "LoadImage",
       "pos": [
-        2896,
-        76
+        2118.9383988105906,
+        1461.8364992566171
       ],
       "size": [
         300,
-        330
+        340
       ],
       "flags": {},
-      "order": 6,
+      "order": 3,
       "mode": 0,
       "inputs": [
         {
@@ -1105,20 +636,19 @@
       ],
       "outputs": [
         {
-          "localized_name": "IMAGE",
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            26
+            19
           ]
         },
         {
-          "localized_name": "MASK",
           "name": "MASK",
           "type": "MASK",
-          "links": null
+          "links": []
         }
       ],
+      "title": "Visualizer still",
       "properties": {
         "Node name for S&R": "LoadImage",
         "cnr_id": "comfy-core",
@@ -1128,42 +658,45 @@
         "yue2-kit-still.png",
         "image"
       ],
-      "title": "Visualizer still"
+      "widgets_values_named": {
+        "image": "yue2-kit-still.png",
+        "upload": "image"
+      }
     },
     {
       "id": 55,
       "type": "AudioVisualizer",
       "pos": [
-        3258,
-        76
+        2511.226255575363,
+        1454.3373842699402
       ],
       "size": [
-        540,
-        815
+        360,
+        707.25
       ],
       "flags": {},
-      "order": 12,
+      "order": 20,
       "mode": 0,
       "inputs": [
         {
           "name": "image",
           "type": "IMAGE",
-          "link": 26
+          "link": 19
         },
         {
           "name": "audio",
           "type": "AUDIO",
-          "link": 27
+          "link": 18
         }
       ],
       "outputs": [
         {
-          "localized_name": "video",
           "name": "video",
           "type": "VIDEO",
-          "links": null
+          "links": []
         }
       ],
+      "title": "Visualizer video",
       "properties": {
         "Node name for S&R": "AudioVisualizer",
         "sdcpp_audio_visualizer_widget_order": [
@@ -1217,67 +750,316 @@
         128,
         -1
       ],
-      "title": "Visualizer video"
+      "widgets_values_named": {
+        "enabled": false,
+        "filename_prefix": "audio/yue2/song_viz",
+        "style": "bars",
+        "dot_spacing": 17,
+        "color": "#9750c4",
+        "band_height": 0.35,
+        "gain": 1.3,
+        "glow": 0,
+        "trail": 0,
+        "vignette": 0,
+        "fade_in": 1.5,
+        "fade_out": 2.5,
+        "fps": 60,
+        "start": 0,
+        "duration": 0,
+        "video_codec": "h265",
+        "h265_crf": 18,
+        "h264_crf": 22,
+        "audio_codec": "flac",
+        "aac_bitrate": 192,
+        "opus_bitrate": 128,
+        "crf": -1
+      }
     },
     {
-      "id": 56,
-      "type": "bno84.ABCTimeline",
+      "id": 63,
+      "type": "bno84.SongHistory",
       "pos": [
-        1170,
-        200
+        -18.16853035593734,
+        967.3999508895827
       ],
       "size": [
-        960,
-        246
+        719.94897025929,
+        355.1865969206083
       ],
       "flags": {},
-      "order": 0,
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "bno84.SongHistory",
+        "cnr_id": "comfyui-yue2-kit",
+        "ver": "0.6.2"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {},
+      "color": "#432",
+      "bgcolor": "#653",
+      "title": "Song history"
+    },
+    {
+      "id": 65,
+      "type": "bno84.YuE2Score",
+      "pos": [
+        -21.366603196819582,
+        1414.866746433687
+      ],
+      "size": [
+        740,
+        1100
+      ],
+      "flags": {},
+      "order": 14,
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "abc",
-          "name": "abc",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 84
+        },
+        {
+          "name": "lyrics",
           "type": "STRING",
-          "link": 28
+          "link": 1
+        },
+        {
+          "name": "style",
+          "type": "STRING",
+          "link": 2
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "link": 3
+        },
+        {
+          "name": "sheetsage2",
+          "type": "*",
+          "link": 26,
+          "shape": 7
         }
       ],
       "outputs": [
         {
-          "localized_name": "seconds",
+          "name": "abc",
+          "type": "STRING",
+          "links": [
+            6,
+            15,
+            85
+          ]
+        },
+        {
+          "name": "mode",
+          "type": "COMBO",
+          "links": [
+            7
+          ]
+        },
+        {
           "name": "seconds",
           "type": "FLOAT",
           "links": [
-            30
+            8
+          ]
+        },
+        {
+          "name": "lyrics",
+          "type": "STRING",
+          "links": [
+            9
+          ]
+        },
+        {
+          "name": "style",
+          "type": "STRING",
+          "links": [
+            10
+          ]
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "links": [
+            11
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": [
+            22
           ]
         }
       ],
-      "title": "ABC timeline · score duration and sections",
       "properties": {
-        "Node name for S&R": "bno84.ABCTimeline",
-        "cnr_id": "comfyui-abcpreview",
-        "ver": "0.3.0"
+        "Node name for S&R": "bno84.YuE2Score",
+        "cnr_id": "comfyui-yue2-kit",
+        "ver": "0.1.0"
       },
-      "widgets_values": []
+      "widgets_values": [
+        "fixed",
+        88,
+        "4/4",
+        "C major",
+        false,
+        8,
+        "intro",
+        4,
+        false,
+        "",
+        1,
+        0,
+        true,
+        "full",
+        0.7,
+        0.9,
+        30,
+        1.005,
+        100,
+        1024,
+        8192
+      ],
+      "widgets_values_named": {
+        "header_mode": "from anchor",
+        "header_tempo": 88,
+        "header_meter": "4/4",
+        "header_key": "C major",
+        "opening_generate": false,
+        "opening_bars": 8,
+        "opening_hint": "intro",
+        "opening_candidates": 4,
+        "anchor_use": true,
+        "anchor_abc": "X:1\nT:\nM:4/4\nL:1/16\nQ:1/4=173\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:D#m\n% chorus\nV: Vocal\nz4\"D#\"z12|\"D#\"z12\"F#6\"z4|\"D#\"z16|\"D#\"z16|\nV: Ins\nz4D4D3DD2=E2|D2D2D2D2D2D2F4|D4D4D3DD2=E2|D2D2D2D2=E2E2F2F2|\nV: Vocal\n\"D#\"z16|\"D#\"z16|\nV: Ins\nD4D4D3DD2=E2|D2D2D2D2D2D2F4|\n",
+        "anchor_start": 1,
+        "anchor_end": 0,
+        "continue_generate": false,
+        "mode": "full",
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "top_k": 30,
+        "repetition_penalty": 1.005,
+        "penalty_window": 100,
+        "opening_tokens": 1024,
+        "continuation_tokens": 8192
+      },
+      "title": "YuE2 Score"
+    },
+    {
+      "id": 12,
+      "type": "MarkdownNote",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        400,
+        230
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Start here",
+      "properties": {},
+      "widgets_values": [
+        "Set Lyrics + style and Seed, then use the standard Score widgets. Header fixed sets tempo, meter and key. Anchor ABC accepts pasted scores or Song history \u2192 Use in planner. Drag the range strip to select single bars. Drop an .abc file on Score to use it as the anchor, or drop audio to transcribe it. The timeline is read-only."
+      ],
+      "widgets_values_named": {
+        "text": "Set Lyrics + style and Seed, then use the standard Score widgets. Header fixed sets tempo, meter and key. Anchor ABC accepts pasted scores or Song history \u2192 Use in planner. Drag the range strip to select single bars. Drop an .abc file on Score to use it as the anchor, or drop audio to transcribe it. The timeline is read-only."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 23,
+      "type": "MarkdownNote",
+      "pos": [
+        1186.2618448708579,
+        2615.5510075396173
+      ],
+      "size": [
+        382.0798697861651,
+        110.63118303462625
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Preview playback",
+      "properties": {},
+      "widgets_values": [
+        "Optional `GeneralUser-GS.sf2` in `models/soundfonts/` (subfolders work). Missing fonts leave notation available; select `(none)` to disable playback. [Get GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS)."
+      ],
+      "widgets_values_named": {
+        "text": "Optional `GeneralUser-GS.sf2` in `models/soundfonts/` (subfolders work). Missing fonts leave notation available; select `(none)` to disable playback. [Get GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS)."
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 66,
+      "type": "PreviewAny",
+      "pos": [
+        482.57051550820955,
+        2622.4841755761663
+      ],
+      "size": [
+        675.0227567107565,
+        242.15209077393047
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "Score report",
+      "properties": {
+        "Node name for S&R": "PreviewAny",
+        "cnr_id": "comfy-core",
+        "ver": "0.38.0"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
     },
     {
       "id": 59,
       "type": "bno84.OptionalModelLora",
       "pos": [
-        2220,
-        1260
+        1617.1463900566714,
+        2638.914646488282
       ],
       "size": [
-        440,
-        130
+        425.8819548623321,
+        137.21211179096372
       ],
       "flags": {},
-      "order": 17,
+      "order": 13,
       "mode": 0,
       "inputs": [
         {
           "name": "model",
           "type": "MODEL",
-          "link": 16
+          "link": 13
         }
       ],
       "outputs": [
@@ -1285,11 +1067,11 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            32
+            23
           ]
         }
       ],
-      "title": "NAR LoRA · optional",
+      "title": "NAR LoRA",
       "properties": {
         "Node name for S&R": "bno84.OptionalModelLora",
         "cnr_id": "comfyui-yue2-kit",
@@ -1298,127 +1080,180 @@
       "widgets_values": [
         "(none)",
         1.0
-      ]
+      ],
+      "widgets_values_named": {
+        "lora_name": "(none)",
+        "strength_model": 1
+      }
     },
     {
-      "id": 60,
+      "id": 84,
       "type": "MarkdownNote",
       "pos": [
-        2220,
-        1450
+        1615.1420623792872,
+        2848.3770426202314
       ],
       "size": [
         436.10507000681355,
         174.01709282533625
       ],
       "flags": {},
-      "order": 18,
+      "order": 7,
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "title": "NAR LoRA · usage and links",
+      "title": "NAR LoRA \u00b7 usage and links",
       "properties": {},
       "widgets_values": [
         "## Optional NAR LoRA\n\nSelect **(none)** or strength **0** to disable the LoRA.\n\n- [nar_lora_joint_v9_comfyui.safetensors](https://huggingface.co/Mothersuperior/yue2-mothersuperior-realaudio-tokenizer-v4/resolve/main/nar_lora_joint_v9_comfyui.safetensors)\n  <br>_CC BY-NC 4.0 (non-commercial)_\n  <br>Put it in `ComfyUI/models/loras/` or a subfolder. \n  <br>Pairs well with **Instrumental LoRA**.\n  <br>Start with strength `1.0`"
       ],
+      "widgets_values_named": {
+        "text": "## Optional NAR LoRA\n\nSelect **(none)** or strength **0** to disable the LoRA.\n\n- [nar_lora_joint_v9_comfyui.safetensors](https://huggingface.co/Mothersuperior/yue2-mothersuperior-realaudio-tokenizer-v4/resolve/main/nar_lora_joint_v9_comfyui.safetensors)\n  <br>_CC BY-NC 4.0 (non-commercial)_\n  <br>Put it in `ComfyUI/models/loras/` or a subfolder. \n  <br>Pairs well with **Instrumental LoRA**.\n  <br>Start with strength `1.0`"
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
     {
-      "id": 61,
+      "id": 85,
       "type": "MarkdownNote",
       "pos": [
-        -309.7603798869784,
-        -148.22872779698827
-      ],
-      "size": [
-        388.92889425187366,
-        160.02711715738815
-      ],
-      "flags": {},
-      "order": 19,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Reference input · usage",
-      "properties": {},
-      "widgets_values": [
-        "Transcribe existing audio/video or input ABC.\n\nSupports two modes, using the \"extend reference\" checkbox:\n- Unchecked; Uses the ABC/Transcription as-is, skipping the planning step.\n- Checked; **Extends** the ABC/Transcription, uses your input as the _start of the song_ and lets planning continue it."
-      ],
-      "color": "#2a363b",
-      "bgcolor": "#3f5159"
-    },
-    {
-      "id": 62,
-      "type": "MarkdownNote",
-      "pos": [
-        3840.292033981406,
-        77.85340460141983
+        2919.891211935469,
+        1457.6949084609976
       ],
       "size": [
         373.49174279126964,
         228.68662491483326
       ],
       "flags": {},
-      "order": 20,
+      "order": 8,
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "title": "Visualizer video · usage",
+      "title": "Visualizer video \u00b7 usage",
       "properties": {},
       "widgets_values": [
         "Creates a video from a still image with a bar or dots spectrum.\n<br>Turn **enabled** on to export a video with your generated song.\n\nChoose the image in **Visualizer still**.\n<br>_The video resolution will match the input image._\n\nAdjust the visualizer options with a mock preview of your settings below.\n\n\n## Reducing file size\n\nIf you're looking for smaller files:\n1. Use the h265/opus codecs (large difference vs h265/flac).\n2. Lower the resolution by picking a smaller input image.\n3. Use 30 fps (small difference).\n\nRequires FFmpeg, with `showcqt` and support for your selected codec.\n"
       ],
+      "widgets_values_named": {
+        "text": "Creates a video from a still image with a bar or dots spectrum.\n<br>Turn **enabled** on to export a video with your generated song.\n\nChoose the image in **Visualizer still**.\n<br>_The video resolution will match the input image._\n\nAdjust the visualizer options with a mock preview of your settings below.\n\n\n## Reducing file size\n\nIf you're looking for smaller files:\n1. Use the h265/opus codecs (large difference vs h265/flac).\n2. Lower the resolution by picking a smaller input image.\n3. Use 30 fps (small difference).\n\nRequires FFmpeg, with `showcqt` and support for your selected codec.\n"
+      },
       "color": "#2a363b",
       "bgcolor": "#3f5159"
     },
     {
-      "id": 63,
-      "type": "bno84.SongHistory",
-      "pos": [
-        110,
-        -780
-      ],
-      "size": [
-        1045,
-        560
-      ],
-      "flags": {},
-      "order": 21,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Song history",
-      "properties": {
-        "Node name for S&R": "bno84.SongHistory",
-        "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.6.2"
-      },
-      "widgets_values": [],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 64,
+      "id": 86,
       "type": "MarkdownNote",
       "pos": [
-        -309.7603798869784,
-        -780
+        1610.7862306528475,
+        1711.0788480474064
       ],
       "size": [
-        388.92889425187366,
-        300
+        421.7740964042439,
+        203.48619407096044
       ],
       "flags": {},
-      "order": 22,
+      "order": 9,
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "title": "Song history · usage",
+      "title": "Acoustic tips",
       "properties": {},
       "widgets_values": [
-        "Browse earlier songs saved by **Final outputs**, newest first.\n\n- ▶ plays the FLAC. Click a row to open its score.\n- Click a section, shift-click to extend, or drag the handles to select bars.\n- **Use as reference** sends the selection to Reference input. Turn on \"extend reference\" to continue from it.\n- **Restore seed** sets the seed to fixed. **Restore all** brings back the seed, lyrics, style and sampling, with the whole score as reference.\n\nSections are counted in bars; the audio can drift from the score by a few seconds.\n\n## Alignment gotcha\n\nFLAC and ABC don't always align. If maximum duration is set, the ABC may be longer than the FLAC.\n\nDuring generation the FLAC may also drift and become longer than the ABC.\n\nThe history will try to visualize the differences but is not perfectly aligning the score with audio."
+        "### Stronger style adherence\n\n- Set **Music guidance** above `1.0`, for example between 2-3.\n<br>(This will generate slower.)\n\n### More detail and layered instruments\n\nTry **Music temperature** first.\nFine tune with `top_p` (lower for more variance).\n\n- Increased temperature, for example `1.20`\n  <br>More variance and layered instruments but deviates from ABC and style prompt more.\n- Decreased temperature, for example `0.80`\n  <br>Stronger ABC and style adherence but can sound clinical and flat."
       ],
+      "widgets_values_named": {
+        "text": "### Stronger style adherence\n\n- Set **Music guidance** above `1.0`, for example between 2-3.\n<br>(This will generate slower.)\n\n### More detail and layered instruments\n\nTry **Music temperature** first.\nFine tune with `top_p` (lower for more variance).\n\n- Increased temperature, for example `1.20`\n  <br>More variance and layered instruments but deviates from ABC and style prompt more.\n- Decreased temperature, for example `0.80`\n  <br>Stronger ABC and style adherence but can sound clinical and flat."
+      },
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 87,
+      "type": "bno84.ABCTimeline",
+      "pos": [
+        785.9082237575992,
+        1628.5753443716135
+      ],
+      "size": [
+        778.4783895861261,
+        267.0873873951957
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "abc",
+          "type": "STRING",
+          "link": 85
+        }
+      ],
+      "outputs": [
+        {
+          "name": "seconds",
+          "type": "FLOAT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "bno84.ABCTimeline",
+        "cnr_id": "comfyui-abcpreview",
+        "ver": "0.3.0"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 88,
+      "type": "MarkdownNote",
+      "pos": [
+        -621.6164639819714,
+        2633.8782411828875
+      ],
+      "size": [
+        482.92119749489007,
+        585.7429654126879
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "About and usage",
+      "properties": {},
+      "widgets_values": [
+        "## YuE2 Kit - Song workflow\n\n_An intuitive workflow for YuE2 power users._\n\nThis workflow tries to give you access to all the cool things YuE2 can do, without getting complicated.\n\n## Basic usage\n\nTurn lyrics and a style prompt into music, with an ABC score.\n\n1. Set **Lyrics + style** and the **Seed**.\n2. Choose a reference, or **None** for a fresh score.\n3. Check **Model files**, then run.\n\nPreview the score in the center of the workflow.\n<br>**Final outputs** saves the song as FLAC and ABC files.\n\n### Instrumental LoRA\n\n1. Above the lyrics input set `instrumental: true`.\n2. Follow the cheat sheet hints, for instrumental prompts.\n3. Make sure you have the LoRA downloaded \ud83d\udc49\n\n### Reference input\n\nSupports input ABC and Transcribing from audio/video files.\n<br>See the \"Reference input\" section on the top left.\n\n### Visualizer video\n\nAn optional video can be created with a visualizer.\n<br>See \"Visualizer video\" on the right of the workflow.\n\n## Using custom nodes\n\nNot every custom node is fully stable yet, but you can use them in your own workflows.\nIt's best to use them from the registry:\n\n- [YuE2-Kit](https://registry.comfy.org/publishers/bno84/nodes/comfyui-yue2-kit)\n- [ABC Preview](https://registry.comfy.org/publishers/bno84/nodes/comfyui-abcpreview)\n- [Audio Visualizer](https://registry.comfy.org/publishers/bno84/nodes/comfyui-audiovisualizer)"
+      ],
+      "widgets_values_named": {
+        "text": "## YuE2 Kit - Song workflow\n\n_An intuitive workflow for YuE2 power users._\n\nThis workflow tries to give you access to all the cool things YuE2 can do, without getting complicated.\n\n## Basic usage\n\nTurn lyrics and a style prompt into music, with an ABC score.\n\n1. Set **Lyrics + style** and the **Seed**.\n2. Choose a reference, or **None** for a fresh score.\n3. Check **Model files**, then run.\n\nPreview the score in the center of the workflow.\n<br>**Final outputs** saves the song as FLAC and ABC files.\n\n### Instrumental LoRA\n\n1. Above the lyrics input set `instrumental: true`.\n2. Follow the cheat sheet hints, for instrumental prompts.\n3. Make sure you have the LoRA downloaded \ud83d\udc49\n\n### Reference input\n\nSupports input ABC and Transcribing from audio/video files.\n<br>See the \"Reference input\" section on the top left.\n\n### Visualizer video\n\nAn optional video can be created with a visualizer.\n<br>See \"Visualizer video\" on the right of the workflow.\n\n## Using custom nodes\n\nNot every custom node is fully stable yet, but you can use them in your own workflows.\nIt's best to use them from the registry:\n\n- [YuE2-Kit](https://registry.comfy.org/publishers/bno84/nodes/comfyui-yue2-kit)\n- [ABC Preview](https://registry.comfy.org/publishers/bno84/nodes/comfyui-abcpreview)\n- [Audio Visualizer](https://registry.comfy.org/publishers/bno84/nodes/comfyui-audiovisualizer)"
+      },
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 89,
+      "type": "MarkdownNote",
+      "pos": [
+        -1063.9690572245636,
+        1655.1545967862276
+      ],
+      "size": [
+        396.5536132582505,
+        695.111629369897
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Prompting cheat sheet",
+      "properties": {},
+      "widgets_values": [
+        "# Normal YuE2\n\n### Lyrics\n\n```\n[verse]\nFootsteps in the morning rain\nTake me down this road again\n\n[chorus]\nLet the daylight carry through\nEvery road leads back to you\n```\n\n### Style\n\nDescribe the genre, instruments, vocals, mood, and tempo.\n\n```\nwarm piano pop, female vocals, acoustic piano,\nrounded bass, light drums, hopeful, 88 BPM\n```\n\n_Note: using reference ABC/Transcription will force a different tempo._\n\nNatural language can be mixed in.\n\n```\njazz, 110 BPM, relaxed saxophone with gradual introduction of drums, acoustic piano, rounded bass and light drums, dynamic composition, experimental\n```\n\n---\n\n# Instrumental LoRA\n\n### Lyrics\n\n```\n[intro]\n[verse]\n[chorus]\n[outro]\n```\n\nSupports timed tags, but **guidance only**. The LoRA tends toward _3\u20135 minute songs_ and section timing is not exact.\n\n```\n[intro 0:00-0:15]\n[verse 0:15-0:45]\n[chorus 0:45-1:10]\n```\n\n### Style\n\nStays the same as normal YuE2."
+      ],
+      "widgets_values_named": {
+        "text": "# Normal YuE2\n\n### Lyrics\n\n```\n[verse]\nFootsteps in the morning rain\nTake me down this road again\n\n[chorus]\nLet the daylight carry through\nEvery road leads back to you\n```\n\n### Style\n\nDescribe the genre, instruments, vocals, mood, and tempo.\n\n```\nwarm piano pop, female vocals, acoustic piano,\nrounded bass, light drums, hopeful, 88 BPM\n```\n\n_Note: using reference ABC/Transcription will force a different tempo._\n\nNatural language can be mixed in.\n\n```\njazz, 110 BPM, relaxed saxophone with gradual introduction of drums, acoustic piano, rounded bass and light drums, dynamic composition, experimental\n```\n\n---\n\n# Instrumental LoRA\n\n### Lyrics\n\n```\n[intro]\n[verse]\n[chorus]\n[outro]\n```\n\nSupports timed tags, but **guidance only**. The LoRA tends toward _3\u20135 minute songs_ and section timing is not exact.\n\n```\n[intro 0:00-0:15]\n[verse 0:15-0:45]\n[chorus 0:45-1:10]\n```\n\n### Style\n\nStays the same as normal YuE2."
+      },
       "color": "#2a363b",
       "bgcolor": "#3f5159"
     }
@@ -1428,108 +1263,92 @@
       1,
       32,
       0,
-      30,
-      0,
+      65,
+      1,
       "STRING"
     ],
     [
       2,
       32,
       1,
-      30,
-      1,
+      65,
+      2,
       "STRING"
     ],
     [
       3,
       3,
       0,
-      30,
-      5,
+      65,
+      3,
       "INT"
-    ],
-    [
-      4,
-      34,
-      1,
-      30,
-      2,
-      "CLIP"
-    ],
-    [
-      5,
-      32,
-      0,
-      31,
-      1,
-      "STRING"
     ],
     [
       6,
-      32,
-      1,
+      65,
+      0,
       31,
-      2,
+      0,
       "STRING"
     ],
     [
       7,
-      3,
-      0,
-      31,
-      7,
-      "INT"
-    ],
-    [
-      8,
-      34,
-      1,
-      31,
-      3,
-      "CLIP"
-    ],
-    [
-      10,
-      33,
-      1,
-      30,
-      3,
-      "AUDIO"
-    ],
-    [
-      12,
-      33,
-      4,
-      30,
-      4,
-      "BOOLEAN"
-    ],
-    [
-      14,
-      30,
+      65,
       1,
       31,
       6,
       "COMBO"
     ],
     [
-      15,
-      30,
-      0,
+      8,
+      65,
+      2,
       31,
-      0,
+      8,
+      "FLOAT"
+    ],
+    [
+      9,
+      65,
+      3,
+      31,
+      1,
       "STRING"
     ],
     [
-      16,
+      10,
+      65,
+      4,
+      31,
+      2,
+      "STRING"
+    ],
+    [
+      11,
+      65,
+      5,
+      31,
+      7,
+      "INT"
+    ],
+    [
+      12,
       34,
       0,
+      31,
+      3,
+      "CLIP"
+    ],
+    [
+      13,
+      34,
+      1,
       59,
       0,
       "MODEL"
     ],
     [
-      17,
+      14,
       34,
       2,
       31,
@@ -1537,7 +1356,15 @@
       "VAE"
     ],
     [
-      18,
+      15,
+      65,
+      0,
+      22,
+      0,
+      "STRING"
+    ],
+    [
+      16,
       31,
       0,
       11,
@@ -1545,63 +1372,23 @@
       "AUDIO"
     ],
     [
-      19,
-      30,
-      0,
+      17,
+      31,
+      1,
       11,
       1,
       "STRING"
     ],
     [
-      20,
-      30,
-      0,
-      22,
-      0,
-      "STRING"
+      18,
+      11,
+      1,
+      55,
+      1,
+      "AUDIO"
     ],
     [
-      21,
-      33,
-      2,
-      30,
-      13,
-      "BOOLEAN"
-    ],
-    [
-      22,
-      34,
-      3,
-      30,
-      14,
-      "AUDIO_ENCODER"
-    ],
-    [
-      23,
-      33,
-      3,
-      30,
-      16,
-      "BOOLEAN"
-    ],
-    [
-      24,
-      33,
-      0,
-      30,
-      15,
-      "STRING"
-    ],
-    [
-      25,
-      32,
-      2,
-      34,
-      3,
-      "BOOLEAN"
-    ],
-    [
-      26,
+      19,
       54,
       0,
       55,
@@ -1609,44 +1396,52 @@
       "IMAGE"
     ],
     [
-      27,
-      11,
-      1,
-      55,
-      1,
-      "AUDIO"
-    ],
-    [
-      28,
-      30,
-      0,
-      56,
+      22,
+      65,
+      6,
+      66,
       0,
       "STRING"
     ],
     [
-      30,
-      56,
-      0,
-      31,
-      8,
-      "FLOAT"
-    ],
-    [
-      31,
-      34,
-      4,
-      33,
-      5,
-      "*"
-    ],
-    [
-      32,
+      23,
       59,
       0,
       31,
       4,
       "MODEL"
+    ],
+    [
+      26,
+      34,
+      3,
+      65,
+      4,
+      "*"
+    ],
+    [
+      83,
+      32,
+      2,
+      34,
+      3,
+      "BOOLEAN"
+    ],
+    [
+      84,
+      34,
+      0,
+      65,
+      0,
+      "CLIP"
+    ],
+    [
+      85,
+      65,
+      0,
+      87,
+      0,
+      "STRING"
     ]
   ],
   "groups": [],
@@ -1658,7 +1453,7 @@
         "state": {
           "lastGroupId": 0,
           "lastNodeId": 53,
-          "lastLinkId": 17,
+          "lastLinkId": 18,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -1701,7 +1496,7 @@
             "name": "sheetsage2",
             "type": "COMBO",
             "linkIds": [
-              2
+              18
             ],
             "label": "SheetSage2",
             "pos": [
@@ -1738,18 +1533,6 @@
         ],
         "outputs": [
           {
-            "id": "57c9589c-1a38-571c-bb4c-f5654c864142",
-            "name": "MODEL",
-            "type": "MODEL",
-            "linkIds": [
-              3
-            ],
-            "pos": [
-              2144,
-              104
-            ]
-          },
-          {
             "id": "7b2d0d0b-aef5-5241-822a-6a89f0cec88a",
             "name": "CLIP",
             "type": "CLIP",
@@ -1759,6 +1542,18 @@
             "pos": [
               2144,
               124
+            ]
+          },
+          {
+            "id": "57c9589c-1a38-571c-bb4c-f5654c864142",
+            "name": "MODEL",
+            "type": "MODEL",
+            "linkIds": [
+              3
+            ],
+            "pos": [
+              2144,
+              104
             ]
           },
           {
@@ -1774,18 +1569,6 @@
             ]
           },
           {
-            "id": "6a796aea-ed40-55f7-8ed6-039817f7f99c",
-            "name": "SheetSage2",
-            "type": "AUDIO_ENCODER",
-            "linkIds": [
-              6
-            ],
-            "pos": [
-              2144,
-              164
-            ]
-          },
-          {
             "id": "a4871a46-db05-5a90-9dad-8ccca25fec55",
             "name": "SheetSage2 file",
             "type": "*",
@@ -1794,7 +1577,7 @@
             ],
             "pos": [
               2144,
-              184
+              164
             ]
           }
         ],
@@ -1904,7 +1687,7 @@
                 ]
               }
             ],
-            "title": "YuE2 3B — model, language model, VAE",
+            "title": "YuE2 3B \u2014 model, language model, VAE",
             "properties": {
               "Node name for S&R": "CheckpointLoaderSimple",
               "cnr_id": "comfy-core",
@@ -1932,7 +1715,7 @@
               {
                 "name": "name",
                 "type": "COMBO",
-                "link": 2,
+                "link": 18,
                 "widget": {
                   "name": "name"
                 }
@@ -1943,12 +1726,11 @@
                 "name": "file",
                 "type": "*",
                 "links": [
-                  15,
                   17
                 ]
               }
             ],
-            "title": "SheetSage2 file — only for Transcribe",
+            "title": "SheetSage2 availability (optional)",
             "properties": {
               "Node name for S&R": "bno84.OptionalAudioEncoderFile",
               "cnr_id": "comfyui-yue2-kit",
@@ -1962,52 +1744,9 @@
               ],
               "bno84.model": {
                 "label": "SheetSage2",
-                "use": "Needed for Transcribe only. Choose None or ABC in Reference input to continue without it.",
+                "use": "Optional transcription model, used when audio is dropped on Score. Ordinary runs use the stored ABC.",
                 "license": "CC BY-NC 4.0 (non-commercial)"
               }
-            },
-            "widgets_values": [
-              "sheetsage2_bf16.safetensors"
-            ]
-          },
-          {
-            "id": 15,
-            "type": "AudioEncoderLoader",
-            "pos": [
-              480,
-              260
-            ],
-            "size": [
-              400,
-              100
-            ],
-            "flags": {},
-            "order": 8,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "audio_encoder_name",
-                "type": "COMBO",
-                "link": 15,
-                "widget": {
-                  "name": "audio_encoder_name"
-                }
-              }
-            ],
-            "outputs": [
-              {
-                "name": "AUDIO_ENCODER",
-                "type": "AUDIO_ENCODER",
-                "links": [
-                  6
-                ]
-              }
-            ],
-            "title": "SheetSage2 + MERT2",
-            "properties": {
-              "Node name for S&R": "AudioEncoderLoader",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
             },
             "widgets_values": [
               "sheetsage2_bf16.safetensors"
@@ -2046,7 +1785,7 @@
                 ]
               }
             ],
-            "title": "Instrumental LoRA file — only for Instrumental",
+            "title": "Instrumental LoRA file \u2014 only for Instrumental",
             "properties": {
               "Node name for S&R": "bno84.OptionalLoraFile",
               "cnr_id": "comfyui-yue2-kit",
@@ -2209,19 +1948,11 @@
             "type": "COMBO"
           },
           {
-            "id": 2,
-            "origin_id": -10,
-            "origin_slot": 1,
-            "target_id": 52,
-            "target_slot": 0,
-            "type": "COMBO"
-          },
-          {
             "id": 3,
             "origin_id": 4,
             "origin_slot": 0,
             "target_id": -20,
-            "target_slot": 0,
+            "target_slot": 1,
             "type": "MODEL"
           },
           {
@@ -2231,14 +1962,6 @@
             "target_id": -20,
             "target_slot": 2,
             "type": "VAE"
-          },
-          {
-            "id": 6,
-            "origin_id": 15,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 3,
-            "type": "AUDIO_ENCODER"
           },
           {
             "id": 7,
@@ -2277,7 +2000,7 @@
             "origin_id": 45,
             "origin_slot": 0,
             "target_id": -20,
-            "target_slot": 1,
+            "target_slot": 0,
             "type": "CLIP"
           },
           {
@@ -2305,14 +2028,6 @@
             "type": "*"
           },
           {
-            "id": 15,
-            "origin_id": 52,
-            "origin_slot": 0,
-            "target_id": 15,
-            "target_slot": 0,
-            "type": "*"
-          },
-          {
             "id": 16,
             "origin_id": 53,
             "origin_slot": 0,
@@ -2325,867 +2040,16 @@
             "origin_id": 52,
             "origin_slot": 0,
             "target_id": -20,
-            "target_slot": 4,
+            "target_slot": 3,
             "type": "*"
-          }
-        ],
-        "extra": {}
-      },
-      {
-        "id": "22655449-5c3f-53cc-a93e-8ebfaa6f293a",
-        "version": 1,
-        "state": {
-          "lastGroupId": 0,
-          "lastNodeId": 36,
-          "lastLinkId": 32,
-          "lastRerouteId": 0
-        },
-        "revision": 0,
-        "config": {},
-        "name": "Planning",
-        "inputNode": {
-          "id": -10,
-          "bounding": [
-            -360,
-            80,
-            128,
-            340
-          ]
-        },
-        "outputNode": {
-          "id": -20,
-          "bounding": [
-            2120,
-            80,
-            128,
-            80
-          ]
-        },
-        "inputs": [
-          {
-            "id": "95cfe732-35a2-52a0-8f12-dbb0a1099f9c",
-            "name": "lyrics",
-            "type": "STRING",
-            "linkIds": [
-              3,
-              16
-            ],
-            "label": "Lyrics",
-            "pos": [
-              -256,
-              104
-            ]
-          },
-          {
-            "id": "9b10c0d8-fd97-5feb-a896-880658985d8a",
-            "name": "style",
-            "type": "STRING",
-            "linkIds": [
-              2,
-              15
-            ],
-            "label": "Style",
-            "pos": [
-              -256,
-              124
-            ]
-          },
-          {
-            "id": "12151698-3caf-52d7-ad2f-75270d4b1401",
-            "name": "clip",
-            "type": "CLIP",
-            "linkIds": [
-              1,
-              14
-            ],
-            "label": "YuE2 language model",
-            "pos": [
-              -256,
-              144
-            ]
-          },
-          {
-            "id": "4b03e9c9-5a34-594c-ac80-5e6d4e129047",
-            "name": "reference_audio",
-            "type": "AUDIO",
-            "linkIds": [
-              17
-            ],
-            "label": "Reference audio",
-            "pos": [
-              -256,
-              184
-            ]
-          },
-          {
-            "id": "22a32f8e-53ae-5ccb-a978-d8a86dd74661",
-            "name": "extend",
-            "type": "BOOLEAN",
-            "linkIds": [
-              18
-            ],
-            "label": "Extend source ABC",
-            "pos": [
-              -256,
-              224
-            ]
-          },
-          {
-            "id": "923b2824-2411-5eac-bb1f-990e541a9208",
-            "name": "seed",
-            "type": "INT",
-            "linkIds": [
-              4,
-              19
-            ],
-            "label": "Seed",
-            "pos": [
-              -256,
-              244
-            ]
-          },
-          {
-            "id": "ef81fe04-8f8e-5123-8849-876cc14ef711",
-            "name": "mode",
-            "type": "COMBO",
-            "linkIds": [
-              5,
-              12,
-              20
-            ],
-            "label": "mode",
-            "pos": [
-              -256,
-              264
-            ]
-          },
-          {
-            "id": "d92e00a5-29d0-573e-aa89-22f83799e599",
-            "name": "max_abc_tokens",
-            "type": "INT",
-            "linkIds": [
-              6,
-              21
-            ],
-            "label": "max_abc_tokens",
-            "pos": [
-              -256,
-              284
-            ]
-          },
-          {
-            "id": "2684ac10-37c3-5e51-a906-9d3ac9a565de",
-            "name": "temperature",
-            "type": "FLOAT",
-            "linkIds": [
-              7,
-              22
-            ],
-            "label": "temperature",
-            "pos": [
-              -256,
-              304
-            ]
-          },
-          {
-            "id": "f6324d76-4132-5144-b0fe-cddf3a17eb90",
-            "name": "top_p",
-            "type": "FLOAT",
-            "linkIds": [
-              8,
-              23
-            ],
-            "label": "top_p",
-            "pos": [
-              -256,
-              324
-            ]
-          },
-          {
-            "id": "d3329992-0949-5349-8fb1-e26f4a192ebe",
-            "name": "top_k",
-            "type": "INT",
-            "linkIds": [
-              9,
-              24
-            ],
-            "label": "top_k",
-            "pos": [
-              -256,
-              344
-            ]
-          },
-          {
-            "id": "e473ef11-47dc-5aad-a67e-608f29dd8ffc",
-            "name": "repetition_penalty",
-            "type": "FLOAT",
-            "linkIds": [
-              10,
-              25
-            ],
-            "label": "repetition_penalty",
-            "pos": [
-              -256,
-              364
-            ]
-          },
-          {
-            "id": "230d632e-f0b8-50ad-b09d-c8caf054b7a5",
-            "name": "penalty_window",
-            "type": "INT",
-            "linkIds": [
-              11,
-              26
-            ],
-            "label": "penalty_window",
-            "pos": [
-              -256,
-              384
-            ]
-          },
-          {
-            "id": "074d9450-50cf-4d62-9f8d-2e056ef8c9ea",
-            "name": "use_reference",
-            "type": "BOOLEAN",
-            "linkIds": [
-              29
-            ],
-            "label": "Use reference",
-            "pos": [
-              -256,
-              364
-            ]
-          },
-          {
-            "id": "05534527-5f16-44af-abab-c1cded3d911e",
-            "name": "audio_encoder",
-            "type": "AUDIO_ENCODER",
-            "linkIds": [
-              30
-            ],
-            "label": "SheetSage2 model",
-            "pos": [
-              -256,
-              384
-            ]
-          },
-          {
-            "id": "200df041-0d20-4018-92c3-a8533e72ecb1",
-            "name": "reference_abc",
-            "type": "STRING",
-            "linkIds": [
-              31
-            ],
-            "label": "Reference abc",
-            "pos": [
-              -256,
-              404
-            ]
-          },
-          {
-            "id": "060ec4fb-1c25-408a-96f1-39957c53db37",
-            "name": "use_audio",
-            "type": "BOOLEAN",
-            "linkIds": [
-              32
-            ],
-            "label": "Use audio",
-            "pos": [
-              -256,
-              424
-            ]
-          }
-        ],
-        "outputs": [
-          {
-            "id": "46c180ff-ed59-52dd-9343-6e2cbba7cad1",
-            "name": "ABC",
-            "type": "STRING",
-            "linkIds": [
-              27
-            ],
-            "pos": [
-              2144,
-              104
-            ]
-          },
-          {
-            "id": "310e240e-e410-51f5-a379-f12b729eeafa",
-            "name": "Score mode",
-            "type": "COMBO",
-            "linkIds": [
-              28
-            ],
-            "pos": [
-              2144,
-              124
-            ]
-          }
-        ],
-        "widgets": [],
-        "nodes": [
-          {
-            "id": 5,
-            "type": "YuE2GenerateABC",
-            "pos": [
-              0,
-              80
-            ],
-            "size": [
-              400,
-              440
-            ],
-            "flags": {},
-            "order": 6,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "clip",
-                "type": "CLIP",
-                "link": 1
-              },
-              {
-                "name": "style",
-                "type": "STRING",
-                "link": 2,
-                "widget": {
-                  "name": "style"
-                }
-              },
-              {
-                "name": "lyrics",
-                "type": "STRING",
-                "link": 3,
-                "widget": {
-                  "name": "lyrics"
-                }
-              },
-              {
-                "name": "seed",
-                "type": "INT",
-                "link": 4,
-                "widget": {
-                  "name": "seed"
-                }
-              },
-              {
-                "name": "mode",
-                "type": "COMBO",
-                "link": 5,
-                "widget": {
-                  "name": "mode"
-                }
-              },
-              {
-                "name": "max_abc_tokens",
-                "type": "INT",
-                "link": 6,
-                "widget": {
-                  "name": "max_abc_tokens"
-                }
-              },
-              {
-                "name": "temperature",
-                "type": "FLOAT",
-                "link": 7,
-                "widget": {
-                  "name": "temperature"
-                }
-              },
-              {
-                "name": "top_p",
-                "type": "FLOAT",
-                "link": 8,
-                "widget": {
-                  "name": "top_p"
-                }
-              },
-              {
-                "name": "top_k",
-                "type": "INT",
-                "link": 9,
-                "widget": {
-                  "name": "top_k"
-                }
-              },
-              {
-                "name": "repetition_penalty",
-                "type": "FLOAT",
-                "link": 10,
-                "widget": {
-                  "name": "repetition_penalty"
-                }
-              },
-              {
-                "name": "penalty_window",
-                "type": "INT",
-                "link": 11,
-                "widget": {
-                  "name": "penalty_window"
-                }
-              }
-            ],
-            "outputs": [
-              {
-                "name": "abc",
-                "type": "STRING",
-                "links": [
-                  13
-                ]
-              }
-            ],
-            "title": "Fresh ABC planner",
-            "properties": {
-              "Node name for S&R": "YuE2GenerateABC",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              "",
-              "",
-              0,
-              "fixed",
-              "full",
-              8192,
-              0.7,
-              0.9,
-              30,
-              1.005,
-              100
-            ]
-          },
-          {
-            "id": 29,
-            "type": "ComfySwitchNode",
-            "pos": [
-              1620,
-              420
-            ],
-            "size": [
-              400,
-              160
-            ],
-            "flags": {},
-            "order": 11,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "switch",
-                "type": "BOOLEAN",
-                "link": null,
-                "widget": {
-                  "name": "switch"
-                }
-              },
-              {
-                "name": "on_false",
-                "type": "COMFY_MATCHTYPE_V3",
-                "link": 12
-              },
-              {
-                "name": "on_true",
-                "type": "COMFY_MATCHTYPE_V3",
-                "link": null
-              }
-            ],
-            "outputs": [
-              {
-                "name": "output",
-                "type": "COMBO",
-                "links": [
-                  28
-                ]
-              }
-            ],
-            "title": "Shared score mode",
-            "properties": {
-              "Node name for S&R": "ComfySwitchNode",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              false
-            ]
-          },
-          {
-            "id": 36,
-            "type": "d740db62-e00e-4695-8bc0-85c2d1b4c858",
-            "pos": [
-              560,
-              80
-            ],
-            "size": [
-              480,
-              380
-            ],
-            "flags": {},
-            "order": 2,
-            "mode": 0,
-            "title": "Reference score",
-            "inputs": [
-              {
-                "name": "abc",
-                "type": "STRING",
-                "link": 13
-              },
-              {
-                "name": "clip",
-                "type": "CLIP",
-                "link": 14
-              },
-              {
-                "name": "style",
-                "type": "STRING",
-                "link": 15
-              },
-              {
-                "name": "lyrics",
-                "type": "STRING",
-                "link": 16
-              },
-              {
-                "name": "reference_audio",
-                "type": "AUDIO",
-                "link": 17
-              },
-              {
-                "name": "extend",
-                "type": "BOOLEAN",
-                "link": 18
-              },
-              {
-                "name": "seed",
-                "type": "INT",
-                "link": 19
-              },
-              {
-                "name": "mode",
-                "type": "COMBO",
-                "link": 20
-              },
-              {
-                "name": "max_abc_tokens",
-                "type": "INT",
-                "link": 21
-              },
-              {
-                "name": "temperature",
-                "type": "FLOAT",
-                "link": 22
-              },
-              {
-                "name": "top_p",
-                "type": "FLOAT",
-                "link": 23
-              },
-              {
-                "name": "top_k",
-                "type": "INT",
-                "link": 24
-              },
-              {
-                "name": "repetition_penalty",
-                "type": "FLOAT",
-                "link": 25
-              },
-              {
-                "name": "penalty_window",
-                "type": "INT",
-                "link": 26
-              },
-              {
-                "name": "enabled",
-                "type": "BOOLEAN",
-                "link": 29
-              },
-              {
-                "name": "audio_encoder",
-                "type": "AUDIO_ENCODER",
-                "link": 30
-              },
-              {
-                "name": "reference_abc",
-                "type": "STRING",
-                "link": 31
-              },
-              {
-                "name": "use_audio",
-                "type": "BOOLEAN",
-                "link": 32
-              }
-            ],
-            "outputs": [
-              {
-                "name": "abc",
-                "type": "STRING",
-                "links": [
-                  27
-                ]
-              }
-            ],
-            "properties": {
-              "previewExposures": []
-            },
-            "widgets_values": []
-          }
-        ],
-        "groups": [],
-        "links": [
-          {
-            "id": 1,
-            "origin_id": -10,
-            "origin_slot": 2,
-            "target_id": 5,
-            "target_slot": 0,
-            "type": "CLIP"
-          },
-          {
-            "id": 2,
-            "origin_id": -10,
-            "origin_slot": 1,
-            "target_id": 5,
-            "target_slot": 1,
-            "type": "STRING"
-          },
-          {
-            "id": 3,
-            "origin_id": -10,
-            "origin_slot": 0,
-            "target_id": 5,
-            "target_slot": 2,
-            "type": "STRING"
-          },
-          {
-            "id": 4,
-            "origin_id": -10,
-            "origin_slot": 5,
-            "target_id": 5,
-            "target_slot": 3,
-            "type": "INT"
-          },
-          {
-            "id": 5,
-            "origin_id": -10,
-            "origin_slot": 6,
-            "target_id": 5,
-            "target_slot": 4,
-            "type": "COMBO"
-          },
-          {
-            "id": 6,
-            "origin_id": -10,
-            "origin_slot": 7,
-            "target_id": 5,
-            "target_slot": 5,
-            "type": "INT"
-          },
-          {
-            "id": 7,
-            "origin_id": -10,
-            "origin_slot": 8,
-            "target_id": 5,
-            "target_slot": 6,
-            "type": "FLOAT"
-          },
-          {
-            "id": 8,
-            "origin_id": -10,
-            "origin_slot": 9,
-            "target_id": 5,
-            "target_slot": 7,
-            "type": "FLOAT"
-          },
-          {
-            "id": 9,
-            "origin_id": -10,
-            "origin_slot": 10,
-            "target_id": 5,
-            "target_slot": 8,
-            "type": "INT"
-          },
-          {
-            "id": 10,
-            "origin_id": -10,
-            "origin_slot": 11,
-            "target_id": 5,
-            "target_slot": 9,
-            "type": "FLOAT"
-          },
-          {
-            "id": 11,
-            "origin_id": -10,
-            "origin_slot": 12,
-            "target_id": 5,
-            "target_slot": 10,
-            "type": "INT"
-          },
-          {
-            "id": 12,
-            "origin_id": -10,
-            "origin_slot": 6,
-            "target_id": 29,
-            "target_slot": 1,
-            "type": "COMBO"
-          },
-          {
-            "id": 13,
-            "origin_id": 5,
-            "origin_slot": 0,
-            "target_id": 36,
-            "target_slot": 0,
-            "type": "STRING"
-          },
-          {
-            "id": 14,
-            "origin_id": -10,
-            "origin_slot": 2,
-            "target_id": 36,
-            "target_slot": 1,
-            "type": "CLIP"
-          },
-          {
-            "id": 15,
-            "origin_id": -10,
-            "origin_slot": 1,
-            "target_id": 36,
-            "target_slot": 2,
-            "type": "STRING"
-          },
-          {
-            "id": 16,
-            "origin_id": -10,
-            "origin_slot": 0,
-            "target_id": 36,
-            "target_slot": 3,
-            "type": "STRING"
-          },
-          {
-            "id": 17,
-            "origin_id": -10,
-            "origin_slot": 3,
-            "target_id": 36,
-            "target_slot": 4,
-            "type": "AUDIO"
           },
           {
             "id": 18,
             "origin_id": -10,
-            "origin_slot": 4,
-            "target_id": 36,
-            "target_slot": 5,
-            "type": "BOOLEAN"
-          },
-          {
-            "id": 19,
-            "origin_id": -10,
-            "origin_slot": 5,
-            "target_id": 36,
-            "target_slot": 6,
-            "type": "INT"
-          },
-          {
-            "id": 20,
-            "origin_id": -10,
-            "origin_slot": 6,
-            "target_id": 36,
-            "target_slot": 7,
-            "type": "COMBO"
-          },
-          {
-            "id": 21,
-            "origin_id": -10,
-            "origin_slot": 7,
-            "target_id": 36,
-            "target_slot": 8,
-            "type": "INT"
-          },
-          {
-            "id": 22,
-            "origin_id": -10,
-            "origin_slot": 8,
-            "target_id": 36,
-            "target_slot": 9,
-            "type": "FLOAT"
-          },
-          {
-            "id": 23,
-            "origin_id": -10,
-            "origin_slot": 9,
-            "target_id": 36,
-            "target_slot": 10,
-            "type": "FLOAT"
-          },
-          {
-            "id": 24,
-            "origin_id": -10,
-            "origin_slot": 10,
-            "target_id": 36,
-            "target_slot": 11,
-            "type": "INT"
-          },
-          {
-            "id": 25,
-            "origin_id": -10,
-            "origin_slot": 11,
-            "target_id": 36,
-            "target_slot": 12,
-            "type": "FLOAT"
-          },
-          {
-            "id": 26,
-            "origin_id": -10,
-            "origin_slot": 12,
-            "target_id": 36,
-            "target_slot": 13,
-            "type": "INT"
-          },
-          {
-            "id": 27,
-            "origin_id": 36,
-            "origin_slot": 0,
-            "target_id": -20,
+            "origin_slot": 1,
+            "target_id": 52,
             "target_slot": 0,
-            "type": "STRING"
-          },
-          {
-            "id": 28,
-            "origin_id": 29,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 1,
             "type": "COMBO"
-          },
-          {
-            "id": 29,
-            "origin_id": -10,
-            "origin_slot": 13,
-            "target_id": 36,
-            "target_slot": 14,
-            "type": "BOOLEAN"
-          },
-          {
-            "id": 30,
-            "origin_id": -10,
-            "origin_slot": 14,
-            "target_id": 36,
-            "target_slot": 15,
-            "type": "AUDIO_ENCODER"
-          },
-          {
-            "id": 31,
-            "origin_id": -10,
-            "origin_slot": 15,
-            "target_id": 36,
-            "target_slot": 16,
-            "type": "STRING"
-          },
-          {
-            "id": 32,
-            "origin_id": -10,
-            "origin_slot": 16,
-            "target_id": 36,
-            "target_slot": 17,
-            "type": "BOOLEAN"
           }
         ],
         "extra": {}
@@ -3195,8 +2059,8 @@
         "version": 1,
         "state": {
           "lastGroupId": 0,
-          "lastNodeId": 58,
-          "lastLinkId": 33,
+          "lastNodeId": 75,
+          "lastLinkId": 45,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -3226,7 +2090,7 @@
             "name": "abc",
             "type": "STRING",
             "linkIds": [
-              7
+              40
             ],
             "label": "ABC",
             "pos": [
@@ -3239,12 +2103,12 @@
             "name": "lyrics",
             "type": "STRING",
             "linkIds": [
-              8
+              43
             ],
             "label": "Lyrics",
             "pos": [
               -256,
-              124
+              224
             ]
           },
           {
@@ -3252,12 +2116,12 @@
             "name": "style",
             "type": "STRING",
             "linkIds": [
-              9
+              44
             ],
             "label": "Style",
             "pos": [
               -256,
-              144
+              264
             ]
           },
           {
@@ -3270,7 +2134,7 @@
             "label": "YuE2 language model",
             "pos": [
               -256,
-              164
+              124
             ]
           },
           {
@@ -3283,7 +2147,7 @@
             "label": "YuE2 acoustic model",
             "pos": [
               -256,
-              184
+              144
             ]
           },
           {
@@ -3296,7 +2160,7 @@
             "label": "Audio VAE",
             "pos": [
               -256,
-              204
+              244
             ]
           },
           {
@@ -3304,12 +2168,12 @@
             "name": "mode",
             "type": "COMBO",
             "linkIds": [
-              13
+              41
             ],
             "label": "Shared score mode",
             "pos": [
               -256,
-              224
+              164
             ]
           },
           {
@@ -3317,13 +2181,12 @@
             "name": "seed",
             "type": "INT",
             "linkIds": [
-              14,
-              15
+              45
             ],
             "label": "Seed",
             "pos": [
               -256,
-              244
+              184
             ]
           },
           {
@@ -3331,12 +2194,12 @@
             "name": "score_seconds",
             "type": "FLOAT",
             "linkIds": [
-              28
+              42
             ],
             "label": "Score seconds",
             "pos": [
               -256,
-              264
+              204
             ]
           },
           {
@@ -3375,7 +2238,7 @@
             "label": "Music temperature",
             "pos": [
               -256,
-              324
+              404
             ]
           },
           {
@@ -3388,7 +2251,7 @@
             "label": "Music top_p",
             "pos": [
               -256,
-              344
+              424
             ]
           },
           {
@@ -3401,7 +2264,7 @@
             "label": "Music top_k",
             "pos": [
               -256,
-              364
+              324
             ]
           },
           {
@@ -3414,7 +2277,7 @@
             "label": "Music repetition penalty",
             "pos": [
               -256,
-              384
+              344
             ]
           },
           {
@@ -3427,7 +2290,7 @@
             "label": "Music guidance",
             "pos": [
               -256,
-              404
+              364
             ]
           },
           {
@@ -3440,7 +2303,7 @@
             "label": "Acoustic steps",
             "pos": [
               -256,
-              424
+              384
             ]
           },
           {
@@ -3507,6 +2370,18 @@
             "pos": [
               2144,
               104
+            ]
+          },
+          {
+            "id": "a582eff1-478f-52ab-a561-64eb796a45c6",
+            "name": "abc",
+            "type": "STRING",
+            "linkIds": [
+              36
+            ],
+            "pos": [
+              2144,
+              124
             ]
           }
         ],
@@ -4049,13 +2924,13 @@
                 "localized_name": "INT",
                 "name": "INT",
                 "type": "INT",
-                "links": null
+                "links": []
               },
               {
                 "localized_name": "BOOL",
                 "name": "BOOL",
                 "type": "BOOLEAN",
-                "links": null
+                "links": []
               }
             ],
             "title": "Score seconds + margin",
@@ -4126,6 +3001,261 @@
             "widgets_values": [
               false
             ]
+          },
+          {
+            "id": 67,
+            "type": "PrimitiveString",
+            "title": "ABC pass-through",
+            "pos": [
+              1080,
+              300
+            ],
+            "size": [
+              360,
+              80
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "value",
+                "type": "STRING",
+                "link": 35,
+                "widget": {
+                  "name": "value"
+                }
+              }
+            ],
+            "outputs": [
+              {
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  36
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "PrimitiveString",
+              "cnr_id": "comfy-core",
+              "ver": "0.38.0"
+            },
+            "widgets_values": [
+              ""
+            ]
+          },
+          {
+            "id": 70,
+            "type": "Reroute",
+            "pos": [
+              -160,
+              80
+            ],
+            "size": [
+              75,
+              26
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "",
+                "type": "STRING",
+                "link": 40
+              }
+            ],
+            "outputs": [
+              {
+                "name": "",
+                "type": "STRING",
+                "links": [
+                  7,
+                  35
+                ]
+              }
+            ],
+            "properties": {
+              "showOutputText": false,
+              "horizontal": false
+            }
+          },
+          {
+            "id": 71,
+            "type": "Reroute",
+            "pos": [
+              -160,
+              150
+            ],
+            "size": [
+              75,
+              26
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "",
+                "type": "COMBO",
+                "link": 41
+              }
+            ],
+            "outputs": [
+              {
+                "name": "",
+                "type": "COMBO",
+                "links": [
+                  13
+                ]
+              }
+            ],
+            "properties": {
+              "showOutputText": false,
+              "horizontal": false
+            }
+          },
+          {
+            "id": 72,
+            "type": "Reroute",
+            "pos": [
+              -160,
+              220
+            ],
+            "size": [
+              75,
+              26
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "",
+                "type": "FLOAT",
+                "link": 42
+              }
+            ],
+            "outputs": [
+              {
+                "name": "",
+                "type": "FLOAT",
+                "links": [
+                  28
+                ]
+              }
+            ],
+            "properties": {
+              "showOutputText": false,
+              "horizontal": false
+            }
+          },
+          {
+            "id": 73,
+            "type": "Reroute",
+            "pos": [
+              -160,
+              290
+            ],
+            "size": [
+              75,
+              26
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "",
+                "type": "STRING",
+                "link": 43
+              }
+            ],
+            "outputs": [
+              {
+                "name": "",
+                "type": "STRING",
+                "links": [
+                  8
+                ]
+              }
+            ],
+            "properties": {
+              "showOutputText": false,
+              "horizontal": false
+            }
+          },
+          {
+            "id": 74,
+            "type": "Reroute",
+            "pos": [
+              -160,
+              360
+            ],
+            "size": [
+              75,
+              26
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "",
+                "type": "STRING",
+                "link": 44
+              }
+            ],
+            "outputs": [
+              {
+                "name": "",
+                "type": "STRING",
+                "links": [
+                  9
+                ]
+              }
+            ],
+            "properties": {
+              "showOutputText": false,
+              "horizontal": false
+            }
+          },
+          {
+            "id": 75,
+            "type": "Reroute",
+            "pos": [
+              -160,
+              430
+            ],
+            "size": [
+              75,
+              26
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "",
+                "type": "INT",
+                "link": 45
+              }
+            ],
+            "outputs": [
+              {
+                "name": "",
+                "type": "INT",
+                "links": [
+                  14,
+                  15
+                ]
+              }
+            ],
+            "properties": {
+              "showOutputText": false,
+              "horizontal": false
+            }
           }
         ],
         "groups": [],
@@ -4180,7 +3310,7 @@
           },
           {
             "id": 7,
-            "origin_id": -10,
+            "origin_id": 70,
             "origin_slot": 0,
             "target_id": 6,
             "target_slot": 3,
@@ -4188,16 +3318,16 @@
           },
           {
             "id": 8,
-            "origin_id": -10,
-            "origin_slot": 1,
+            "origin_id": 73,
+            "origin_slot": 0,
             "target_id": 6,
             "target_slot": 2,
             "type": "STRING"
           },
           {
             "id": 9,
-            "origin_id": -10,
-            "origin_slot": 2,
+            "origin_id": 74,
+            "origin_slot": 0,
             "target_id": 6,
             "target_slot": 1,
             "type": "STRING"
@@ -4228,24 +3358,24 @@
           },
           {
             "id": 13,
-            "origin_id": -10,
-            "origin_slot": 6,
+            "origin_id": 71,
+            "origin_slot": 0,
             "target_id": 6,
             "target_slot": 5,
             "type": "COMBO"
           },
           {
             "id": 14,
-            "origin_id": -10,
-            "origin_slot": 7,
+            "origin_id": 75,
+            "origin_slot": 0,
             "target_id": 6,
             "target_slot": 4,
             "type": "INT"
           },
           {
             "id": 15,
-            "origin_id": -10,
-            "origin_slot": 7,
+            "origin_id": 75,
+            "origin_slot": 0,
             "target_id": 9,
             "target_slot": 1,
             "type": "INT"
@@ -4256,38 +3386,6 @@
             "origin_slot": 10,
             "target_id": 57,
             "target_slot": 0,
-            "type": "FLOAT"
-          },
-          {
-            "id": 17,
-            "origin_id": -10,
-            "origin_slot": 11,
-            "target_id": 6,
-            "target_slot": 7,
-            "type": "FLOAT"
-          },
-          {
-            "id": 18,
-            "origin_id": -10,
-            "origin_slot": 12,
-            "target_id": 6,
-            "target_slot": 8,
-            "type": "FLOAT"
-          },
-          {
-            "id": 19,
-            "origin_id": -10,
-            "origin_slot": 13,
-            "target_id": 6,
-            "target_slot": 9,
-            "type": "INT"
-          },
-          {
-            "id": 20,
-            "origin_id": -10,
-            "origin_slot": 14,
-            "target_id": 6,
-            "target_slot": 10,
             "type": "FLOAT"
           },
           {
@@ -4307,38 +3405,6 @@
             "type": "INT"
           },
           {
-            "id": 23,
-            "origin_id": -10,
-            "origin_slot": 17,
-            "target_id": 9,
-            "target_slot": 3,
-            "type": "FLOAT"
-          },
-          {
-            "id": 24,
-            "origin_id": -10,
-            "origin_slot": 18,
-            "target_id": 9,
-            "target_slot": 4,
-            "type": "COMBO"
-          },
-          {
-            "id": 25,
-            "origin_id": -10,
-            "origin_slot": 19,
-            "target_id": 9,
-            "target_slot": 5,
-            "type": "COMBO"
-          },
-          {
-            "id": 26,
-            "origin_id": -10,
-            "origin_slot": 20,
-            "target_id": 9,
-            "target_slot": 9,
-            "type": "FLOAT"
-          },
-          {
             "id": 27,
             "origin_id": 10,
             "origin_slot": 0,
@@ -4348,8 +3414,8 @@
           },
           {
             "id": 28,
-            "origin_id": -10,
-            "origin_slot": 8,
+            "origin_id": 72,
+            "origin_slot": 0,
             "target_id": 13,
             "target_slot": 0,
             "type": "FLOAT"
@@ -4393,1067 +3459,134 @@
             "target_id": 6,
             "target_slot": 6,
             "type": "FLOAT"
-          }
-        ],
-        "extra": {}
-      },
-      {
-        "id": "d740db62-e00e-4695-8bc0-85c2d1b4c858",
-        "version": 1,
-        "state": {
-          "lastGroupId": 0,
-          "lastNodeId": 40,
-          "lastLinkId": 24,
-          "lastRerouteId": 0
-        },
-        "revision": 0,
-        "config": {},
-        "name": "Reference score",
-        "inputNode": {
-          "id": -10,
-          "bounding": [
-            -360,
-            80,
-            128,
-            100
-          ]
-        },
-        "outputNode": {
-          "id": -20,
-          "bounding": [
-            2120,
-            80,
-            128,
-            80
-          ]
-        },
-        "inputs": [
-          {
-            "id": "21838b25-4254-447e-966c-dde719c37f1b",
-            "name": "abc",
-            "type": "STRING",
-            "linkIds": [
-              22
-            ],
-            "label": "abc",
-            "pos": [
-              -256,
-              104
-            ]
           },
           {
-            "id": "26649727-a064-4165-ac3e-e7fa5cd435c5",
-            "name": "clip",
-            "type": "CLIP",
-            "linkIds": [
-              7
-            ],
-            "label": "clip",
-            "pos": [
-              -256,
-              124
-            ]
+            "id": 35,
+            "origin_id": 70,
+            "origin_slot": 0,
+            "target_id": 67,
+            "target_slot": 0,
+            "type": "STRING"
           },
           {
-            "id": "89aa869d-1b80-430c-9104-18088f734dff",
-            "name": "style",
-            "type": "STRING",
-            "linkIds": [
-              8
-            ],
-            "label": "style",
-            "pos": [
-              -256,
-              144
-            ]
+            "id": 36,
+            "origin_id": 67,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 1,
+            "type": "STRING"
           },
-          {
-            "id": "179b6ec3-9b54-48db-8ffe-9e49016b698f",
-            "name": "lyrics",
-            "type": "STRING",
-            "linkIds": [
-              9
-            ],
-            "label": "lyrics",
-            "pos": [
-              -256,
-              164
-            ]
-          },
-          {
-            "id": "c2d01514-0b86-4387-8dd3-f1c00e85eaca",
-            "name": "reference_audio",
-            "type": "AUDIO",
-            "linkIds": [
-              1
-            ],
-            "label": "reference_audio",
-            "pos": [
-              -256,
-              184
-            ]
-          },
-          {
-            "id": "1541a6e7-16f2-4daf-8f9d-ab720bb164da",
-            "name": "extend",
-            "type": "BOOLEAN",
-            "linkIds": [
-              18
-            ],
-            "label": "extend",
-            "pos": [
-              -256,
-              204
-            ]
-          },
-          {
-            "id": "1993140e-99f4-4718-a68b-7fc94bc75d90",
-            "name": "seed",
-            "type": "INT",
-            "linkIds": [
-              10
-            ],
-            "label": "seed",
-            "pos": [
-              -256,
-              224
-            ]
-          },
-          {
-            "id": "585370c0-5187-458e-a3d7-d9508ddb40f2",
-            "name": "mode",
-            "type": "COMBO",
-            "linkIds": [
-              3,
-              11
-            ],
-            "label": "mode",
-            "pos": [
-              -256,
-              244
-            ]
-          },
-          {
-            "id": "9e79ea4e-526a-4bf4-91fd-685d534d5a04",
-            "name": "max_abc_tokens",
-            "type": "INT",
-            "linkIds": [
-              12
-            ],
-            "label": "max_abc_tokens",
-            "pos": [
-              -256,
-              264
-            ]
-          },
-          {
-            "id": "aa8d105e-f3a0-4c63-8153-0e4a05be1732",
-            "name": "temperature",
-            "type": "FLOAT",
-            "linkIds": [
-              13
-            ],
-            "label": "temperature",
-            "pos": [
-              -256,
-              284
-            ]
-          },
-          {
-            "id": "c8a1ea84-ff7b-46dd-a8b9-45ae442248cb",
-            "name": "top_p",
-            "type": "FLOAT",
-            "linkIds": [
-              14
-            ],
-            "label": "top_p",
-            "pos": [
-              -256,
-              304
-            ]
-          },
-          {
-            "id": "9fc6dd8d-d412-4ad9-97c4-67946d3db0ef",
-            "name": "top_k",
-            "type": "INT",
-            "linkIds": [
-              15
-            ],
-            "label": "top_k",
-            "pos": [
-              -256,
-              324
-            ]
-          },
-          {
-            "id": "820494be-dc6f-4df0-8ff0-dddc51867121",
-            "name": "repetition_penalty",
-            "type": "FLOAT",
-            "linkIds": [
-              16
-            ],
-            "label": "repetition_penalty",
-            "pos": [
-              -256,
-              344
-            ]
-          },
-          {
-            "id": "cfe5008e-5839-4ab4-99b1-62520d51ac94",
-            "name": "penalty_window",
-            "type": "INT",
-            "linkIds": [
-              17
-            ],
-            "label": "penalty_window",
-            "pos": [
-              -256,
-              364
-            ]
-          },
-          {
-            "id": "84c6e530-1eab-49a2-98b2-0699ab6a7053",
-            "name": "enabled",
-            "type": "BOOLEAN",
-            "linkIds": [
-              21
-            ],
-            "label": "Enabled",
-            "pos": [
-              -256,
-              384
-            ]
-          },
-          {
-            "id": "43ba49f2-42a8-451a-8459-8d554499ddf1",
-            "name": "audio_encoder",
-            "type": "AUDIO_ENCODER",
-            "linkIds": [
-              2
-            ],
-            "label": "SheetSage2 model",
-            "pos": [
-              -256,
-              404
-            ]
-          },
-          {
-            "id": "5ed5bbae-d7c6-475d-b8a4-2c77ba1aa91a",
-            "name": "reference_abc",
-            "type": "STRING",
-            "linkIds": [
-              4
-            ],
-            "label": "Reference abc",
-            "pos": [
-              -256,
-              424
-            ]
-          },
-          {
-            "id": "1a1a0244-4ea5-4c70-aafc-def3a18906c3",
-            "name": "use_audio",
-            "type": "BOOLEAN",
-            "linkIds": [
-              5
-            ],
-            "label": "Use audio",
-            "pos": [
-              -256,
-              444
-            ]
-          }
-        ],
-        "outputs": [
-          {
-            "id": "62d338fa-6c3e-45b8-835d-97353e1a1e2e",
-            "name": "abc",
-            "type": "STRING",
-            "linkIds": [
-              24
-            ],
-            "pos": [
-              2144,
-              104
-            ]
-          }
-        ],
-        "widgets": [],
-        "nodes": [
           {
             "id": 40,
-            "type": "ee087d4c-3f9d-4bbe-bc19-532e88083ff6",
-            "pos": [
-              0,
-              80
-            ],
-            "size": [
-              420,
-              220
-            ],
-            "flags": {},
-            "order": 0,
-            "mode": 0,
-            "title": "Audio transcription",
-            "inputs": [
-              {
-                "name": "abc",
-                "type": "STRING",
-                "link": 4
-              },
-              {
-                "name": "reference_audio",
-                "type": "AUDIO",
-                "link": 1
-              },
-              {
-                "name": "audio_encoder",
-                "type": "AUDIO_ENCODER",
-                "link": 2
-              },
-              {
-                "name": "mode",
-                "type": "COMBO",
-                "link": 3
-              },
-              {
-                "name": "enabled",
-                "type": "BOOLEAN",
-                "link": 5
-              }
-            ],
-            "outputs": [
-              {
-                "name": "abc",
-                "type": "STRING",
-                "links": [
-                  6,
-                  19
-                ]
-              }
-            ],
-            "properties": {
-              "previewExposures": []
-            },
-            "widgets_values": []
-          },
-          {
-            "id": 18,
-            "type": "bno84.YuE2ExtendABC",
-            "pos": [
-              560,
-              700
-            ],
-            "size": [
-              400,
-              500
-            ],
-            "flags": {},
-            "order": 10,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "abc",
-                "type": "STRING",
-                "link": 6
-              },
-              {
-                "name": "clip",
-                "type": "CLIP",
-                "link": 7
-              },
-              {
-                "name": "style",
-                "type": "STRING",
-                "link": 8,
-                "widget": {
-                  "name": "style"
-                }
-              },
-              {
-                "name": "lyrics",
-                "type": "STRING",
-                "link": 9,
-                "widget": {
-                  "name": "lyrics"
-                }
-              },
-              {
-                "name": "seed",
-                "type": "INT",
-                "link": 10,
-                "widget": {
-                  "name": "seed"
-                }
-              },
-              {
-                "name": "mode",
-                "type": "COMBO",
-                "link": 11,
-                "widget": {
-                  "name": "mode"
-                }
-              },
-              {
-                "name": "max_abc_tokens",
-                "type": "INT",
-                "link": 12,
-                "widget": {
-                  "name": "max_abc_tokens"
-                }
-              },
-              {
-                "name": "temperature",
-                "type": "FLOAT",
-                "link": 13,
-                "widget": {
-                  "name": "temperature"
-                }
-              },
-              {
-                "name": "top_p",
-                "type": "FLOAT",
-                "link": 14,
-                "widget": {
-                  "name": "top_p"
-                }
-              },
-              {
-                "name": "top_k",
-                "type": "INT",
-                "link": 15,
-                "widget": {
-                  "name": "top_k"
-                }
-              },
-              {
-                "name": "repetition_penalty",
-                "type": "FLOAT",
-                "link": 16,
-                "widget": {
-                  "name": "repetition_penalty"
-                }
-              },
-              {
-                "name": "penalty_window",
-                "type": "INT",
-                "link": 17,
-                "widget": {
-                  "name": "penalty_window"
-                }
-              }
-            ],
-            "outputs": [
-              {
-                "name": "abc",
-                "type": "STRING",
-                "links": [
-                  20
-                ]
-              }
-            ],
-            "title": "Extend source ABC",
-            "properties": {
-              "Node name for S&R": "bno84.YuE2ExtendABC",
-              "cnr_id": "comfyui-yue2-kit",
-              "ver": "0.6.2"
-            },
-            "widgets_values": [
-              "",
-              "",
-              0,
-              "fixed",
-              "full",
-              8192,
-              0.7,
-              0.9,
-              30,
-              1.005,
-              100
-            ]
-          },
-          {
-            "id": 19,
-            "type": "ComfySwitchNode",
-            "pos": [
-              1080,
-              700
-            ],
-            "size": [
-              400,
-              160
-            ],
-            "flags": {},
-            "order": 11,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "switch",
-                "type": "BOOLEAN",
-                "link": 18,
-                "widget": {
-                  "name": "switch"
-                }
-              },
-              {
-                "name": "on_false",
-                "type": "COMFY_MATCHTYPE_V3",
-                "link": 19
-              },
-              {
-                "name": "on_true",
-                "type": "COMFY_MATCHTYPE_V3",
-                "link": 20
-              }
-            ],
-            "outputs": [
-              {
-                "name": "output",
-                "type": "COMFY_MATCHTYPE_V3",
-                "links": [
-                  23
-                ]
-              }
-            ],
-            "title": "Extend or use ABC as-is",
-            "properties": {
-              "Node name for S&R": "ComfySwitchNode",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              ""
-            ]
-          },
-          {
-            "id": 20,
-            "type": "ComfySwitchNode",
-            "pos": [
-              1620,
-              80
-            ],
-            "size": [
-              400,
-              160
-            ],
-            "flags": {},
-            "order": 12,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "switch",
-                "type": "BOOLEAN",
-                "link": 21,
-                "widget": {
-                  "name": "switch"
-                }
-              },
-              {
-                "name": "on_false",
-                "type": "COMFY_MATCHTYPE_V3",
-                "link": 22
-              },
-              {
-                "name": "on_true",
-                "type": "COMFY_MATCHTYPE_V3",
-                "link": 23
-              }
-            ],
-            "outputs": [
-              {
-                "name": "output",
-                "type": "COMFY_MATCHTYPE_V3",
-                "links": [
-                  24
-                ]
-              }
-            ],
-            "title": "Use reference or fresh score",
-            "properties": {
-              "Node name for S&R": "ComfySwitchNode",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              false
-            ]
-          }
-        ],
-        "groups": [],
-        "links": [
-          {
-            "id": 1,
             "origin_id": -10,
-            "origin_slot": 4,
-            "target_id": 40,
-            "target_slot": 1,
-            "type": "AUDIO"
-          },
-          {
-            "id": 2,
-            "origin_id": -10,
-            "origin_slot": 15,
-            "target_id": 40,
-            "target_slot": 2,
-            "type": "AUDIO_ENCODER"
-          },
-          {
-            "id": 3,
-            "origin_id": -10,
-            "origin_slot": 7,
-            "target_id": 40,
-            "target_slot": 3,
-            "type": "COMBO"
-          },
-          {
-            "id": 4,
-            "origin_id": -10,
-            "origin_slot": 16,
-            "target_id": 40,
-            "target_slot": 0,
-            "type": "STRING"
-          },
-          {
-            "id": 5,
-            "origin_id": -10,
-            "origin_slot": 17,
-            "target_id": 40,
-            "target_slot": 4,
-            "type": "BOOLEAN"
-          },
-          {
-            "id": 6,
-            "origin_id": 40,
             "origin_slot": 0,
-            "target_id": 18,
+            "target_id": 70,
             "target_slot": 0,
             "type": "STRING"
           },
           {
-            "id": 7,
-            "origin_id": -10,
-            "origin_slot": 1,
-            "target_id": 18,
-            "target_slot": 1,
-            "type": "CLIP"
-          },
-          {
-            "id": 8,
-            "origin_id": -10,
-            "origin_slot": 2,
-            "target_id": 18,
-            "target_slot": 2,
-            "type": "STRING"
-          },
-          {
-            "id": 9,
-            "origin_id": -10,
-            "origin_slot": 3,
-            "target_id": 18,
-            "target_slot": 3,
-            "type": "STRING"
-          },
-          {
-            "id": 10,
+            "id": 41,
             "origin_id": -10,
             "origin_slot": 6,
-            "target_id": 18,
-            "target_slot": 4,
-            "type": "INT"
-          },
-          {
-            "id": 11,
-            "origin_id": -10,
-            "origin_slot": 7,
-            "target_id": 18,
-            "target_slot": 5,
+            "target_id": 71,
+            "target_slot": 0,
             "type": "COMBO"
           },
           {
-            "id": 12,
+            "id": 42,
             "origin_id": -10,
             "origin_slot": 8,
-            "target_id": 18,
-            "target_slot": 6,
+            "target_id": 72,
+            "target_slot": 0,
+            "type": "FLOAT"
+          },
+          {
+            "id": 43,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 73,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 44,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 74,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 45,
+            "origin_id": -10,
+            "origin_slot": 7,
+            "target_id": 75,
+            "target_slot": 0,
             "type": "INT"
-          },
-          {
-            "id": 13,
-            "origin_id": -10,
-            "origin_slot": 9,
-            "target_id": 18,
-            "target_slot": 7,
-            "type": "FLOAT"
-          },
-          {
-            "id": 14,
-            "origin_id": -10,
-            "origin_slot": 10,
-            "target_id": 18,
-            "target_slot": 8,
-            "type": "FLOAT"
-          },
-          {
-            "id": 15,
-            "origin_id": -10,
-            "origin_slot": 11,
-            "target_id": 18,
-            "target_slot": 9,
-            "type": "INT"
-          },
-          {
-            "id": 16,
-            "origin_id": -10,
-            "origin_slot": 12,
-            "target_id": 18,
-            "target_slot": 10,
-            "type": "FLOAT"
           },
           {
             "id": 17,
             "origin_id": -10,
-            "origin_slot": 13,
-            "target_id": 18,
-            "target_slot": 11,
-            "type": "INT"
+            "origin_slot": 11,
+            "target_id": 6,
+            "target_slot": 7,
+            "type": "FLOAT"
           },
           {
             "id": 18,
             "origin_id": -10,
-            "origin_slot": 5,
-            "target_id": 19,
-            "target_slot": 0,
-            "type": "BOOLEAN"
+            "origin_slot": 12,
+            "target_id": 6,
+            "target_slot": 8,
+            "type": "FLOAT"
           },
           {
             "id": 19,
-            "origin_id": 40,
-            "origin_slot": 0,
-            "target_id": 19,
-            "target_slot": 1,
-            "type": "STRING"
+            "origin_id": -10,
+            "origin_slot": 13,
+            "target_id": 6,
+            "target_slot": 9,
+            "type": "INT"
           },
           {
             "id": 20,
-            "origin_id": 18,
-            "origin_slot": 0,
-            "target_id": 19,
-            "target_slot": 2,
-            "type": "STRING"
-          },
-          {
-            "id": 21,
             "origin_id": -10,
             "origin_slot": 14,
-            "target_id": 20,
-            "target_slot": 0,
-            "type": "BOOLEAN"
-          },
-          {
-            "id": 22,
-            "origin_id": -10,
-            "origin_slot": 0,
-            "target_id": 20,
-            "target_slot": 1,
-            "type": "STRING"
+            "target_id": 6,
+            "target_slot": 10,
+            "type": "FLOAT"
           },
           {
             "id": 23,
-            "origin_id": 19,
-            "origin_slot": 0,
-            "target_id": 20,
-            "target_slot": 2,
-            "type": "STRING"
+            "origin_id": -10,
+            "origin_slot": 17,
+            "target_id": 9,
+            "target_slot": 3,
+            "type": "FLOAT"
           },
           {
             "id": 24,
-            "origin_id": 20,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 0,
-            "type": "STRING"
-          }
-        ],
-        "extra": {}
-      },
-      {
-        "id": "ee087d4c-3f9d-4bbe-bc19-532e88083ff6",
-        "version": 1,
-        "state": {
-          "lastGroupId": 0,
-          "lastNodeId": 21,
-          "lastLinkId": 7,
-          "lastRerouteId": 0
-        },
-        "revision": 0,
-        "config": {},
-        "name": "Audio transcription",
-        "inputNode": {
-          "id": -10,
-          "bounding": [
-            -360,
-            80,
-            128,
-            100
-          ]
-        },
-        "outputNode": {
-          "id": -20,
-          "bounding": [
-            2120,
-            80,
-            128,
-            80
-          ]
-        },
-        "inputs": [
-          {
-            "id": "ca9e0a58-96ff-497c-87ba-4070fce24697",
-            "name": "abc",
-            "type": "STRING",
-            "linkIds": [
-              5
-            ],
-            "label": "Abc",
-            "pos": [
-              -256,
-              104
-            ]
-          },
-          {
-            "id": "3280bf65-2e10-4cd3-91b0-32e2e6f3114e",
-            "name": "reference_audio",
-            "type": "AUDIO",
-            "linkIds": [
-              2
-            ],
-            "label": "Reference audio",
-            "pos": [
-              -256,
-              124
-            ]
-          },
-          {
-            "id": "3d87e1d5-d203-46c1-9eeb-13a6601cf6fc",
-            "name": "audio_encoder",
-            "type": "AUDIO_ENCODER",
-            "linkIds": [
-              1
-            ],
-            "label": "Audio encoder",
-            "pos": [
-              -256,
-              144
-            ]
-          },
-          {
-            "id": "31405e1d-a95f-45e1-85f3-2f9e2b8cac27",
-            "name": "mode",
-            "type": "COMBO",
-            "linkIds": [
-              3
-            ],
-            "label": "Mode",
-            "pos": [
-              -256,
-              164
-            ]
-          },
-          {
-            "id": "1208154b-ea86-407d-ac2a-516887cd7604",
-            "name": "enabled",
-            "type": "BOOLEAN",
-            "linkIds": [
-              4
-            ],
-            "label": "Enabled",
-            "pos": [
-              -256,
-              184
-            ]
-          }
-        ],
-        "outputs": [
-          {
-            "id": "a50461b1-ef91-4c0c-bfee-1cc93d0e9b84",
-            "name": "abc",
-            "type": "STRING",
-            "linkIds": [
-              7
-            ],
-            "label": "Abc",
-            "pos": [
-              -256,
-              104
-            ]
-          }
-        ],
-        "widgets": [],
-        "nodes": [
-          {
-            "id": 16,
-            "type": "SheetSage2AudioToABC",
-            "pos": [
-              0,
-              700
-            ],
-            "size": [
-              400,
-              180
-            ],
-            "flags": {},
-            "order": 9,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "audio_encoder",
-                "type": "AUDIO_ENCODER",
-                "link": 1
-              },
-              {
-                "name": "audio",
-                "type": "AUDIO",
-                "link": 2
-              },
-              {
-                "name": "mode",
-                "type": "COMBO",
-                "link": 3,
-                "widget": {
-                  "name": "mode"
-                }
-              }
-            ],
-            "outputs": [
-              {
-                "name": "abc",
-                "type": "STRING",
-                "links": [
-                  6
-                ]
-              }
-            ],
-            "title": "SheetSage2 transcription",
-            "properties": {
-              "Node name for S&R": "SheetSage2AudioToABC",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              "full"
-            ]
-          },
-          {
-            "id": 21,
-            "type": "ComfySwitchNode",
-            "pos": [
-              560,
-              80
-            ],
-            "size": [
-              400,
-              160
-            ],
-            "flags": {},
-            "order": 0,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "switch",
-                "type": "BOOLEAN",
-                "link": 4,
-                "widget": {
-                  "name": "switch"
-                }
-              },
-              {
-                "name": "on_false",
-                "type": "COMFY_MATCHTYPE_V3",
-                "link": 5
-              },
-              {
-                "name": "on_true",
-                "type": "COMFY_MATCHTYPE_V3",
-                "link": 6
-              }
-            ],
-            "outputs": [
-              {
-                "name": "output",
-                "type": "COMFY_MATCHTYPE_V3",
-                "links": [
-                  7
-                ]
-              }
-            ],
-            "title": "Select pasted or transcribed ABC",
-            "properties": {
-              "Node name for S&R": "ComfySwitchNode",
-              "cnr_id": "comfy-core",
-              "ver": "0.38.0"
-            },
-            "widgets_values": [
-              false
-            ]
-          }
-        ],
-        "groups": [],
-        "links": [
-          {
-            "id": 1,
             "origin_id": -10,
-            "origin_slot": 2,
-            "target_id": 16,
-            "target_slot": 0,
-            "type": "AUDIO_ENCODER"
-          },
-          {
-            "id": 2,
-            "origin_id": -10,
-            "origin_slot": 1,
-            "target_id": 16,
-            "target_slot": 1,
-            "type": "AUDIO"
-          },
-          {
-            "id": 3,
-            "origin_id": -10,
-            "origin_slot": 3,
-            "target_id": 16,
-            "target_slot": 2,
+            "origin_slot": 18,
+            "target_id": 9,
+            "target_slot": 4,
             "type": "COMBO"
           },
           {
-            "id": 4,
+            "id": 25,
             "origin_id": -10,
-            "origin_slot": 4,
-            "target_id": 21,
-            "target_slot": 0,
-            "type": "BOOLEAN"
+            "origin_slot": 19,
+            "target_id": 9,
+            "target_slot": 5,
+            "type": "COMBO"
           },
           {
-            "id": 5,
+            "id": 26,
             "origin_id": -10,
-            "origin_slot": 0,
-            "target_id": 21,
-            "target_slot": 1,
-            "type": "STRING"
-          },
-          {
-            "id": 6,
-            "origin_id": 16,
-            "origin_slot": 0,
-            "target_id": 21,
-            "target_slot": 2,
-            "type": "STRING"
-          },
-          {
-            "id": 7,
-            "origin_id": 21,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 0,
-            "type": "STRING"
+            "origin_slot": 20,
+            "target_id": 9,
+            "target_slot": 9,
+            "type": "FLOAT"
           }
         ],
         "extra": {}
@@ -5463,10 +3596,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.5,
+      "scale": 0.8448443904906552,
       "offset": [
-        80,
-        220
+        666.8541769365024,
+        -1129.3725819352023
       ]
     },
     "workflowRendererVersion": "LG"

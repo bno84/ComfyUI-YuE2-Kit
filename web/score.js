@@ -230,16 +230,13 @@ app.registerExtension({
     const abc=node.widgets.find(w=>w.name==="anchor_abc");
     const changed=()=>panel.refresh();
     abc?.element?.addEventListener("input",changed);
-    const syncWidth=()=>{
-      for(const w of node.widgets ?? []) {
-        if(w.name.startsWith("__separator_") || ["score_timeline","anchor_range"].includes(w.name) || w === panel.open) w.width=node.size[0];
+    // Full-width widgets always follow the node. ComfyUI's side panel writes its own
+    // narrower width into widgets it shows, which would otherwise stick on the canvas.
+    for (const w of node.widgets ?? []) {
+      if (w.name.startsWith("__separator_") || ["score_timeline","anchor_range"].includes(w.name) || w === panel.open) {
+        Object.defineProperty(w, "width", {configurable: true, get: () => node.size[0], set() {}});
       }
-    };
-    const resize=node.onResize;
-    node.onResize=function(...args){const value=resize?.apply(this,args);syncWidth();return value;};
-    const configured=node.onConfigure;
-    node.onConfigure=function(...args){const value=configured?.apply(this,args);syncWidth();return value;};
-    syncWidth();
+    }
     const removed = node.onRemoved;
     node.onRemoved = function (...args) { abc?.element?.removeEventListener("input",changed); panel.destroy(); return removed?.apply(this,args); };
     const over = node.onDragOver, drop = node.onDragDrop;

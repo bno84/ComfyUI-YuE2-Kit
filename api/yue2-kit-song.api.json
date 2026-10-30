@@ -1,200 +1,304 @@
 {
-  "11": {
-    "_meta": {
-      "title": "Final outputs · ABC + FLAC"
-    },
-    "class_type": "bno84.SaveYuE2Bundle",
+  "32": {
+    "class_type": "bno84.LyricsStyle",
     "inputs": {
-      "abc": [
-        "30:36:20",
-        0
-      ],
-      "audio": [
-        "31:10",
-        0
-      ],
-      "filename_prefix": "audio/yue2/song"
-    }
-  },
-  "22": {
-    "_meta": {
-      "title": "ABC · sheet music, source, preview playback"
-    },
-    "class_type": "bno84.ABCPreview",
-    "inputs": {
-      "abc": [
-        "30:36:20",
-        0
-      ],
-      "soundfont": "GeneralUser-GS.sf2"
+      "instrumental": false,
+      "lyrics": "[Verse]\nNeon fades along the lane\nFootsteps keep the time of rain\nFold the night and leave it here\nMorning has a sky to clear\n\n[Chorus]\nLet the day come into view\nEvery road begins with you\nHold a little room for light\nWe will sing beyond the night",
+      "style": "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM"
     }
   },
   "3": {
-    "_meta": {
-      "title": "Seed — shared"
-    },
     "class_type": "PrimitiveInt",
     "inputs": {
       "value": 831001
     }
   },
-  "30:29": {
-    "_meta": {
-      "title": "Shared score mode"
-    },
-    "class_type": "ComfySwitchNode",
+  "11": {
+    "class_type": "bno84.SaveYuE2Bundle",
     "inputs": {
-      "on_false": "full",
-      "switch": false
-    }
-  },
-  "30:36:18": {
-    "_meta": {
-      "title": "Extend source ABC"
-    },
-    "class_type": "bno84.YuE2ExtendABC",
-    "inputs": {
-      "abc": [
-        "30:36:40:21",
-        0
-      ],
-      "clip": [
-        "34:45",
-        0
-      ],
-      "lyrics": [
-        "32",
-        0
-      ],
-      "max_abc_tokens": 8192,
-      "mode": "full",
-      "penalty_window": 100,
-      "repetition_penalty": 1.005,
-      "seed": [
-        "3",
-        0
-      ],
-      "style": [
-        "32",
-        1
-      ],
-      "temperature": 0.7,
-      "top_k": 30,
-      "top_p": 0.9
-    }
-  },
-  "30:36:19": {
-    "_meta": {
-      "title": "Extend or use ABC as-is"
-    },
-    "class_type": "ComfySwitchNode",
-    "inputs": {
-      "on_false": [
-        "30:36:40:21",
-        0
-      ],
-      "on_true": [
-        "30:36:18",
-        0
-      ],
-      "switch": [
-        "33",
-        4
-      ]
-    }
-  },
-  "30:36:20": {
-    "_meta": {
-      "title": "Use reference or fresh score"
-    },
-    "class_type": "ComfySwitchNode",
-    "inputs": {
-      "on_false": [
-        "30:5",
-        0
-      ],
-      "on_true": [
-        "30:36:19",
-        0
-      ],
-      "switch": [
-        "33",
-        2
-      ]
-    }
-  },
-  "30:36:40:16": {
-    "_meta": {
-      "title": "SheetSage2 transcription"
-    },
-    "class_type": "SheetSage2AudioToABC",
-    "inputs": {
+      "filename_prefix": "audio/yue2/song",
       "audio": [
-        "33",
-        1
-      ],
-      "audio_encoder": [
-        "34:15",
+        "31:10",
         0
       ],
-      "mode": "full"
-    }
-  },
-  "30:36:40:21": {
-    "_meta": {
-      "title": "Select pasted or transcribed ABC"
-    },
-    "class_type": "ComfySwitchNode",
-    "inputs": {
-      "on_false": [
-        "33",
+      "abc": [
+        "31:67",
         0
-      ],
-      "on_true": [
-        "30:36:40:16",
-        0
-      ],
-      "switch": [
-        "33",
-        3
       ]
     }
   },
-  "30:5": {
-    "_meta": {
-      "title": "Fresh ABC planner"
-    },
-    "class_type": "YuE2GenerateABC",
+  "22": {
+    "class_type": "bno84.ABCPreview",
     "inputs": {
-      "clip": [
-        "34:45",
+      "soundfont": "GeneralUser-GS.sf2",
+      "abc": [
+        "65",
+        0
+      ]
+    }
+  },
+  "54": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "yue2-kit-still.png"
+    }
+  },
+  "55": {
+    "class_type": "AudioVisualizer",
+    "inputs": {
+      "enabled": false,
+      "filename_prefix": "audio/yue2/song_viz",
+      "style": "bars",
+      "dot_spacing": 17,
+      "color": "#9750c4",
+      "band_height": 0.35,
+      "gain": 1.3,
+      "glow": 0,
+      "trail": 0,
+      "vignette": 0.0,
+      "fade_in": 1.5,
+      "fade_out": 2.5,
+      "fps": 60,
+      "start": 0,
+      "duration": 0,
+      "video_codec": "h265",
+      "h265_crf": 18,
+      "h264_crf": 22,
+      "audio_codec": "flac",
+      "aac_bitrate": 192,
+      "opus_bitrate": 128,
+      "crf": -1,
+      "image": [
+        "54",
         0
       ],
+      "audio": [
+        "11",
+        1
+      ]
+    }
+  },
+  "63": {
+    "class_type": "bno84.SongHistory",
+    "inputs": {}
+  },
+  "65": {
+    "class_type": "bno84.YuE2Score",
+    "inputs": {
       "lyrics": [
         "32",
-        0
-      ],
-      "max_abc_tokens": 8192,
-      "mode": "full",
-      "penalty_window": 100,
-      "repetition_penalty": 1.005,
-      "seed": [
-        "3",
         0
       ],
       "style": [
         "32",
         1
       ],
+      "seed": [
+        "3",
+        0
+      ],
+      "header_mode": "fixed",
+      "header_tempo": 88,
+      "header_meter": "4/4",
+      "header_key": "C major",
+      "opening_generate": false,
+      "opening_bars": 8,
+      "opening_hint": "intro",
+      "opening_candidates": 4,
+      "anchor_use": false,
+      "anchor_abc": "",
+      "anchor_start": 1,
+      "anchor_end": 0,
+      "continue_generate": true,
+      "mode": "full",
       "temperature": 0.7,
+      "top_p": 0.9,
       "top_k": 30,
-      "top_p": 0.9
+      "repetition_penalty": 1.005,
+      "penalty_window": 100,
+      "opening_tokens": 1024,
+      "continuation_tokens": 8192,
+      "clip": [
+        "34:45",
+        0
+      ],
+      "sheetsage2": [
+        "34:52",
+        0
+      ]
+    }
+  },
+  "66": {
+    "class_type": "PreviewAny",
+    "inputs": {
+      "source": [
+        "65",
+        6
+      ]
+    }
+  },
+  "59": {
+    "class_type": "bno84.OptionalModelLora",
+    "inputs": {
+      "lora_name": "(none)",
+      "strength_model": 1.0,
+      "model": [
+        "34:4",
+        0
+      ]
+    }
+  },
+  "34:51": {
+    "class_type": "bno84.CheckpointFile",
+    "inputs": {
+      "name": "yue2_3b_bf16.safetensors"
+    }
+  },
+  "34:4": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+      "ckpt_name": [
+        "34:51",
+        0
+      ]
+    }
+  },
+  "34:52": {
+    "class_type": "bno84.OptionalAudioEncoderFile",
+    "inputs": {
+      "name": "sheetsage2_bf16.safetensors"
+    }
+  },
+  "34:53": {
+    "class_type": "bno84.OptionalLoraFile",
+    "inputs": {
+      "name": "ar_lora_inst_v3abc_comfyui.safetensors"
+    }
+  },
+  "34:44": {
+    "class_type": "LoraLoader",
+    "inputs": {
+      "lora_name": [
+        "34:53",
+        0
+      ],
+      "strength_model": 0.0,
+      "strength_clip": 1.0,
+      "model": [
+        "34:4",
+        0
+      ],
+      "clip": [
+        "34:4",
+        1
+      ]
+    }
+  },
+  "34:45": {
+    "class_type": "ComfySwitchNode",
+    "inputs": {
+      "switch": [
+        "32",
+        2
+      ],
+      "on_false": [
+        "34:4",
+        1
+      ],
+      "on_true": [
+        "34:44",
+        1
+      ]
+    }
+  },
+  "31:6": {
+    "class_type": "YuE2GenerateMusic",
+    "inputs": {
+      "style": [
+        "65",
+        4
+      ],
+      "lyrics": [
+        "65",
+        3
+      ],
+      "abc": [
+        "65",
+        0
+      ],
+      "seed": [
+        "65",
+        5
+      ],
+      "mode": [
+        "65",
+        1
+      ],
+      "max_duration": [
+        "31:14",
+        0
+      ],
+      "temperature": 1.0,
+      "top_p": 0.95,
+      "top_k": 100,
+      "repetition_penalty": 1.2,
+      "cfg_scale": 1.0,
+      "clip": [
+        "34:45",
+        0
+      ]
+    }
+  },
+  "31:7": {
+    "class_type": "EmptyYuE2LatentAudio",
+    "inputs": {
+      "seconds": [
+        "31:6",
+        1
+      ],
+      "batch_size": 1
+    }
+  },
+  "31:8": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "31:6",
+        0
+      ]
+    }
+  },
+  "31:9": {
+    "class_type": "KSampler",
+    "inputs": {
+      "seed": [
+        "65",
+        5
+      ],
+      "steps": 32,
+      "cfg": 1.0,
+      "sampler_name": "dpm_2",
+      "scheduler": "sgm_uniform",
+      "denoise": 1.0,
+      "model": [
+        "59",
+        0
+      ],
+      "positive": [
+        "31:6",
+        0
+      ],
+      "negative": [
+        "31:8",
+        0
+      ],
+      "latent_image": [
+        "31:7",
+        0
+      ]
     }
   },
   "31:10": {
-    "_meta": {
-      "title": "Decode stereo audio"
-    },
     "class_type": "VAEDecodeAudio",
     "inputs": {
       "samples": [
@@ -207,16 +311,25 @@
       ]
     }
   },
+  "31:57": {
+    "class_type": "PrimitiveFloat",
+    "inputs": {
+      "value": 120.0
+    }
+  },
+  "31:58": {
+    "class_type": "PrimitiveFloat",
+    "inputs": {
+      "value": 10.0
+    }
+  },
   "31:13": {
-    "_meta": {
-      "title": "Score seconds + margin"
-    },
     "class_type": "ComfyMathExpression",
     "inputs": {
       "expression": "a + b",
       "values.a": [
-        "56",
-        0
+        "65",
+        2
       ],
       "values.b": [
         "31:58",
@@ -225,11 +338,9 @@
     }
   },
   "31:14": {
-    "_meta": {
-      "title": "Maximum seconds or score estimate"
-    },
     "class_type": "ComfySwitchNode",
     "inputs": {
+      "switch": false,
       "on_false": [
         "31:13",
         0
@@ -237,319 +348,25 @@
       "on_true": [
         "31:57",
         0
-      ],
-      "switch": false
-    }
-  },
-  "31:57": {
-    "_meta": {
-      "title": "Maximum seconds"
-    },
-    "class_type": "PrimitiveFloat",
-    "inputs": {
-      "value": 120
-    }
-  },
-  "31:58": {
-    "_meta": {
-      "title": "Margin seconds"
-    },
-    "class_type": "PrimitiveFloat",
-    "inputs": {
-      "value": 10
-    }
-  },
-  "31:6": {
-    "_meta": {
-      "title": "Music tokens from ABC"
-    },
-    "class_type": "YuE2GenerateMusic",
-    "inputs": {
-      "abc": [
-        "30:36:20",
-        0
-      ],
-      "cfg_scale": 1,
-      "clip": [
-        "34:45",
-        0
-      ],
-      "lyrics": [
-        "32",
-        0
-      ],
-      "max_duration": [
-        "31:14",
-        0
-      ],
-      "mode": [
-        "30:29",
-        0
-      ],
-      "repetition_penalty": 1.2,
-      "seed": [
-        "3",
-        0
-      ],
-      "style": [
-        "32",
-        1
-      ],
-      "temperature": 1,
-      "top_k": 100,
-      "top_p": 0.95
-    }
-  },
-  "31:7": {
-    "_meta": {
-      "title": "Audio length from generated tokens"
-    },
-    "class_type": "EmptyYuE2LatentAudio",
-    "inputs": {
-      "batch_size": 1,
-      "seconds": [
-        "31:6",
-        1
       ]
     }
   },
-  "31:8": {
-    "_meta": {
-      "title": "Unconditional conditioning"
-    },
-    "class_type": "ConditioningZeroOut",
+  "31:67": {
+    "class_type": "PrimitiveString",
     "inputs": {
-      "conditioning": [
-        "31:6",
+      "value": [
+        "65",
         0
       ]
     }
   },
-  "31:9": {
-    "_meta": {
-      "title": "Acoustic synthesis"
-    },
-    "class_type": "KSampler",
-    "inputs": {
-      "cfg": 1,
-      "denoise": 1,
-      "latent_image": [
-        "31:7",
-        0
-      ],
-      "model": [
-        "59",
-        0
-      ],
-      "negative": [
-        "31:8",
-        0
-      ],
-      "positive": [
-        "31:6",
-        0
-      ],
-      "sampler_name": "dpm_2",
-      "scheduler": "sgm_uniform",
-      "seed": [
-        "3",
-        0
-      ],
-      "steps": 32
-    }
-  },
-  "32": {
-    "_meta": {
-      "title": "Lyrics + style"
-    },
-    "class_type": "bno84.LyricsStyle",
-    "inputs": {
-      "instrumental": false,
-      "lyrics": "[Verse]\nNeon fades along the lane\nFootsteps keep the time of rain\nFold the night and leave it here\nMorning has a sky to clear\n\n[Chorus]\nLet the day come into view\nEvery road begins with you\nHold a little room for light\nWe will sing beyond the night",
-      "style": "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM"
-    }
-  },
-  "33": {
-    "_meta": {
-      "title": "Reference input"
-    },
-    "class_type": "bno84.ReferenceInput",
-    "inputs": {
-      "abc": "",
-      "audio": "",
-      "extend": false,
-      "source": "None",
-      "transcription_model": [
-        "34:52",
-        0
-      ],
-      "transcription_mode": "full"
-    }
-  },
-  "34:15": {
-    "_meta": {
-      "title": "SheetSage2 + MERT2"
-    },
-    "class_type": "AudioEncoderLoader",
-    "inputs": {
-      "audio_encoder_name": [
-        "34:52",
-        0
-      ]
-    }
-  },
-  "34:4": {
-    "_meta": {
-      "title": "YuE2 3B — model, language model, VAE"
-    },
-    "class_type": "CheckpointLoaderSimple",
-    "inputs": {
-      "ckpt_name": [
-        "34:51",
-        0
-      ]
-    }
-  },
-  "34:44": {
-    "_meta": {
-      "title": "Instrumental AR LoRA (CLIP only)"
-    },
-    "class_type": "LoraLoader",
-    "inputs": {
-      "clip": [
-        "34:4",
-        1
-      ],
-      "lora_name": [
-        "34:53",
-        0
-      ],
-      "model": [
-        "34:4",
-        0
-      ],
-      "strength_clip": 1,
-      "strength_model": 0
-    }
-  },
-  "34:45": {
-    "_meta": {
-      "title": "Original or instrumental language model"
-    },
-    "class_type": "ComfySwitchNode",
-    "inputs": {
-      "on_false": [
-        "34:4",
-        1
-      ],
-      "on_true": [
-        "34:44",
-        1
-      ],
-      "switch": [
-        "32",
-        2
-      ]
-    }
-  },
-  "34:51": {
-    "_meta": {
-      "title": "YuE2 3B file"
-    },
-    "class_type": "bno84.CheckpointFile",
-    "inputs": {
-      "name": "yue2_3b_bf16.safetensors"
-    }
-  },
-  "34:52": {
-    "_meta": {
-      "title": "SheetSage2 file — only for Transcribe"
-    },
-    "class_type": "bno84.OptionalAudioEncoderFile",
-    "inputs": {
-      "name": "sheetsage2_bf16.safetensors"
-    }
-  },
-  "34:53": {
-    "_meta": {
-      "title": "Instrumental LoRA file — only for Instrumental"
-    },
-    "class_type": "bno84.OptionalLoraFile",
-    "inputs": {
-      "name": "ar_lora_inst_v3abc_comfyui.safetensors"
-    }
-  },
-  "54": {
-    "_meta": {
-      "title": "Visualizer still"
-    },
-    "class_type": "LoadImage",
-    "inputs": {
-      "image": "yue2-kit-still.png"
-    }
-  },
-  "55": {
-    "_meta": {
-      "title": "Visualizer video"
-    },
-    "class_type": "AudioVisualizer",
-    "inputs": {
-      "aac_bitrate": 192,
-      "audio": [
-        "11",
-        1
-      ],
-      "audio_codec": "flac",
-      "band_height": 0.35,
-      "color": "#9750c4",
-      "crf": -1,
-      "dot_spacing": 17,
-      "duration": 0,
-      "enabled": false,
-      "filename_prefix": "audio/yue2/song_viz",
-      "fps": 60,
-      "gain": 1.3,
-      "glow": 0,
-      "h264_crf": 22,
-      "h265_crf": 18,
-      "image": [
-        "54",
-        0
-      ],
-      "opus_bitrate": 128,
-      "start": 0,
-      "style": "bars",
-      "trail": 0,
-      "video_codec": "h265",
-      "vignette": 0.0,
-      "fade_in": 1.5,
-      "fade_out": 2.5
-    }
-  },
-  "56": {
-    "_meta": {
-      "title": "ABC timeline · score duration and sections"
-    },
+  "87": {
     "class_type": "bno84.ABCTimeline",
     "inputs": {
       "abc": [
-        "30:36:20",
+        "65",
         0
       ]
-    }
-  },
-  "59": {
-    "class_type": "bno84.OptionalModelLora",
-    "inputs": {
-      "model": [
-        "34:4",
-        0
-      ],
-      "lora_name": "(none)",
-      "strength_model": 1.0
-    },
-    "_meta": {
-      "title": "NAR LoRA · optional"
     }
   }
 }
