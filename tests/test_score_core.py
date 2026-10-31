@@ -86,6 +86,33 @@ class HeaderTests(unittest.TestCase):
             plan["opening"]["vocal"] = vocal
             s.plan_from(plan)
 
+    def test_meter_error_suggests_a_unit_that_fits_both_voices(self):
+        for meter, duration in (("4/4", "16"), ("3/4", "12")):
+            with self.subTest(meter=meter):
+                abc = ABC.replace("M:4/4", "M:" + meter).replace("L:1/8", "L:1/64")
+                abc = abc.replace("C8", "C" + duration)
+                parsed = s.splice.parse(abc)
+                before = copy.deepcopy(parsed)
+                with self.assertRaisesRegex(ValueError, "Unit note length to 1/16") as error:
+                    s.validate_score(parsed)
+                self.assertIn("Vocal: bar 1 does not match the meter", str(error.exception))
+                self.assertIn("fit L:1/16 rather than L:1/64", str(error.exception))
+                self.assertEqual(parsed, before)
+
+    def test_meter_error_does_not_guess_for_inconsistent_bar_lengths(self):
+        for ins in ("C4|C8|", "C8|C8|"):
+            with self.subTest(ins=ins):
+                abc = ABC.replace("L:1/8", "L:1/64").replace("C8-|C8|", "C16|C8|").replace("Z2|", ins)
+                with self.assertRaises(ValueError) as error:
+                    s.validate_score(s.splice.parse(abc))
+                self.assertNotIn("Try setting", str(error.exception))
+
+    def test_meter_error_does_not_guess_with_incomplete_notation(self):
+        abc = ABC.replace("L:1/8", "L:1/64").replace("C8-|C8|", "C16|C16")
+        with self.assertRaises(ValueError) as error:
+            s.validate_score(s.splice.parse(abc))
+        self.assertNotIn("Try setting", str(error.exception))
+
     def test_cross_voice_state_and_join_structure(self):
         score = self.source()
         score.bars["Ins"][1].state["K"] = "G"

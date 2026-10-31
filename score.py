@@ -213,6 +213,27 @@ def note_unit(score):
     return normalize_field("L", value) if value else splice.note_unit(score)
 
 
+def suggested_note_unit(score):
+    """Suggest a supported L: only when every measured interior bar agrees."""
+    if score.notes:
+        return None
+    units = set()
+    for bars in score.bars.values():
+        for bar in bars[:-1]:
+            if bar.text == "Z":
+                continue  # Whole-bar rests provide no evidence about L:.
+            duration = splice.bar_units(bar.text, Fraction(1))
+            if duration is None or duration <= 0:
+                return None
+            units.add(normalize_field("M", bar.state["M"]) / duration)
+    if len(units) != 1:
+        return None
+    unit = units.pop()
+    if unit == note_unit(score) or str(unit) not in ("1/4", "1/8", "1/16", "1/32", "1/64"):
+        return None
+    return str(unit)
+
+
 def validate_score(score):
     splice.aligned(score)
     if not score.length:
@@ -225,7 +246,12 @@ def validate_score(score):
             raise ValueError(f"Voices disagree on M/K/Q at bar {index + 1}; writing would lose state.")
     problems = splice.check(score)
     if problems:
-        raise ValueError("; ".join(problems))
+        message = "; ".join(problems)
+        suggested = suggested_note_unit(score)
+        if suggested:
+            message += (f"\nThe bar durations fit L:{suggested} rather than L:{note_unit(score)}. "
+                        f"Try setting Unit note length to {suggested} and generating again.")
+        raise ValueError(message)
     return score
 
 
