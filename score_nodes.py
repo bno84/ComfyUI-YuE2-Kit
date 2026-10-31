@@ -302,10 +302,11 @@ def result_payload(abc, data, context, facts, lyrics, style, mode, seed):
               dict(stage="continuation", start=opening + anchor, end=bars)])
     cut = facts["cut"]
     cut_text = f"bars {cut['start'] + 1}–{cut['end']}" if cut else "none"
+    property_names = dict(anchor="reference", set="locked", free="generated")
     lines = [f"Mode: {mode}. Source: {facts['source']}. Cut: {cut_text}.",
              "Stages: " + ", ".join(f"{'reference' if s['stage'] == 'anchor' else s['stage']} {s['end'] - s['start']} bars" for s in spans) + ".",
-             "Header policies: " + ", ".join(f"{name} {'reference' if field['policy'] == 'anchor' else field['policy']}" for name, field in facts["header"].items()) + ".",
-             "Effective header: " + ", ".join(f"{name}:{value}" for name, value in splice.parse(abc).bars[analysis["voices"][0]][0].state.items()) + "."]
+             "Score properties: " + ", ".join(f"{name} {property_names[field['policy']]}" for name, field in facts["header"].items()) + ".",
+             "Effective score properties: " + ", ".join(f"{name}:{value}" for name, value in splice.parse(abc).bars[analysis["voices"][0]][0].state.items()) + "."]
     details = data.get("candidates", []) or ([data["fresh"]] if "fresh" in data else [])
     for detail in details:
         if "fresh" in data:
@@ -365,13 +366,13 @@ def score_inputs():
         io.String.Input("lyrics", force_input=True),
         io.String.Input("style", force_input=True),
         io.Int.Input("seed", min=0, max=score.UINT64, force_input=True),
-        io.Combo.Input("header_mode", options=["generated", "fixed", "from reference", "from anchor"], default="generated", display_name="Header mode"),
-        io.Int.Input("header_tempo", default=120, min=1, max=1000, display_name="Header tempo (BPM)"),
-        io.Combo.Input("header_meter", options=["4/4", "3/4", "6/8", "2/4", "12/8", "2/2", "5/4", "7/8"], display_name="Header meter"),
+        io.Combo.Input("header_mode", options=["generated", "locked", "reference", "fixed", "from reference", "from anchor"], default="generated", display_name="Score properties"),
+        io.Int.Input("header_tempo", default=120, min=1, max=1000, display_name="Tempo (BPM)"),
+        io.Combo.Input("header_meter", options=["4/4", "3/4", "6/8", "2/4", "12/8", "2/2", "5/4", "7/8"], display_name="Meter"),
         io.Combo.Input("header_unit", options=["1/4", "1/8", "1/16", "1/32", "1/64"], default="1/16",
-                       display_name="Unit note length", tooltip="ABC L: base duration for unqualified notes. Used with fixed headers."),
-        io.Combo.Input("header_key", options=list(score.KEYS), default="C major", display_name="Header key"),
-        io.Boolean.Input("opening_generate", default=False, display_name="Opening generate"),
+                       display_name="Unit note length", tooltip="ABC L: base duration for unqualified notes. Used with locked score properties."),
+        io.Combo.Input("header_key", options=list(score.KEYS), default="C major", display_name="Key"),
+        io.Boolean.Input("opening_generate", default=False, display_name="Generate opening"),
         io.Int.Input("opening_bars", default=8, min=1, max=256, display_name="Opening bars"),
         io.String.Input("opening_hint", default="intro", display_name="Opening hint (opening only)", dynamic_prompts=False),
         io.Int.Input("opening_candidates", default=4, min=1, max=16, display_name="Opening candidates"),
@@ -379,7 +380,7 @@ def score_inputs():
         io.String.Input("anchor_abc", default="", multiline=True, dynamic_prompts=False, display_name="Reference ABC"),
         io.Int.Input("anchor_start", default=1, min=1, max=1000000, display_name="Reference start"),
         io.Int.Input("anchor_end", default=0, min=0, max=1000000, display_name="Reference end"),
-        io.Boolean.Input("continue_generate", default=True, display_name="Continue generate"),
+        io.Boolean.Input("continue_generate", default=True, display_name="Generate continuation"),
         io.Combo.Input("mode", options=["full", "melody"], default="full", display_name="Mode"),
         io.Float.Input("temperature", default=0.7, min=0.01, max=100, step=0.01, display_name="Temperature"),
         io.Float.Input("top_p", default=0.9, min=0.01, max=1, step=0.01, display_name="Top p"),

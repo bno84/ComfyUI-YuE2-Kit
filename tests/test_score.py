@@ -71,7 +71,7 @@ class ScoreTests(unittest.TestCase):
 
     def test_public_header_rules_fail_before_model_work(self):
         anchored = dict(anchor_use=True, anchor_abc=ANCHOR)
-        for values, error in ((dict(header_mode="from anchor"), "requires Reference use"),
+        for values, error in ((dict(header_mode="from anchor"), "require Reference use"),
                               (dict(anchored, header_mode="generated"), "needs an opening"),
                               (dict(anchored, header_mode="from anchor", opening_generate=True, opening_tokens=0), "at least 256")):
             with self.subTest(values=values), self.assertRaisesRegex(ValueError, error):
@@ -122,6 +122,18 @@ class ScoreTests(unittest.TestCase):
         preview = score.preview(**values)
         self.assertEqual(preview["errors"], [])
         self.assertEqual(preview["header"]["fixed"], dict(M="3/4", K="Dm", L="1/32", Q="1/4=110"))
+
+    def test_score_property_labels_and_legacy_modes(self):
+        self.assertEqual(score.widgets_to_plan(dict(header_mode="locked")),
+                         score.widgets_to_plan(dict(header_mode="fixed")))
+        values = dict(anchor_use=True, anchor_abc=ANCHOR)
+        self.assertEqual(score.widgets_to_plan(dict(values, header_mode="reference")),
+                         score.widgets_to_plan(dict(values, header_mode="from reference")))
+        inputs = {item.id: item for item in nodes.score_inputs()}
+        for name, label in (("header_mode", "Score properties"), ("header_tempo", "Tempo (BPM)"),
+                            ("header_meter", "Meter"), ("header_key", "Key"),
+                            ("opening_generate", "Generate opening"), ("continue_generate", "Generate continuation")):
+            self.assertEqual(inputs[name].display_name, label)
 
     def test_reference_labels_keep_legacy_workflows_compatible(self):
         values = dict(anchor_use=True, anchor_abc=ANCHOR)

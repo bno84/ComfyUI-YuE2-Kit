@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { readValues, setValues, applicable, rangeSelection, previewValues, restoreLegacyWidgets } from "./score_state.js";
+import { readValues, setValues, applicable, rangeSelection, previewValues, restoreLegacyWidgets, propertyMode } from "./score_state.js";
 import { referenceExecutionId, buildTranscriptionPrompt, queueTranscription, transcriptionError } from "./reference_transcribe.js";
 import { referenceFileKind } from "./reference_input.js";
 
@@ -22,8 +22,8 @@ function separator(node, before) {
 }
 export function updateWidgets(node) {
   const header = node.widgets?.find(w => w.name === "header_mode");
-  if (header?.value === "from anchor") header.value = "from reference";
-  if (Array.isArray(header?.options?.values)) header.options.values = header.options.values.filter(v => v !== "from anchor");
+  if (header) header.value = propertyMode(header.value);
+  if (Array.isArray(header?.options?.values)) header.options.values = header.options.values.filter(v => ["generated", "locked", "reference"].includes(v));
   const v = readValues(node);
   // Only native disabled support. Never install a custom disabled draw override.
   for (const [name, enabled] of Object.entries(applicable(v))) {
@@ -106,11 +106,11 @@ export class ScorePanel {
     header.style.cssText="flex:0 0 140px;font:11px/18px sans-serif;border-right:1px solid #78889a55;padding-right:8px";
     const fixed=data?.header?.fixed ?? {}, policies=data?.header?.policies ?? {};
     for (const [label,field,name] of [["Tempo","Q","tempo"],["Meter","M","meter"],["Key","K","key"]]) {
-      const policy=policies[name]?.policy ?? (v.header_mode==="fixed" ? "set" : ["from reference","from anchor"].includes(v.header_mode) ? "anchor" : "free");
-      const mode={set:"fixed",anchor:"reference",free:"model"}[policy];
+      const policy=policies[name]?.policy ?? (propertyMode(v.header_mode)==="locked" ? "set" : propertyMode(v.header_mode)==="reference" ? "anchor" : "free");
+      const mode={set:"locked",anchor:"reference",free:"generated"}[policy];
       const raw=fixed[field] ?? (policy==="set" ? {Q:v.header_tempo,M:v.header_meter,K:v.header_key}[field] : null);
       const value=label==="Key" ? (raw ? keyWords(String(raw)) : "model") : label==="Tempo" ? (data?.timing?.bpm ?? raw ?? "model") : (raw ?? "model");
-      const unit = field === "M" ? (fixed.L ?? (v.header_mode === "fixed" ? v.header_unit : null)) : null;
+      const unit = field === "M" ? (fixed.L ?? (propertyMode(v.header_mode) === "locked" ? v.header_unit : null)) : null;
       header.append(element("div",`${label} ${value}${unit ? ` · L:${unit}` : ""} · ${mode}`));
     }
     const body=element("div"); body.style.cssText="flex:1;min-width:0";

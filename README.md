@@ -58,20 +58,20 @@ CFG controls acoustic diffusion.
 
 ## Optional features
 
-**Header mode** selects one policy for the whole header:
+**Score properties** selects how tempo, meter, unit note length and key are chosen:
 
 - **generated**: model chooses the header. With a reference, an opening is required;
   meter and voice/unit declarations remain compatible, the opening's tempo is
   adopted across the reference, and key changes remain experimental for audio.
-- **fixed**: the visible tempo, meter, named key and **Unit note length** apply.
+- **locked**: the visible tempo, meter, named key and **Unit note length** apply.
   Unit note length is ABC's `L:` field (for example, `1/32`); it is supplied directly,
   with no separate model pass. With a reference, meter, key and unit note length
   come from the reference and their controls are disabled. Tempo stays editable;
   a differing tempo retimes the reference.
-- **from reference**: requires Reference use and keeps its header, including the
+- **reference**: requires Reference use and keeps its header, including the
   reference's `L:` line.
 
-**Opening generate** adds the requested bars before the reference. Its hint labels
+**Generate opening** adds the requested bars before the reference. Its hint labels
 only that opening. Candidates use first good fit, then the best available join;
 this is a chord-root/structural heuristic, so audition the join in ABC Preview.
 Opening controls have no effect with Reference use off.
@@ -87,7 +87,7 @@ file, as in the template. Only that transcription job loads SheetSage2; ordinary
 Score runs use the stored ABC and never transcribe. Drag either range handle or drag
 across the strip to select single bars; the stored source stays intact.
 
-**Continue generate** adds a tail after the reference. With Reference use off it is
+**Generate continuation** adds a tail after the reference. With Reference use off it is
 forced on and generates the whole song. It runs until the model ends the song or
 **Continuation tokens** runs out; an exhausted budget trims to complete aligned
 bars and reports it. Sampling controls and both token budgets are always visible.
@@ -97,10 +97,10 @@ handles, then **Use as reference**. Choose a destination when multiple YuE2 Scor
 or Reference input nodes are present. Only that node is updated. In Score, the
 selected ABC becomes the whole stored source with a reset range; header and
 sampling widgets retain their values. In Reference input, it selects ABC and
-keeps the Extend setting. With a fixed header, meter, key and unit note length
+keeps the Extend setting. With locked score properties, meter, key and unit note length
 follow the reference; its tempo remains editable.
 **Use saved score** loads final ABC as-is, turns Opening/Continue off and explicitly
-selects from reference. **Restore lyrics + style** and **Restore seed (fixed)** restore
+selects reference score properties. **Restore lyrics + style** and **Restore seed (fixed)** restore
 those settings. **Restore all** also restores the Score widgets, including the
 original source and mode. Restoring saved Score settings requires a YuE2 Score
 destination; **Restore all** refuses an incompatible Reference input destination.
@@ -150,7 +150,8 @@ through the end. The range strip edits these two values instead of showing
 number fields. For an external ABC source, connect `anchor_abc`, enable `anchor_use`,
 and select a compatible `header_mode`. The stored `anchor_*` input names and
 legacy `from anchor` header value remain supported for existing workflows; the
-UI uses Reference labels and `from reference`.
+UI uses Score properties with `generated`, `locked` and `reference`. Legacy
+`fixed` and `from reference` values also remain supported.
 
 ```bash
 node --test tests/*.mjs

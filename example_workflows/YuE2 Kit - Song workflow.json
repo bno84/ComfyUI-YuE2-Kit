@@ -903,7 +903,7 @@
         "ver": "0.1.0"
       },
       "widgets_values": [
-        "fixed",
+        "locked",
         88,
         "4/4",
         "1/16",
@@ -970,10 +970,10 @@
       "title": "Start here",
       "properties": {},
       "widgets_values": [
-        "Set Lyrics + style and Seed, then use the standard Score widgets. Header fixed sets tempo, meter and key. Anchor ABC accepts pasted scores or Song history \u2192 Use in planner. Drag the range strip to select single bars. Drop an .abc file on Score to use it as the anchor, or drop audio to transcribe it. The timeline is read-only."
+        "Set Lyrics + style and Seed, then use the standard Score widgets. Locked Score properties set tempo, meter, unit note length and key. Reference ABC accepts pasted scores or Song history \u2192 Use as reference. Drag the range strip to select single bars. Drop an .abc file on Score to use it as the reference, or drop audio to transcribe it. The timeline is read-only."
       ],
       "widgets_values_named": {
-        "text": "Set Lyrics + style and Seed, then use the standard Score widgets. Header fixed sets tempo, meter and key. Anchor ABC accepts pasted scores or Song history \u2192 Use in planner. Drag the range strip to select single bars. Drop an .abc file on Score to use it as the anchor, or drop audio to transcribe it. The timeline is read-only."
+        "text": "Set Lyrics + style and Seed, then use the standard Score widgets. Locked Score properties set tempo, meter, unit note length and key. Reference ABC accepts pasted scores or Song history \u2192 Use as reference. Drag the range strip to select single bars. Drop an .abc file on Score to use it as the reference, or drop audio to transcribe it. The timeline is read-only."
       },
       "color": "#432",
       "bgcolor": "#653"

@@ -97,7 +97,7 @@
         "3",
         0
       ],
-      "header_mode": "fixed",
+      "header_mode": "locked",
       "header_tempo": 88,
       "header_meter": "4/4",
       "header_unit": "1/16",

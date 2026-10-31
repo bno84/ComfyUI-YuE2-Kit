@@ -8,7 +8,7 @@ const read = (name) => readFileSync(new URL(`../web/${name}`, import.meta.url), 
 const load = (sources, names, app = { registerExtension() {} }) =>
   new Function("app", "api", sources.map(read).join("\n") + `\nreturn {${names}};`)(app, {});
 
-const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,valuesPlan,applicable,restoreLegacyWidgets");
+const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,valuesPlan,applicable,restoreLegacyWidgets,propertyMode");
 const strip = load(["score_strip.js"], "shortLabel,sectionColor,sourceSummary");
 const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceTargets");
 const transcribe = load(["reference_transcribe.js"], "buildTranscriptionPrompt");
@@ -56,7 +56,7 @@ test("Use as reference fills Score and keeps header and sampling", () => {
   assert.equal(value(n, "anchor_abc"), "NEW");
   assert.equal(value(n, "header_mode"), "fixed");
   history.useInPlanner(n, "FINAL", true);
-  assert.equal(value(n, "header_mode"), "from reference");
+  assert.equal(value(n, "header_mode"), "reference");
 });
 
 test("transcription runs as its own job from the reference settings", () => {
@@ -147,4 +147,14 @@ test("fixed headers with a reference disable meter, key and unit but retain temp
     assert.equal(enabled[name], false);
     assert.equal(state.applicable({ ...settings, anchor_use: false })[name], true);
   }
+});
+
+
+test("Score properties use generated, locked and reference with legacy aliases", () => {
+  assert.equal(state.propertyMode("fixed"), "locked");
+  for (const mode of ["reference", "from reference", "from anchor"]) {
+    assert.equal(state.propertyMode(mode), "reference");
+    assert.equal(state.applicable({ ...state.SCORE_DEFAULTS, header_mode: mode }).header_tempo, false);
+  }
+  assert.equal(state.applicable({ ...state.SCORE_DEFAULTS, header_mode: "locked" }).header_tempo, true);
 });

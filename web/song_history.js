@@ -233,7 +233,7 @@ export function flashPlanner(node) {
 export function useInPlanner(node, abc, saved = false) {
   node.graph?.beforeChange?.();
   setValues(node, {anchor_use:true,anchor_abc:abc,anchor_start:1,anchor_end:0,
-    ...(saved ? {opening_generate:false,continue_generate:false,header_mode:"from reference"} : {})});
+    ...(saved ? {opening_generate:false,continue_generate:false,header_mode:"reference"} : {})});
   node.graph?.afterChange?.();
   showPlan(node); flashPlanner(node);
 }

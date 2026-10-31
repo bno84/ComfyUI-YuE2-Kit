@@ -58,11 +58,11 @@ def widgets_to_plan(values):
         max_tokens=v["opening_tokens"] if enabled and v["opening_generate"] else 0)
     plan["continuation"].update(enabled=v["continue_generate"] if enabled else True,
         max_tokens=v["continuation_tokens"] if plan["continuation"]["enabled"] else 0)
-    mode = "from anchor" if v["header_mode"] == "from reference" else v["header_mode"]
+    mode = {"locked": "fixed", "reference": "from anchor", "from reference": "from anchor"}.get(v["header_mode"], v["header_mode"])
     if mode not in ("generated", "fixed", "from anchor"):
-        raise ValueError("Unknown Header mode.")
+        raise ValueError("Unknown Score properties mode.")
     if mode == "from anchor" and not enabled:
-        raise ValueError("Header from reference requires Reference use.")
+        raise ValueError("Reference score properties require Reference use.")
     source = resolve_source(plan)
     anchor = cut_anchor(source, plan["anchor"])[0] if source is not None else None
     if mode == "fixed":
@@ -75,7 +75,7 @@ def widgets_to_plan(values):
         else:
             key = KEYS.get(v["header_key"])
             if key is None:
-                raise ValueError("Header key must be a named major or minor key.")
+                raise ValueError("Key must be a named major or minor key.")
             unit = single_line(v["header_unit"], "Unit note length", False)
             normalize_field("L", unit)
             for name, value in (("meter", v["header_meter"]), ("key", key), ("unit", unit)):
