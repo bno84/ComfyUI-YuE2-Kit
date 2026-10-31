@@ -124,11 +124,11 @@
       },
       "widgets_values": [
         831001,
-        "fixed"
+        "randomize"
       ],
       "widgets_values_named": {
         "value": 831001,
-        "fixed": "fixed"
+        "fixed": "randomize"
       }
     },
     {
@@ -898,7 +898,7 @@
         "ver": "0.1.0"
       },
       "widgets_values": [
-        "locked",
+        "generated",
         88,
         "4/4",
         "1/16",
@@ -922,19 +922,20 @@
         8192
       ],
       "widgets_values_named": {
-        "header_mode": "from anchor",
+        "header_mode": "generated",
         "header_tempo": 88,
         "header_meter": "4/4",
+        "header_unit": "1/16",
         "header_key": "C major",
         "opening_generate": false,
         "opening_bars": 8,
         "opening_hint": "intro",
         "opening_candidates": 4,
-        "anchor_use": true,
-        "anchor_abc": "X:1\nT:\nM:4/4\nL:1/16\nQ:1/4=173\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:D#m\n% chorus\nV: Vocal\nz4\"D#\"z12|\"D#\"z12\"F#6\"z4|\"D#\"z16|\"D#\"z16|\nV: Ins\nz4D4D3DD2=E2|D2D2D2D2D2D2F4|D4D4D3DD2=E2|D2D2D2D2=E2E2F2F2|\nV: Vocal\n\"D#\"z16|\"D#\"z16|\nV: Ins\nD4D4D3DD2=E2|D2D2D2D2D2D2F4|\n",
+        "anchor_use": false,
+        "anchor_abc": "",
         "anchor_start": 1,
         "anchor_end": 0,
-        "continue_generate": false,
+        "continue_generate": true,
         "mode": "full",
         "temperature": 0.7,
         "top_p": 0.9,

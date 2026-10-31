@@ -35,7 +35,8 @@ load [the workflow JSON](<example_workflows/YuE2 Kit - Song workflow.json>).
 2. Connect **lyrics**, **style** and **seed** to **YuE2 Advanced Score**; these are socket-only
    inputs. Use the ordinary ComfyUI widgets in score order: timeline, Header,
    Opening, Reference, Continue and Sampling. The Song template
-   starts with a **32-bar cap**, fixed **4/4**, **C major** and **88 BPM**.
+   starts with **generated** score properties and the seed control set to
+   **randomize**.
 3. Check **Model files**, then run. **ABC Preview** displays Score's ABC;
    **Score report** shows generation details and warnings. **Acoustic** renders it;
    **Final outputs** saves matching FLAC + ABC files.
