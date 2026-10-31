@@ -31,7 +31,7 @@ def kind(name):
 io = types.SimpleNamespace(ComfyNode=object, Schema=schema, Custom=kind,
                            NodeOutput=lambda *values, **kwargs: types.SimpleNamespace(result=values, **kwargs),
                            Hidden=types.SimpleNamespace(dynprompt="dynprompt", unique_id="unique_id"))
-for name in ("String", "Int", "Combo", "Float", "Boolean", "Clip", "Audio", "AudioEncoder"):
+for name in ("String", "Int", "Combo", "Float", "Boolean", "Clip", "Audio", "AudioEncoder", "AnyType"):
     setattr(io, name, kind(name))
 
 
@@ -101,6 +101,30 @@ class ScoreTests(unittest.TestCase):
                 self.assertEqual(set(out.expand), stages)
         settings = json.loads(out.expand["opening"]["inputs"]["settings"])
         self.assertEqual(settings["opening"]["bars"], 8)
+
+    def test_sampling_ranges_reject_zero_before_model_work(self):
+        inputs = {item.id: item for item in nodes.score_inputs()}
+        for name in ("top_k", "penalty_window"):
+            with self.subTest(name=name):
+                self.assertEqual(inputs[name].min, 1)
+                with self.assertRaisesRegex(ValueError, name):
+                    score.widgets_to_plan({name: 0})
+                self.assertEqual(score.widgets_to_plan({name: 1})["sampling"][name], 1)
+
+    def test_implicit_note_length_follows_initial_meter(self):
+        for meter, note_length in (("2/4", 8), ("3/8", 6), ("3/4", 6), ("4/4", 8), ("C|", 8)):
+            with self.subTest(meter=meter):
+                header = HEADER.replace("M:4/4", "M:" + meter).replace("L:1/16\n", "")
+                abc = header + f"V: Vocal\nc{note_length}|\nV: Ins\nC{note_length}|\n"
+                parsed = splice.parse(abc)
+                self.assertEqual(splice.check(parsed), [])
+                self.assertEqual(score.note_unit(parsed), splice.note_unit(parsed))
+                preview = score.preview(anchor_use=True, anchor_abc=abc, header_mode="from anchor")
+                self.assertEqual(preview["errors"], [])
+                self.assertEqual(preview["anchor"]["bars"], 1)
+        # An explicit unit takes precedence over the meter-derived default.
+        abc = HEADER.replace("M:4/4", "M:2/4") + "V: Vocal\nc8|\nV: Ins\nC8|\n"
+        self.assertEqual(splice.check(splice.parse(abc)), [])
 
     def test_uniform_tempo(self):
         head, chorus = ANCHOR.split("% chorus\n")

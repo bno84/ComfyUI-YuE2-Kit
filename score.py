@@ -202,7 +202,7 @@ def normalize_field(name, value):
 
 def note_unit(score):
     value = score.field("L")
-    return normalize_field("L", value) if value else Fraction(1, 8) if normalize_field("M", score.field("M") or "4/4") >= Fraction(3, 4) else Fraction(1, 16)
+    return normalize_field("L", value) if value else splice.note_unit(score)
 
 
 def validate_score(score):
@@ -378,7 +378,7 @@ def sampling_from(value):
         if isinstance(item, bool) or not isinstance(item, (int, float)) or not math.isfinite(item) or not low < item <= high:
             raise ValueError(f"Invalid sampling {name}.")
     for name in ("top_k", "penalty_window"):
-        result[name] = integer(result[name], 0, 1000000, name)
+        result[name] = integer(result[name], 1, 1000000, name)
     return result
 
 

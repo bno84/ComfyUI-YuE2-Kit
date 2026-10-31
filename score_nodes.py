@@ -381,9 +381,9 @@ def score_inputs():
         io.Combo.Input("mode", options=["full", "melody"], default="full", display_name="Mode"),
         io.Float.Input("temperature", default=0.7, min=0.01, max=100, step=0.01, display_name="Temperature"),
         io.Float.Input("top_p", default=0.9, min=0.01, max=1, step=0.01, display_name="Top p"),
-        io.Int.Input("top_k", default=30, min=0, max=1000000, display_name="Top k"),
+        io.Int.Input("top_k", default=30, min=1, max=1000000, display_name="Top k"),
         io.Float.Input("repetition_penalty", default=1.005, min=0.001, max=100, step=0.001, display_name="Repetition penalty"),
-        io.Int.Input("penalty_window", default=100, min=0, max=1000000, display_name="Penalty window"),
+        io.Int.Input("penalty_window", default=100, min=1, max=1000000, display_name="Penalty window"),
         io.Int.Input("opening_tokens", default=1024, min=score.OPENING_TOKENS_MIN, max=20000, display_name="Opening token budget"),
         io.Int.Input("continuation_tokens", default=8192, min=0, max=20000, display_name="Continuation token budget"),
         # The encoder file, never a loaded model: only the browser's transcription job loads it.

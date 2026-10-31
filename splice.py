@@ -326,10 +326,16 @@ def join(lead, fragment):
     return Score(header=list(lead.header), voices=list(lead.voices), bars=bars, labels=labels), warnings
 
 
+def note_unit(score):
+    """Resolve L:, using the initial meter for ABC's implicit note length."""
+    default = Fraction(1, 8) if _fraction(score.field("M"), Fraction(1)) >= Fraction(3, 4) else Fraction(1, 16)
+    return _fraction(score.field("L"), default)
+
+
 def check(score):
     """Problems worth knowing before a score is used: notes from parsing, and bars of the wrong length."""
     problems = list(score.notes)
-    unit = _fraction(score.field("L"), Fraction(1, 8))
+    unit = note_unit(score)
     for voice, bars in score.bars.items():
         unknown = [index + 1 for index, bar in enumerate(bars)
                    if bar.text != "Z" and bar_units(bar.text, unit) is None]
