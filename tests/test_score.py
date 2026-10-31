@@ -165,6 +165,28 @@ class ScoreTests(unittest.TestCase):
                     self.assertEqual(data["selected"]["cadence"], 2)
                     self.assertIn('"G"', abc)
 
+    def test_opening_ignores_a_line_cut_by_the_budget(self):
+        plan = score.widgets_to_plan(dict(anchor_use=True, anchor_abc=ANCHOR, header_mode="reference",
+                                          opening_generate=True, opening_bars=4, opening_candidates=1))
+        anchor = splice.parse(ANCHOR)
+        settings = dict(spec=score.header_spec(plan, anchor), fixed=score.resolve_header(plan, anchor),
+                        sampling=score.sampling_from({}), budget=768, opening=plan["opening"])
+
+        def run(text, ended=False):
+            with patch.object(nodes, "generate", return_value=(text, dict(ended=ended, header=[]))):
+                return nodes.opening_candidates(None, ANCHOR, settings, "", "", "full", 1)
+        for suffix in ("\nV: Voc", '\nV: Vocal\n"C"c16|"G', "\nV: Ins\nC16|C"):
+            with self.subTest(suffix=suffix):
+                abc, data = run(ANCHOR + suffix)
+                self.assertEqual(score.analyze(abc)["bars"], 4)
+                self.assertEqual(data["selected"]["error"], "")
+        for text, ended, error in (
+                (ANCHOR + "\nV: Voc", True, "not declared"),  # A finished score has no budget cut.
+                (ANCHOR.replace("% chorus\nV: Vocal", "% chorus\nV: Voc"), False, "not declared"),
+                (ANCHOR.removesuffix("C16|G16|\n") + "C16|G", False, "ran out of tokens before 4 bars")):
+            with self.subTest(text=text[-30:], ended=ended), self.assertRaisesRegex(ValueError, error):
+                run(text, ended)
+
     def test_opening_candidate_bounds(self):
         widget = next(item for item in nodes.score_inputs() if item.id == "opening_candidates")
         self.assertEqual((widget.min, widget.max, widget.default), (1, 10, 4))

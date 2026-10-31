@@ -111,6 +111,19 @@ def finish_tail(text, ended, start=0):
                                    trimmed=bool(diagnostics), diagnostics=diagnostics)
 
 
+def drop_unfinished_line(text):
+    """Drop the final line a token budget may have cut mid-field or mid-bar.
+
+    Keep its complete bars. Comments and earlier lines stay untouched, so a
+    malformed header or interior bar still fails when parsed.
+    """
+    lines = text.rstrip().split("\n")
+    last = lines[-1].strip()
+    if last and not last.startswith("%"):
+        lines[-1] = "" if splice.FIELD.match(last) else last[:last.rfind("|") + 1]
+    return "\n".join(lines) + "\n"
+
+
 def opening_candidates(clip, anchor_abc, settings, style, lyrics, mode, seed):
     anchor = score.validate_score(splice.parse(anchor_abc))
     options = settings["opening"]
@@ -128,7 +141,7 @@ def opening_candidates(clip, anchor_abc, settings, style, lyrics, mode, seed):
             text, detail = generate(clip, settings, style, lyrics, mode, candidate_seed)
             record.update(detail)
             candidate.text, candidate.ended = text, detail["ended"]
-            written = splice.parse(text)
+            written = splice.parse(text if candidate.ended else drop_unfinished_line(text))
             problems = [note for note in written.notes if "header field" in note or "declaration" in note]
             if problems:
                 raise ValueError("; ".join(problems))

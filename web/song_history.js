@@ -333,22 +333,36 @@ function linkOf(graph, id) {
   return graph?.getLink?.(id) ?? graph?.links?.[id] ?? graph?._links?.get?.(id) ?? null;
 }
 
-// Set what a compiled input will be. An input fed from its subgraph's own
-// input takes the value of the subgraph node's widget, one level up.
+// Nodes whose "value" widget is what they output.
+const PRIMITIVES = new Set(["PrimitiveNode", "PrimitiveInt", "PrimitiveFloat", "PrimitiveString",
+  "PrimitiveStringMultiline", "PrimitiveBoolean"]);
+
+// Set what a compiled input will be: {node, name} of the widget written.
+// An input fed from its subgraph's own input takes the value of the subgraph
+// node's widget, one level up; one fed by a primitive (through reroutes)
+// takes the primitive's value. Any other upstream node computes the input,
+// so nothing is written and {linked} names that node.
 export function setInput(root, id, name, value) {
   const path = String(id).split(":");
   let node = findNode(root, path.join(":"));
   while (node) {
     const input = node.inputs?.find((candidate) => candidate.name === name);
     const link = input?.link != null ? linkOf(node.graph, input.link) : null;
-    if (link && Number(link.origin_id) === SUBGRAPH_INPUT && path.length > 1) {
+    if (!link) return setWidget(node, name, value) ? { node, name } : null;
+    if (Number(link.origin_id) === SUBGRAPH_INPUT && path.length > 1) {
       const slot = node.graph.inputs?.[link.origin_slot];
       path.pop();
       node = findNode(root, path.join(":"));
       name = slot?.name;
       continue;
     }
-    return setWidget(node, name, value) ? node : null;
+    const origin = node.graph?.getNodeById?.(link.origin_id)
+      ?? node.graph?._nodes?.find((candidate) => String(candidate.id) === String(link.origin_id));
+    const type = origin?.comfyClass ?? origin?.type;
+    if (!origin || !(PRIMITIVES.has(type) || type === "Reroute")) return { linked: origin ?? null };
+    path[path.length - 1] = String(origin.id);
+    node = origin;
+    name = type === "Reroute" ? origin.inputs?.[0]?.name : "value";
   }
   return null;
 }
@@ -1066,7 +1080,7 @@ class SongHistoryPanel {
     if (what.plan && planners.length && !recorded) {
       return this.message("Choose a matching recorded Score node; multiple saved scores cannot be mapped automatically.", true);
     }
-    const done = [], missing = [];
+    const done = [], missing = [], linked = new Set();
     changeGraph(() => {
       const past = detail.settings;
       // Every source the current graph uses, set to the past value for its sampler.
@@ -1079,11 +1093,12 @@ class SongHistoryPanel {
           const publicValue = recorded && past.values[name].find(source => source.samplerId === recorded.id);
           // Into Lyrics + style, write the variant the run used; the instrumental flag is restored with it.
           const input = entry.classType === LYRICS_STYLE ? lyricsVariant(name, shown(past, "instrumental")?.value === true) : entry.input;
-          const node = setInput(root, entry.id, input, publicValue ? publicValue.value : pastValueFor(past, name, entry));
-          if (node) { set++; after?.(node, entry); }
+          const result = setInput(root, entry.id, input, publicValue ? publicValue.value : pastValueFor(past, name, entry));
+          if (result?.node) { set++; after?.(result.node, result.name); }
+          else if (result) linked.add(name);
         }
         if (set) done.push(label(set));
-        else missing.push(name);
+        else if (!linked.has(name)) missing.push(name);
       };
       if (what.plan && recorded && !isScore(target.node)) {
         restoreReference(target.node, recorded.plan);
@@ -1091,7 +1106,9 @@ class SongHistoryPanel {
       } else if (what.plan && recorded) {
         const values = normalizeValues(recorded.values);
         for (const [name,value] of Object.entries(values)) {
-          if (!setInput(root,target.id,name,value)) missing.push(name);
+          const result = setInput(root, target.id, name, value);
+          if (!result) missing.push(name);
+          else if (!result.node) linked.add(name);
         }
         showPlan(target.node); flashPlanner(target.node); done.push("Score widgets");
       }
@@ -1101,7 +1118,7 @@ class SongHistoryPanel {
       }
       if (what.seed) {
         restore("seed", (count) => `seed ${[...new Set(past.values.seed.map((entry) => entry.value))].join(" / ")} (fixed${count > 1 ? `, ${count} sources` : ""})`,
-          (node, entry) => fixControl(node, entry.input));
+          (node, name) => fixControl(node, name));
       }
       if (what.lyricsStyle) {
         restore("lyrics", () => "lyrics");
@@ -1115,14 +1132,19 @@ class SongHistoryPanel {
             ?? current.sampling.find((other) => other.class_type === entry.class_type);
           if (!target) continue;
           for (const [name, value] of Object.entries(entry.values)) {
-            if (name in target.values && !same(value, target.values[name]) && setInput(root, target.id, name, value)) changed++;
+            if (!(name in target.values) || same(value, target.values[name])) continue;
+            const result = setInput(root, target.id, name, value);
+            if (result?.node) changed++;
+            else if (result) linked.add(name);
           }
         }
         done.push(changed ? `${changed} sampling setting${changed === 1 ? "" : "s"}` : "sampling (already the same)");
       }
     });
     const text = done.length ? `Restored ${done.join(", ")}.` : "Nothing restored.";
-    this.message(missing.length ? `Not found in this workflow: ${missing.join(", ")}.` : done.length ? "" : text, missing.length > 0 || !done.length);
+    const problems = [missing.length && `Not found in this workflow: ${missing.join(", ")}.`,
+      linked.size && `Not restored, set by a linked node: ${[...linked].join(", ")}.`].filter(Boolean);
+    this.message(problems.length ? problems.join(" ") : done.length ? "" : text, problems.length > 0 || !done.length);
     this.compare();
   }
 

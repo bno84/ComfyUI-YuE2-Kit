@@ -10,7 +10,7 @@ const load = (sources, names, app = { registerExtension() {} }) =>
 
 const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,normalizeValues,applicable");
 const strip = load(["score_strip.js"], "shortLabel,sectionColor,sourceSummary");
-const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,resolvePlans,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceGaps,restoreReference,referenceTargets,scoreViews,showScore,SongHistoryPanel,planningText");
+const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,resolvePlans,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceGaps,restoreReference,referenceTargets,scoreViews,showScore,SongHistoryPanel,planningText,setInput");
 const transcribe = load(["reference_transcribe.js"], "buildTranscriptionPrompt");
 const lyricsStyle = load(["lyrics_style.js"], "variantInput,instrumentalPromptWarning,migrateSavedPair");
 const textbox = load(["reference_input.js", "score.js"], "bindReferenceTextbox");
@@ -361,6 +361,53 @@ test("only a reference without an opening repairs generated properties", () => {
   assert.equal(repaired({ anchor_use: true, opening_generate: true }), "generated");
   assert.equal(repaired({ anchor_use: false }), "generated");
   assert.equal(repaired({ anchor_use: true, header_mode: "locked" }), "locked");
+});
+
+test("restoring an input writes the primitive or subgraph widget that feeds it", () => {
+  const primitive = { id: 2, type: "PrimitiveNode", widgets: [{ name: "value", value: 0.9 }] };
+  const target = { id: 1, inputs: [{ name: "temperature", link: 42 }], widgets: [{ name: "temperature", value: 0.7 }] };
+  const graph = { _nodes: [target, primitive], links: { 42: { origin_id: 2, origin_slot: 0 } } };
+  target.graph = primitive.graph = graph;
+  assert.deepEqual(history.setInput(graph, "1", "temperature", 0.5), { node: primitive, name: "value" });
+  assert.deepEqual([value(primitive, "value"), value(target, "temperature")], [0.5, 0.7]);
+
+  // Through a reroute to a core primitive whose value is itself fed from the subgraph input.
+  const outer = { id: 5, inputs: [{ name: "heat", link: null }], widgets: [{ name: "heat", value: 1 }] };
+  const core = { id: 4, comfyClass: "PrimitiveFloat", inputs: [{ name: "value", link: 8 }], widgets: [{ name: "value", value: 2 }] };
+  const reroute = { id: 3, type: "Reroute", inputs: [{ name: "", link: 7 }], widgets: [] };
+  const inner = { id: 1, inputs: [{ name: "temperature", link: 6 }], widgets: [{ name: "temperature", value: 3 }] };
+  const sub = { _nodes: [inner, reroute, core], inputs: [{ name: "heat" }],
+    links: { 6: { origin_id: 3, origin_slot: 0 }, 7: { origin_id: 4, origin_slot: 0 }, 8: { origin_id: -10, origin_slot: 0 } } };
+  outer.subgraph = sub;
+  const root = { _nodes: [outer], links: {} };
+  outer.graph = root; inner.graph = reroute.graph = core.graph = sub;
+  assert.deepEqual(history.setInput(root, "5:1", "temperature", 0.4), { node: outer, name: "heat" });
+  assert.deepEqual([value(outer, "heat"), value(core, "value"), value(inner, "temperature")], [0.4, 2, 3]);
+
+  // A node that computes the value is reported, not overwritten behind it.
+  const math = { id: 2, type: "FloatMath", widgets: [{ name: "value", value: 0.9 }] };
+  graph._nodes[1] = math;
+  assert.deepEqual(history.setInput(graph, "1", "temperature", 0.1), { linked: math });
+  assert.deepEqual([value(math, "value"), value(target, "temperature")], [0.9, 0.7]);
+  assert.equal(history.setInput(graph, "1", "top_p", 0.1), null);
+});
+
+test("Restore all names Score settings a linked node controls", async () => {
+  const n = { ...node(state.SCORE_DEFAULTS), id: 1, comfyClass: "bno84.YuE2AdvancedScore" };
+  const math = { id: 2, type: "FloatMath", widgets: [] };
+  n.inputs = [{ name: "temperature", link: 42 }];
+  const graph = { _nodes: [n, math], links: { 42: { origin_id: 2, origin_slot: 0 } }, beforeChange() {}, afterChange() {} };
+  n.graph = math.graph = graph;
+  const mod = load(["score_strip.js", "score_state.js", "song_history.js"], "SongHistoryPanel,runSettings",
+    { registerExtension() {}, rootGraph: graph, graphToPrompt: async () => ({ output: {} }) });
+  const panel = Object.create(mod.SongHistoryPanel.prototype);
+  let message;
+  panel.open = "song"; panel.message = (text, error) => { message = { text, error }; }; panel.compare = () => {};
+  const values = { ...state.SCORE_DEFAULTS, temperature: 0.5, top_p: 0.8 };
+  panel.details = new Map([["song", { abc: "FINAL", settings: mod.runSettings({ 1: { class_type: "bno84.YuE2AdvancedScore", inputs: values } }) }]]);
+  await panel.restore({ plan: true }, { id: "1", node: n });
+  assert.deepEqual([value(n, "temperature"), value(n, "top_p")], [0.7, 0.8]);
+  assert.deepEqual(message, { text: "Not restored, set by a linked node: temperature.", error: true });
 });
 
 test("Lyrics + style keeps Base and Instrumental pairs and history follows the active one", () => {
