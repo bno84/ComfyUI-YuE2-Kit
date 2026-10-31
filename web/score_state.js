@@ -48,7 +48,8 @@ export function rangeSelection(total, start, end, side, from, to) {
 }
 export function applicable(v) {
   return {
-    ...Object.fromEntries(["header_tempo", "header_meter", "header_key", "header_unit"].map(n => [n, v.header_mode === "fixed"])),
+    header_tempo: v.header_mode === "fixed",
+    ...Object.fromEntries(["header_meter", "header_key", "header_unit"].map(n => [n, v.header_mode === "fixed" && !v.anchor_use])),
     opening_generate: v.anchor_use,
     ...Object.fromEntries(["opening_bars", "opening_hint", "opening_candidates", "opening_tokens"].map(n => [n, v.anchor_use && v.opening_generate])),
     anchor_abc: v.anchor_use, anchor_start: v.anchor_use, anchor_end: v.anchor_use,

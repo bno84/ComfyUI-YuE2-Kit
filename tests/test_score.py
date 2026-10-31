@@ -72,8 +72,6 @@ class ScoreTests(unittest.TestCase):
     def test_public_header_rules_fail_before_model_work(self):
         anchored = dict(anchor_use=True, anchor_abc=ANCHOR)
         for values, error in ((dict(header_mode="from anchor"), "requires Reference use"),
-                              (dict(anchored, header_mode="fixed", header_meter="3/4"), "meter"),
-                              (dict(anchored, header_mode="fixed", header_key="D major"), "key"),
                               (dict(anchored, header_mode="generated"), "needs an opening"),
                               (dict(anchored, header_mode="from anchor", opening_generate=True, opening_tokens=0), "at least 256")):
             with self.subTest(values=values), self.assertRaisesRegex(ValueError, error):
@@ -106,10 +104,24 @@ class ScoreTests(unittest.TestCase):
                 self.assertEqual(generate.call_count, 1)
                 self.assertIn("L:" + unit + "\n", abc)
                 self.assertTrue(all(line["given"] for line in detail["header"]))
-        with self.assertRaisesRegex(ValueError, "unit note length must equal"):
-            score.widgets_to_plan(dict(header_mode="fixed", header_unit="1/32", anchor_use=True, anchor_abc=ANCHOR))
         with self.assertRaises(ValueError):
             score.widgets_to_plan(dict(header_mode="fixed", header_unit="invalid"))
+
+    def test_fixed_header_inherits_locked_reference_fields_and_keeps_tempo(self):
+        # Stale or linked values in disabled controls do not affect the score.
+        values = dict(header_mode="fixed", anchor_use=True, anchor_abc=ANCHOR,
+                      header_meter="3/4", header_key="D minor", header_unit="1/32", header_tempo=110)
+        for ignored in ({}, dict(header_meter="invalid", header_key="invalid", header_unit="invalid")):
+            with self.subTest(ignored=ignored):
+                preview = score.preview(**dict(values, **ignored))
+                self.assertEqual(preview["errors"], [])
+                self.assertEqual(preview["header"]["fixed"], dict(M="4/4", K="C", L="1/16", Q="1/4=110"))
+                self.assertEqual(preview["header"]["policies"]["unit"]["policy"], "anchor")
+        # Disabling reference restores the independent fixed controls.
+        values["anchor_use"] = False
+        preview = score.preview(**values)
+        self.assertEqual(preview["errors"], [])
+        self.assertEqual(preview["header"]["fixed"], dict(M="3/4", K="Dm", L="1/32", Q="1/4=110"))
 
     def test_reference_labels_keep_legacy_workflows_compatible(self):
         values = dict(anchor_use=True, anchor_abc=ANCHOR)

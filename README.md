@@ -60,14 +60,14 @@ CFG controls acoustic diffusion.
 
 **Header mode** selects one policy for the whole header:
 
-- **generated**: model chooses the header. With an reference, an opening is required;
+- **generated**: model chooses the header. With a reference, an opening is required;
   meter and voice/unit declarations remain compatible, the opening's tempo is
   adopted across the reference, and key changes remain experimental for audio.
 - **fixed**: the visible tempo, meter, named key and **Unit note length** apply.
   Unit note length is ABC's `L:` field (for example, `1/32`); it is supplied directly,
-  with no separate model pass. With an reference,
-  meter, key and unit note length must match it; a differing tempo retimes it. Conflicts fail before
-  model work.
+  with no separate model pass. With a reference, meter, key and unit note length
+  come from the reference and their controls are disabled. Tempo stays editable;
+  a differing tempo retimes the reference.
 - **from reference**: requires Reference use and keeps its header, including the
   reference's `L:` line.
 
@@ -77,7 +77,7 @@ this is a chord-root/structural heuristic, so audition the join in ABC Preview.
 Opening controls have no effect with Reference use off.
 
 **Reference use** enables the **Reference ABC** source. Its section strip updates as you
-paste or edit, even if the current header conflicts. It shows the whole source with
+paste or edit. It shows the whole source with
 numbered bars; the selected range appears in the summary above it. Paste ABC, send it
 from Song history, or drop an `.abc` file on the node. Drop an audio or video file to
 transcribe it with SheetSage2 in the current **Mode**; **Open ABC or audio…** does the
@@ -97,8 +97,8 @@ handles, then **Use as reference**. Choose a destination when multiple YuE2 Scor
 or Reference input nodes are present. Only that node is updated. In Score, the
 selected ABC becomes the whole stored source with a reset range; header and
 sampling widgets retain their values. In Reference input, it selects ABC and
-keeps the Extend setting. A fixed
-header that conflicts with the new source produces a visible validation error.
+keeps the Extend setting. With a fixed header, meter, key and unit note length
+follow the reference; its tempo remains editable.
 **Use saved score** loads final ABC as-is, turns Opening/Continue off and explicitly
 selects from reference. **Restore lyrics + style** and **Restore seed (fixed)** restore
 those settings. **Restore all** also restores the Score widgets, including the

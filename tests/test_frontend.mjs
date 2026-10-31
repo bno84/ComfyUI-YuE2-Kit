@@ -137,3 +137,14 @@ test("unit note length is fixed-only and older Score widgets retain their values
   const settings = history.runSettings({ score: { class_type: "bno84.YuE2Score", inputs: { ...values, header_unit: "1/32" } } });
   assert.equal(settings.planners[0].values.header_unit, "1/32");
 });
+
+
+test("fixed headers with a reference disable meter, key and unit but retain tempo", () => {
+  const settings = { ...state.SCORE_DEFAULTS, header_mode: "fixed", anchor_use: true };
+  const enabled = state.applicable(settings);
+  assert.equal(enabled.header_tempo, true);
+  for (const name of ["header_meter", "header_key", "header_unit"]) {
+    assert.equal(enabled[name], false);
+    assert.equal(state.applicable({ ...settings, anchor_use: false })[name], true);
+  }
+});

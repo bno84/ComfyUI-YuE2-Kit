@@ -66,22 +66,20 @@ def widgets_to_plan(values):
     source = resolve_source(plan)
     anchor = cut_anchor(source, plan["anchor"])[0] if source is not None else None
     if mode == "fixed":
-        key = KEYS.get(v["header_key"])
-        if key is None:
-            raise ValueError("Header key must be a named major or minor key.")
+        plan["header"]["tempo"] = dict(policy="set", value=v["header_tempo"])
         if anchor is not None:
             state = anchor.bars[anchor.voices[0]][0].state
-            for field, value, name in (("M", v["header_meter"], "meter"), ("K", key, "key")):
-                if (({"C":"4/4", "C|":"2/2"}.get(value, value) != {"C":"4/4", "C|":"2/2"}.get(state[field], state[field])) if field == "M"
-                    else normalize_field(field, value) != normalize_field(field, state[field])):
-                    raise ValueError(f"Fixed header {name} must equal the reference's {name}; transposition and re-metering are not supported.")
-        for name, value in (("tempo", v["header_tempo"]), ("meter", v["header_meter"]), ("key", key)):
-            plan["header"][name] = dict(policy="anchor" if enabled and name != "tempo" else "set", value=value)
-        unit = single_line(v["header_unit"], "Unit note length", False)
-        normalize_field("L", unit)
-        if anchor is not None and normalize_field("L", unit) != note_unit(anchor):
-            raise ValueError("Fixed unit note length must equal the reference's; changing note lengths is not supported.")
-        plan["header"]["unit"] = dict(policy="set", value=unit)
+            for name, value in (("meter", state["M"]), ("key", state["K"]),
+                                ("unit", anchor.field("L") or str(note_unit(anchor)))):
+                plan["header"][name] = dict(policy="anchor", value=value)
+        else:
+            key = KEYS.get(v["header_key"])
+            if key is None:
+                raise ValueError("Header key must be a named major or minor key.")
+            unit = single_line(v["header_unit"], "Unit note length", False)
+            normalize_field("L", unit)
+            for name, value in (("meter", v["header_meter"]), ("key", key), ("unit", unit)):
+                plan["header"][name] = dict(policy="set", value=value)
     elif mode == "generated":
         for name in ("tempo", "key"):
             plan["header"][name]["policy"] = "free"
