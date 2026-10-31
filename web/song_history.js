@@ -348,7 +348,11 @@ function styles() {
 .yue2-history .h-row {display:grid;grid-template-columns:22px 96px minmax(0,1fr) 38px;gap:8px;align-items:center;padding:4px;border-bottom:1px solid var(--border-color,#444);cursor:pointer;}
 .yue2-history .h-row:hover {background:#ffffff0a;}
 .yue2-history .h-row.open {background:#3d4a5c;border-radius:4px 4px 0 0;border-bottom-color:transparent;}
-.yue2-history .h-play {width:22px;height:22px;padding:0;border-radius:50%;font-size:9px;line-height:20px;text-align:center;}
+.yue2-history button.h-icon {display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;padding:0;line-height:1;flex:none;}
+.yue2-history .h-icon svg {display:block;width:12px;height:12px;flex:none;}
+.yue2-history .h-play {width:22px;height:22px;border-radius:50%;}
+.yue2-history .h-refresh {width:28px;align-self:stretch;}
+.yue2-history .h-refresh svg {width:14px;height:14px;}
 .yue2-history .h-play.on {background:var(--p-button-primary-background,#405c83);border-color:transparent;}
 .yue2-history .h-name {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .yue2-history .h-name b {font-weight:600;}
@@ -413,6 +417,28 @@ function button(text, onClick, className = "") {
   node.type = "button";
   node.onclick = (event) => { event.stopPropagation(); onClick(event); };
   return node;
+}
+
+// SVG geometry avoids font-dependent baselines and uneven symbol spacing.
+function setIcon(button, kind) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS(svg.namespaceURI, "path");
+  path.setAttribute("d", {
+    play: "M8 5 19 12 8 19Z",
+    pause: "M6 5H10V19H6Z M14 5H18V19H14Z",
+    refresh: "M20 7V3 M20 7H16 M20 7A9 9 0 1 0 21 14",
+  }[kind]);
+  path.setAttribute("fill", kind === "refresh" ? "none" : "currentColor");
+  if (kind === "refresh") {
+    path.setAttribute("stroke", "currentColor");
+    path.setAttribute("stroke-width", "2");
+    path.setAttribute("stroke-linecap", "round");
+    path.setAttribute("stroke-linejoin", "round");
+  }
+  svg.append(path);
+  button.replaceChildren(svg);
 }
 
 // Hatching over the bars after the audio stops, when the render was cut short.
@@ -496,7 +522,9 @@ class SongHistoryPanel {
     this.filter.placeholder = "Filter by name, style or lyrics…";
     this.filter.setAttribute("aria-label", "Filter songs");
     this.filter.oninput = () => { clearTimeout(this.filterTimer); this.filterTimer = setTimeout(() => this.load(), 250); };
-    const refresh = button("↻", () => this.load("refresh"));
+    const refresh = button("", () => this.load("refresh"), "h-icon h-refresh");
+    setIcon(refresh, "refresh");
+    refresh.setAttribute("aria-label", "Refresh the list");
     refresh.title = "Refresh the list";
     bar.append(this.filter, refresh);
     this.list = element("div", "h-list");
@@ -551,7 +579,8 @@ class SongHistoryPanel {
     else if (!this.songs.length) items.push(element("div", "h-note", this.filter.value ? "No songs match." : "No saved FLAC + ABC songs yet."));
     for (const song of this.songs) {
       const row = element("div", "h-row");
-      const play = button("▶", () => this.togglePlay(song), "h-play");
+      const play = button("", () => this.togglePlay(song), "h-icon h-play");
+      setIcon(play, "play");
       play.setAttribute("aria-label", `Play ${song.name}`);
       const name = element("div", "h-name");
       name.title = song.path;
@@ -606,7 +635,8 @@ class SongHistoryPanel {
     for (const [path, parts] of this.rows ?? []) {
       const on = path === this.playing && !this.audio.paused;
       parts.play.classList.toggle("on", on);
-      parts.play.textContent = on ? "❚❚" : "▶";
+      setIcon(parts.play, on ? "pause" : "play");
+      parts.play.setAttribute("aria-label", `${on ? "Pause" : "Play"} ${this.songs.find(song => song.path === path)?.name ?? "song"}`);
       parts.progress.hidden = path !== this.playing;
     }
     this.updateProgress();
