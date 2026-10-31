@@ -86,7 +86,7 @@ class ScoreTests(unittest.TestCase):
         self.assertIn(("V", ' Vocal clef=treble name="Vocal Melody" snm="Vocal"'), spec)
         # A fixed tempo may differ from the anchor's: that retimes it.
         plan = score.widgets_to_plan(dict(anchored, header_mode="locked", header_tempo=90))
-        self.assertEqual(plan["header"]["tempo"], dict(policy="set", value=90))
+        self.assertEqual(plan["header"]["tempo"], dict(policy="locked", value=90))
 
     def test_fixed_and_reference_units_do_not_generate_header_lines(self):
         for values, unit in ((dict(header_mode="locked", header_unit="1/32"), "1/32"),
@@ -116,7 +116,7 @@ class ScoreTests(unittest.TestCase):
                 preview = score.preview(**dict(values, **ignored))
                 self.assertEqual(preview["errors"], [])
                 self.assertEqual(preview["header"]["fixed"], dict(M="4/4", K="C", L="1/16", Q="1/4=110"))
-                self.assertEqual(preview["header"]["policies"]["unit"]["policy"], "anchor")
+                self.assertEqual(preview["header"]["policies"]["unit"]["policy"], "reference")
         # Disabling reference restores the independent fixed controls.
         values["anchor_use"] = False
         preview = score.preview(**values)
@@ -238,6 +238,28 @@ class ScoreTests(unittest.TestCase):
         self.assertTrue(result["errors"])
         self.assertEqual(score.derive_seed(1, "opening", 0), score.derive_seed(1, "opening", 0))
         self.assertNotEqual(score.derive_seed(1, "opening", 0), score.derive_seed(1, "opening", 1))
+
+
+class PreviewPlanTests(unittest.TestCase):
+    """Song history reads these plan fields; see the plan helper in test_frontend.mjs."""
+
+    def test_preview_returns_the_plan_in_score_property_terms(self):
+        plan = score.preview(anchor_use=True, anchor_abc=ANCHOR, header_mode="locked", header_tempo=90,
+                             opening_generate=True, anchor_start=2, continue_generate=False)["plan"]
+        self.assertEqual(plan["source"], dict(kind="abc", abc=ANCHOR))
+        self.assertEqual(plan["anchor"], dict(start=1, end=None))
+        self.assertEqual(plan["opening"]["bars"], 8)
+        self.assertFalse(plan["continuation"]["enabled"])
+        self.assertEqual({name: field["policy"] for name, field in plan["header"].items()},
+                         dict(tempo="locked", meter="reference", key="reference", unit="reference"))
+        fresh = score.preview()["plan"]
+        self.assertEqual(fresh["source"]["kind"], "none")
+        self.assertEqual(fresh["header"]["tempo"]["policy"], "generated")
+
+    def test_invalid_settings_have_no_plan(self):
+        result = score.preview(anchor_use=True, anchor_abc=ANCHOR, header_mode="generated")
+        self.assertIsNone(result["plan"])
+        self.assertEqual(result["errors"], ["Generated tempo needs an opening."])
 
 
 if __name__ == "__main__":

@@ -8,13 +8,21 @@ const read = (name) => readFileSync(new URL(`../web/${name}`, import.meta.url), 
 const load = (sources, names, app = { registerExtension() {} }) =>
   new Function("app", "api", sources.map(read).join("\n") + `\nreturn {${names}};`)(app, {});
 
-const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,valuesPlan,applicable,restoreLegacyWidgets,migrateScoreWorkflow");
+const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,normalizeValues,applicable,restoreLegacyWidgets,migrateScoreWorkflow");
 const strip = load(["score_strip.js"], "shortLabel,sectionColor,sourceSummary");
-const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceGaps,restoreReference,referenceTargets,scoreViews,showScore,SongHistoryPanel,planningText");
+const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,resolvePlans,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceGaps,restoreReference,referenceTargets,scoreViews,showScore,SongHistoryPanel,planningText");
 const transcribe = load(["reference_transcribe.js"], "buildTranscriptionPrompt");
 const textbox = load(["reference_input.js", "score.js"], "bindReferenceTextbox");
 const node = (values) => ({ widgets: Object.entries(values).map(([name, value]) => ({ name, value })), inputs: [], graph: { setDirtyCanvas() {} } });
 const value = (n, name) => n.widgets.find((w) => w.name === name).value;
+// The shape of a plan from the Python planner (see test_score.py).
+const plan = ({ source = "abc", opening = 0, continuation = true, start = 0, end = null, tempo = "reference" } = {}) => ({
+  source: { kind: source, abc: source === "none" ? "" : "SOURCE" }, anchor: { start, end }, opening: { bars: opening },
+  continuation: { enabled: continuation }, header: { tempo: { policy: tempo } } });
+const planned = (entry) => ({ planners: [{ id: "1", error: "", planError: "", ...entry }], reference: null });
+
+// What resolvePlans attaches to a recorded Score node once the planner answers.
+const withPlan = (settings, value) => { settings.planners[0].plan = value; return settings; };
 
 test("Score widgets: range drag, applicability and plan view", () => {
   assert.deepEqual(state.rangeSelection(16, 1, 16, null, 5.8, 2.1), [3, 6]);
@@ -24,7 +32,7 @@ test("Score widgets: range drag, applicability and plan view", () => {
   assert.equal(fresh.opening_generate, false);
   const n = node(state.SCORE_DEFAULTS);
   state.setValues(n, { anchor_use: true, anchor_abc: "ABC", anchor_start: 3, anchor_end: 7 });
-  assert.deepEqual(state.valuesPlan(state.readValues(n)).anchor, { start: 2, end: 7 });
+  assert.deepEqual([value(n, "anchor_start"), value(n, "anchor_end")], [3, 7]);
 });
 
 test("strip labels shorten on word boundaries and the summary stays in words", () => {
@@ -104,7 +112,7 @@ test("Restore all refuses saved Score features for Reference input before changi
   panel.open = "song";
   const prompt = { score: { class_type: "bno84.YuE2AdvancedScore", inputs: { ...state.SCORE_DEFAULTS,
     header_mode: "reference", anchor_use: true, anchor_abc: "SOURCE", opening_generate: true } } };
-  panel.details = new Map([["song", { abc: "FINAL", settings: mod.runSettings(prompt) }]]);
+  panel.details = new Map([["song", { abc: "FINAL", settings: withPlan(mod.runSettings(prompt), plan({ opening: 8 })) }]]);
   let message;
   panel.message = (text, error) => { message = { text, error }; };
   panel.compare = () => {};
@@ -164,7 +172,6 @@ test("opening defaults to 768 tokens and enables the configured candidate count"
   assert.equal(state.applicable({ ...v, opening_generate: false }).opening_candidates, false);
   assert.equal(state.SCORE_DEFAULTS.opening_candidates, 4);
   assert.equal(state.applicable(v).opening_tokens, true);
-  assert.equal(state.valuesPlan(v).opening.attempts, 1);
 });
 
 
@@ -236,12 +243,12 @@ test("history shows the same selection in both ABC views and reports failures", 
 
 
 test("Planning describes generated and reference stages", () => {
-  const current = values => history.runSettings({ 1: { class_type: "bno84.YuE2AdvancedScore", inputs: { ...state.SCORE_DEFAULTS, ...values } } });
-  for (const opening_generate of [false, true]) for (const continue_generate of [false, true]) {
-    assert.equal(history.planningText(current({ anchor_use: false, opening_generate, continue_generate })), "Generated");
-    const expected = (opening_generate ? "Opening + reference" : "Reference") + (continue_generate ? " + continuation" : "");
-    assert.equal(history.planningText(current({ anchor_use: true, opening_generate, continue_generate })), expected);
+  for (const opening of [0, 8]) for (const continuation of [false, true]) {
+    assert.equal(history.planningText(planned({ plan: plan({ source: "none", opening, continuation }) })), "Generated");
+    const expected = (opening ? "Opening + reference" : "Reference") + (continuation ? " + continuation" : "");
+    assert.equal(history.planningText(planned({ plan: plan({ opening, continuation }) })), expected);
   }
+  assert.equal(history.planningText(planned({ plan: null, planError: "Generated tempo needs an opening." })), "-");
   for (const source of ["None", "ABC", "Transcribe"]) for (const extend of [false, true]) {
     assert.equal(history.planningText({ planners: [], reference: { source, extend } }),
       source === "None" ? "Generated" : source + (extend ? " + continuation" : ""));
@@ -305,17 +312,15 @@ test("Score state normalizes reference updates before widget callbacks", () => {
 
 
 test("Restore all maps plans Reference input can hold and names what it cannot", async () => {
-  const plan = (inputs) => history.runSettings({ 1: { class_type: "bno84.YuE2AdvancedScore",
-    inputs: { ...state.SCORE_DEFAULTS, header_mode: "reference", anchor_use: true, anchor_abc: "SOURCE", ...inputs } } }).planners[0].plan;
-  assert.deepEqual(history.referenceGaps(plan({})), []);
-  assert.deepEqual(history.referenceGaps(plan({ opening_generate: true, anchor_start: 3, anchor_end: 8, header_mode: "locked" })),
+  assert.deepEqual(history.referenceGaps(plan()), []);
+  assert.deepEqual(history.referenceGaps(plan({ opening: 8, start: 2, end: 8, tempo: "locked" })),
     ["an opening", "bars 3–8 of the reference", "locked properties"]);
-  assert.deepEqual(history.referenceGaps(plan({ anchor_use: false, anchor_start: 3 })), []);
+  assert.deepEqual(history.referenceGaps(plan({ source: "none", start: 2 })), []);
 
   const reference = { ...node({ source: "None", abc: "OLD", extend: false }), id: 1, comfyClass: "bno84.ReferenceInput" };
-  history.restoreReference(reference, plan({ continue_generate: true }));
+  history.restoreReference(reference, plan({ continuation: true }));
   assert.deepEqual(["source", "abc", "extend"].map(name => value(reference, name)), ["ABC", "SOURCE", true]);
-  history.restoreReference(reference, plan({ anchor_use: false }));
+  history.restoreReference(reference, plan({ source: "none" }));
   assert.equal(value(reference, "source"), "None");
   assert.equal(value(reference, "abc"), "SOURCE");
 });
@@ -333,7 +338,8 @@ test("several destinations open a menu that disables those that cannot take the 
     let message;
     panel.open = "song"; panel.message = (text, error) => { message = { text, error }; }; panel.compare = () => {};
     const inputs = { ...state.SCORE_DEFAULTS, header_mode: "reference", anchor_use: true, anchor_abc: "SOURCE", opening_generate: true };
-    panel.details = new Map([["song", { abc: "FINAL", settings: mod.runSettings({ 9: { class_type: "bno84.YuE2AdvancedScore", inputs } }) }]]);
+    const settings = withPlan(mod.runSettings({ 9: { class_type: "bno84.YuE2AdvancedScore", inputs } }), plan({ opening: 8 }));
+    panel.details = new Map([["song", { abc: "FINAL", settings }]]);
     const event = { type: "click" };
     panel.restoreAll(event);
     assert.equal(menus.length, 1);
@@ -355,4 +361,33 @@ test("several destinations open a menu that disables those that cannot take the 
   } finally {
     delete globalThis.LiteGraph;
   }
+});
+
+test("saved plans come from the Python planner, with the UI action's mode repair", async () => {
+  const settings = history.runSettings({
+    1: { class_type: "bno84.YuE2AdvancedScore", inputs: { ...state.SCORE_DEFAULTS, anchor_use: true, anchor_abc: "ABC" } },
+    2: { class_type: "bno84.YuE2AdvancedScore", inputs: { ...state.SCORE_DEFAULTS } } });
+  assert.deepEqual(settings.planners.map(entry => entry.plan), [null, null]);
+  const sent = [];
+  await history.resolvePlans(settings, async (url, request) => {
+    const values = JSON.parse(request.body);
+    sent.push([url, values.header_mode]);
+    const ok = values.anchor_use;
+    return { ok: true, json: async () => ok ? { plan: plan(), errors: [] } : { plan: null, errors: ["Bad settings."] } };
+  });
+  assert.deepEqual(sent, [["/yue2-kit/score/preview", "reference"], ["/yue2-kit/score/preview", "generated"]]);
+  assert.deepEqual(settings.planners[0].plan, plan());
+  assert.equal(settings.planners[1].plan, null);
+  assert.equal(settings.planners[1].planError, "Bad settings.");
+  assert.equal(settings.planners[1].error, "");
+  await history.resolvePlans(settings, async () => { throw Error("offline"); });
+  assert.match(settings.planners[0].planError, /offline/);
+});
+
+test("only a reference without an opening repairs generated properties", () => {
+  const repaired = values => state.normalizeValues({ ...state.SCORE_DEFAULTS, ...values }).header_mode;
+  assert.equal(repaired({ anchor_use: true }), "reference");
+  assert.equal(repaired({ anchor_use: true, opening_generate: true }), "generated");
+  assert.equal(repaired({ anchor_use: false }), "generated");
+  assert.equal(repaired({ anchor_use: true, header_mode: "locked" }), "locked");
 });

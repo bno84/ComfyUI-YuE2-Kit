@@ -29,7 +29,7 @@ class PlanTests(unittest.TestCase):
             plan = s.default_plan(source)
             plan["source"].update(kind="abc" if source else "none", abc=ABC if source else "")
             s.plan_from(plan)
-            for name, policy in (("meter", "free" if source else "anchor"), ("key", "set" if source else "anchor")):
+            for name, policy in (("meter", "generated" if source else "reference"), ("key", "locked" if source else "reference")):
                 bad = copy.deepcopy(plan)
                 bad["header"][name]["policy"] = policy
                 with self.assertRaises(ValueError):

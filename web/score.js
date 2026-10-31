@@ -128,20 +128,20 @@ export class ScorePanel {
     header.style.cssText="flex:0 0 150px;min-width:0;font:11px/18px sans-serif;border-right:1px solid #78889a55;padding-right:8px;box-sizing:border-box";
     const fixed=data?.header?.fixed ?? {}, policies=data?.header?.policies ?? {};
     for (const [label,field,name] of [["Tempo","Q","tempo"],["Meter","M","meter"],["Key","K","key"]]) {
-      const policy=policies[name]?.policy ?? (v.header_mode==="locked" ? "set" : v.header_mode==="reference" ? "anchor" : "free");
-      const mode={set:"locked",anchor:"reference",free:"generated"}[policy];
-      const raw=fixed[field] ?? (policy==="set" ? {Q:v.header_tempo,M:v.header_meter,L:v.header_unit,K:v.header_key}[field] : null);
+      // Policies use the Score properties values: generated, locked or reference.
+      const policy=policies[name]?.policy ?? v.header_mode;
+      const raw=fixed[field] ?? (policy==="locked" ? {Q:v.header_tempo,M:v.header_meter,L:v.header_unit,K:v.header_key}[field] : null);
       const value=label==="Key" ? (raw ? keyWords(String(raw)) : "model") : label==="Tempo" ? (data?.timing?.bpm ?? raw ?? "model") : (raw ?? "model");
       const row=element("div"); row.style.cssText="display:flex;gap:4px;white-space:nowrap";
-      const text=element(policy==="set" ? "strong" : "span", String(value));
+      const text=element(policy==="locked" ? "strong" : "span", String(value));
       text.style.cssText="min-width:0;overflow:hidden;text-overflow:ellipsis";
-      row.title=`${label} ${value} · ${mode}`;
+      row.title=`${label} ${value} · ${policy}`;
       row.append(element("span",label),text);
       if (field === "Q" && value !== "model") row.append(element("span","BPM"));
       if (field === "M") {
         const unitPolicy = policies.unit?.policy ?? policy;
-        const unit = fixed.L ?? (unitPolicy === "set" ? v.header_unit : "model");
-        row.append(element("span","· unit"),element(unitPolicy === "set" ? "strong" : "span",String(unit)));
+        const unit = fixed.L ?? (unitPolicy === "locked" ? v.header_unit : "model");
+        row.append(element("span","· unit"),element(unitPolicy === "locked" ? "strong" : "span",String(unit)));
         row.title += `; Unit note length ${unit}`;
       }
       header.append(row);

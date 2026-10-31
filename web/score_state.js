@@ -24,12 +24,11 @@ export function readValues(node) {
   return Object.fromEntries(Object.keys(SCORE_DEFAULTS).map(name =>
     [name, node.widgets?.find(w => w.name === name)?.value ?? SCORE_DEFAULTS[name]]));
 }
-// Normalize a complete Score configuration before applying a batch of changes.
-// Referenced scores can generate tempo/key only when generating an opening.
+// UI actions only: when an action turns on a reference without an opening,
+// generated properties would fail, so the action takes them from the reference.
+// The Python planner itself never changes settings; it rejects invalid ones.
 export function normalizeValues(values) {
-  const plan = valuesPlan(values);
-  return plan.source.kind !== "none" && !plan.opening.bars
-    && [plan.header.tempo, plan.header.key].some(field => field.policy === "free")
+  return values.anchor_use && !values.opening_generate && values.header_mode === "generated"
     ? {...values, header_mode:"reference"} : values;
 }
 
@@ -45,16 +44,6 @@ export function setValues(node, values) {
   // Callbacks must see the complete configuration, including any repaired mode.
   for (const widget of changed) widget.callback?.(widget.value);
   node.yue2ScorePanel?.refresh(); node.graph?.setDirtyCanvas(true, true);
-}
-// Internal representation for history descriptions, never a serialized widget.
-export function valuesPlan(v) {
-  const policy = v.header_mode === "locked" ? "set" : v.header_mode === "reference" ? "anchor" : "free";
-  const key = v.header_key.replace(" major", "").replace(" minor", "m");
-  return {version: 1, source: {kind: v.anchor_use ? "abc" : "none", abc: v.anchor_abc},
-    anchor: {start: v.anchor_start - 1, end: v.anchor_end || null},
-    opening: {bars: v.anchor_use && v.opening_generate ? v.opening_bars : 0, label: v.opening_hint, attempts: v.opening_candidates},
-    continuation: {enabled: !v.anchor_use || v.continue_generate},
-    header: Object.fromEntries([["tempo", v.header_tempo], ["meter", v.header_meter], ["key", key], ["unit", v.header_unit]].map(([name,value]) => [name,{policy,value}]))};
 }
 export function rangeSelection(total, start, end, side, from, to) {
   const clamp = n => Math.max(0, Math.min(total - 1, Math.floor(n)));

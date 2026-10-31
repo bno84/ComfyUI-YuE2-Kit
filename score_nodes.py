@@ -303,10 +303,9 @@ def result_payload(abc, data, context, facts, lyrics, style, mode, seed):
               dict(stage="continuation", start=opening + anchor, end=bars)])
     cut = facts["cut"]
     cut_text = f"bars {cut['start'] + 1}–{cut['end']}" if cut else "none"
-    property_names = dict(anchor="reference", set="locked", free="generated")
     lines = [f"Mode: {mode}. Source: {facts['source']}. Cut: {cut_text}.",
              "Stages: " + ", ".join(f"{'reference' if s['stage'] == 'anchor' else s['stage']} {s['end'] - s['start']} bars" for s in spans) + ".",
-             "Score properties: " + ", ".join(f"{name} {property_names[field['policy']]}" for name, field in facts["header"].items()) + ".",
+             "Score properties: " + ", ".join(f"{name} {field['policy']}" for name, field in facts["header"].items()) + ".",
              "Effective score properties: " + ", ".join(f"{name}:{value}" for name, value in splice.parse(abc).bars[analysis["voices"][0]][0].state.items()) + "."]
     details = data.get("candidates", []) or ([data["fresh"]] if "fresh" in data else [])
     for detail in details:
@@ -457,7 +456,7 @@ class YuE2AdvancedScore(io.ComfyNode):
             else:
                 opening, data, context = "", dict(opening_bars=0, diagnostics=[]), None
             joined = graph.node("bno84.ScoreJoin", "join", anchor=anchor_abc, opening=opening, data=data,
-                                tempo=fixed["Q"] if not plan["opening"]["bars"] and plan["header"]["tempo"]["policy"] == "set" else "")
+                                tempo=fixed["Q"] if not plan["opening"]["bars"] and plan["header"]["tempo"]["policy"] == "locked" else "")
             final, data = joined.out(0), joined.out(1)
             if plan["continuation"]["enabled"]:
                 settings = dict(budget=plan["continuation"]["max_tokens"] or 8192, sampling=sampling, fixed=fixed)

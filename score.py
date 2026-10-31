@@ -20,7 +20,7 @@ def default_plan(source=False):
                 anchor=dict(start=0, end=None),
                 opening=dict(bars=0, label="intro", attempts=4, max_tokens=0),
                 continuation=dict(enabled=True, max_tokens=8192),
-                header={name: dict(policy="anchor" if source else "free", value=value)
+                header={name: dict(policy="reference" if source else "generated", value=value)
                         for name, value in (("tempo", 120), ("meter", "4/4"), ("key", "C"))})
 
 
@@ -66,12 +66,12 @@ def widgets_to_plan(values):
     source = resolve_source(plan)
     anchor = cut_anchor(source, plan["anchor"])[0] if source is not None else None
     if mode == "locked":
-        plan["header"]["tempo"] = dict(policy="set", value=v["header_tempo"])
+        plan["header"]["tempo"] = dict(policy="locked", value=v["header_tempo"])
         if anchor is not None:
             state = anchor.bars[anchor.voices[0]][0].state
             for name, value in (("meter", state["M"]), ("key", state["K"]),
                                 ("unit", anchor.field("L") or str(note_unit(anchor)))):
-                plan["header"][name] = dict(policy="anchor", value=value)
+                plan["header"][name] = dict(policy="reference", value=value)
         else:
             key = KEYS.get(v["header_key"])
             if key is None:
@@ -79,10 +79,10 @@ def widgets_to_plan(values):
             unit = single_line(v["header_unit"], "Unit note length", False)
             normalize_field("L", unit)
             for name, value in (("meter", v["header_meter"]), ("key", key), ("unit", unit)):
-                plan["header"][name] = dict(policy="set", value=value)
+                plan["header"][name] = dict(policy="locked", value=value)
     elif mode == "generated":
         for name in ("tempo", "key"):
-            plan["header"][name]["policy"] = "free"
+            plan["header"][name]["policy"] = "generated"
         # Meter and voice/unit declarations remain joinable with fixed material.
     plan["sampling"] = sampling_from({name: v[name] for name in
         ("temperature", "top_p", "top_k", "repetition_penalty", "penalty_window")})
@@ -131,11 +131,12 @@ def plan_from(value):
         continuation["max_tokens"] = integer(continuation["max_tokens"], 0, 20000, "Continuation budget")
         if not has_source and not continuation["enabled"]:
             raise ValueError("Source none requires whole-score generation.")
-        header.setdefault("unit", dict(policy="anchor" if has_source else
-            "set" if header["meter"]["policy"] == "set" else "free", value="1/16"))
+        header.setdefault("unit", dict(policy="reference" if has_source else
+            "locked" if header["meter"]["policy"] == "locked" else "generated", value="1/16"))
         for name in ("tempo", "meter", "key", "unit"):
             field = header[name]
-            allowed = (("anchor", "set") if name == "unit" else ("anchor", "set", "free") if name == "tempo" else ("anchor", "free") if name == "key" else ("anchor",)) if has_source else ("set", "free")
+            allowed = (("reference", "locked") if name == "unit" else ("reference", "locked", "generated") if name == "tempo"
+                       else ("reference", "generated") if name == "key" else ("reference",)) if has_source else ("locked", "generated")
             if not isinstance(field, dict) or field["policy"] not in allowed:
                 raise ValueError(f"Invalid {name} policy for this source.")
             value = field["value"]
@@ -150,8 +151,8 @@ def plan_from(value):
         raise ValueError("Incomplete Score plan.") from error
     if has_source and opening["bars"] == 0:
         for name in ("tempo", "key"):
-            if header[name]["policy"] == "free":
-                raise ValueError(f"Free {name} needs an opening.")
+            if header[name]["policy"] == "generated":
+                raise ValueError(f"Generated {name} needs an opening.")
     return plan
 
 
@@ -232,11 +233,11 @@ def resolve_header(plan, anchor=None):
     result = {}
     for field, name in (("M", "meter"), ("Q", "tempo"), ("K", "key"), ("L", "unit")):
         policy = plan["header"][name]
-        if policy["policy"] == "anchor":
+        if policy["policy"] == "reference":
             if anchor is None:
                 raise ValueError("A reference policy requires a reference score.")
             result[field] = (anchor.field("L") or str(note_unit(anchor))) if field == "L" else state[field] or ("1/4=120" if field == "Q" else state[field])
-        elif policy["policy"] == "set":
+        elif policy["policy"] == "locked":
             result[field] = f"1/4={policy['value']:g}" if field == "Q" else policy["value"]
         else:
             result[field] = None
@@ -277,8 +278,8 @@ def validate_header_line(field, value):
 
 
 def header_diagnostics(plan, anchor=None):
-    if anchor is not None and plan["header"]["key"]["policy"] == "free":
-        return [diagnostic("opening", "key_experimental", "Key free is experimental: the audio may not follow the key change.")]
+    if anchor is not None and plan["header"]["key"]["policy"] == "generated":
+        return [diagnostic("opening", "key_experimental", "Generated key is experimental: the audio may not follow the key change.")]
     return []
 
 
@@ -407,8 +408,12 @@ def source_facts(score):
 
 
 def preview(plan=None, **widgets):
-    """CPU-only editor facts. Unknown generated lengths/fields stay null."""
-    result = dict(version=1, source=None, anchor=None, header=None, spans=[], diagnostics=[], errors=[])
+    """CPU-only editor facts. Unknown generated lengths/fields stay null.
+
+    `plan` is the canonical plan the widgets resolve to, so the browser
+    describes and restores runs without its own copy of these rules.
+    """
+    result = dict(version=1, plan=None, source=None, anchor=None, header=None, spans=[], diagnostics=[], errors=[])
     # The source strip describes the pasted score independently of plan validity.
     # Header/range conflicts must not erase the very source needed to fix them.
     try:
@@ -467,6 +472,7 @@ def preview(plan=None, **widgets):
             fixed = resolve_header(plan)
             bpm = normalize_field("Q", fixed["Q"]) if fixed["Q"] else None
             result["timing"] = dict(seconds=None, bpm=bpm, final_tempo_model_chosen=bpm is None)
+        result["plan"] = plan
     except (ValueError, TypeError, KeyError, ZeroDivisionError) as error:
         result["errors"].append(str(error))
     return result

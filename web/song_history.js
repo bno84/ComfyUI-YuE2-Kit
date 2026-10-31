@@ -5,7 +5,7 @@
 // FLAC embeds.
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { SCORE_DEFAULTS, readValues, setValues, valuesPlan, normalizeValues } from "./score_state.js";
+import { SCORE_DEFAULTS, readValues, setValues, normalizeValues } from "./score_state.js";
 
 import {fillStrip, barAxis, selectionOverlay, releaseStrip, sectionColor} from "./score_strip.js";
 
@@ -80,8 +80,8 @@ export function runSettings(prompt) {
       const values = Object.fromEntries(Object.entries(SCORE_DEFAULTS).map(([name, fallback]) => [name, resolveInput(prompt,id,name)?.value ?? fallback]));
       let error = "";
       if (!("header_mode" in inputs)) error = "Original standard-widget Score settings are unavailable.";
-      const plan = valuesPlan(values);
-      settings.planners.push({id, plan, values, mode: values.mode, error, source: plan.source});
+      // The plan comes from the Python planner: see resolvePlans.
+      settings.planners.push({id, plan: null, planError: "", values, mode: values.mode, error});
       if (!error) settings.sampling.push({id, class_type:SCORE, values:Object.fromEntries(Object.keys(SCORE_SAMPLING).map(name => [name, values[name]]))});
     } else if (SAMPLERS.includes(node.class_type)) {
       const values = Object.fromEntries(Object.entries(inputs).filter(([name, value]) => !RESTORED.includes(name) && scalar(value)));
@@ -89,6 +89,25 @@ export function runSettings(prompt) {
     }
   }
   settings.sampling.sort((a, b) => SAMPLERS.indexOf(a.class_type) - SAMPLERS.indexOf(b.class_type));
+  return settings;
+}
+
+// The plan each recorded Score node resolves to, from the Python planner,
+// which owns these rules. Restore applies normalizeValues, so resolve those values.
+export async function resolvePlans(settings, fetchApi = (...args) => api.fetchApi(...args)) {
+  await Promise.all(settings.planners.filter(entry => !entry.error).map(async entry => {
+    try {
+      const response = await fetchApi("/yue2-kit/score/preview", {method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(normalizeValues(entry.values))});
+      const data = await response.json();
+      if (!response.ok) throw Error(data.error ?? `Score preview failed (${response.status}).`);
+      entry.plan = data.plan ?? null;
+      entry.planError = data.plan ? "" : (data.errors ?? []).join(" ") || "The planner rejected these settings.";
+    } catch (error) {
+      entry.plan = null;
+      entry.planError = `Cannot read the saved plan: ${error.message ?? error}`;
+    }
+  }));
   return settings;
 }
 
@@ -276,7 +295,7 @@ export function referenceGaps(plan) {
   const {anchor} = plan;
   return [plan.opening.bars > 0 && "an opening",
     plan.source.kind !== "none" && (anchor.start > 0 || anchor.end) && `bars ${anchor.start + 1}–${anchor.end ?? "end"} of the reference`,
-    plan.header.tempo.policy === "set" && "locked properties"].filter(Boolean);
+    plan.header.tempo.policy === "locked" && "locked properties"].filter(Boolean);
 }
 
 export function restoreReference(node, plan) {
@@ -674,7 +693,7 @@ class SongHistoryPanel {
         const response = await api.fetchApi(`/yue2-kit/history/song?${new URLSearchParams({ path: song.path })}`);
         const detail = await response.json();
         if (!response.ok) throw new Error(detail.error ?? `Cannot open ${song.name} (${response.status}).`);
-        detail.settings = runSettings(detail.prompt);
+        detail.settings = await resolvePlans(runSettings(detail.prompt));
         this.details.set(song.path, detail);
       } catch (error) {
         this.details.delete(song.path);
@@ -871,6 +890,7 @@ class SongHistoryPanel {
   // Score holds any saved plan; Reference input only a whole-reference plan without an opening or locked properties.
   planBlock(node, recorded) {
     if (isScore(node) || !recorded || recorded.error) return "";
+    if (!recorded.plan) return `can't hold a plan the planner cannot read (${recorded.planError})`;
     const gaps = referenceGaps(recorded.plan);
     return gaps.length ? `can't hold ${gaps.join(", ")}` : "";
   }
