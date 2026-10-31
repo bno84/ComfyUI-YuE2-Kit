@@ -12,6 +12,7 @@ const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rang
 const strip = load(["score_strip.js"], "shortLabel,sectionColor,sourceSummary");
 const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,resolvePlans,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceGaps,restoreReference,referenceTargets,scoreViews,showScore,SongHistoryPanel,planningText");
 const transcribe = load(["reference_transcribe.js"], "buildTranscriptionPrompt");
+const lyricsStyle = load(["lyrics_style.js"], "variantInput,instrumentalPromptWarning,migrateSavedPair");
 const textbox = load(["reference_input.js", "score.js"], "bindReferenceTextbox");
 const node = (values) => ({ widgets: Object.entries(values).map(([name, value]) => ({ name, value })), inputs: [], graph: { setDirtyCanvas() {} } });
 const value = (n, name) => n.widgets.find((w) => w.name === name).value;
@@ -390,4 +391,59 @@ test("only a reference without an opening repairs generated properties", () => {
   assert.equal(repaired({ anchor_use: true, opening_generate: true }), "generated");
   assert.equal(repaired({ anchor_use: false }), "generated");
   assert.equal(repaired({ anchor_use: true, header_mode: "locked" }), "locked");
+});
+
+test("Lyrics + style keeps Base and Instrumental pairs and history follows the active one", () => {
+  assert.equal(lyricsStyle.variantInput("lyrics", false), "lyrics");
+  assert.equal(lyricsStyle.variantInput("style", true), "instrumental_style");
+  assert.equal(lyricsStyle.instrumentalPromptWarning(true, "[intro]\n[interlude]\n[outro]"), "");
+  assert.match(lyricsStyle.instrumentalPromptWarning(true, "[intro]\nla la"), /only section tags/);
+  assert.equal(lyricsStyle.instrumentalPromptWarning(false, "la la"), "");
+  const prompt = (instrumental) => ({
+    32: { class_type: "bno84.LyricsStyle", inputs: { instrumental, lyrics: "[verse]\nsung", style: "pop",
+      instrumental_lyrics: "[intro]\n[outro]", instrumental_style: "ambient" } },
+    6: { class_type: "YuE2GenerateMusic", inputs: { seed: 1, lyrics: ["32", 0], style: ["32", 1] } } });
+  for (const instrumental of [false, true]) {
+    const found = history.runSettings(prompt(instrumental)).values;
+    assert.equal(found.lyrics[0].value, instrumental ? "[intro]\n[outro]" : "[verse]\nsung");
+    assert.equal(found.style[0].input, instrumental ? "instrumental_style" : "style");
+  }
+  // Older Lyrics + style nodes without variants keep reading the Base pair.
+  const old = { 32: { class_type: "bno84.LyricsStyle", inputs: { instrumental: true, lyrics: "[intro]", style: "rave" } },
+    6: { class_type: "YuE2GenerateMusic", inputs: { seed: 1, lyrics: ["32", 0], style: ["32", 1] } } };
+  assert.equal(history.runSettings(old).values.lyrics[0].input, "lyrics");
+});
+
+test("restoring an instrumental run writes the Instrumental pair and keeps Base", async () => {
+  const values = { instrumental: false, lyrics: "[verse]\nmine", style: "pop", instrumental_lyrics: "[intro]", instrumental_style: "old" };
+  const n = { ...node(values), id: 32, comfyClass: "bno84.LyricsStyle", type: "bno84.LyricsStyle" };
+  const graph = { _nodes: [n], beforeChange() {}, afterChange() {}, getNodeById: id => String(id) === "32" ? n : null };
+  const current = { 32: { class_type: "bno84.LyricsStyle", inputs: { ...values } },
+    6: { class_type: "YuE2GenerateMusic", inputs: { seed: 1, lyrics: ["32", 0], style: ["32", 1] } } };
+  const mod = load(["score_strip.js", "score_state.js", "song_history.js"], "SongHistoryPanel,runSettings",
+    { registerExtension() {}, rootGraph: graph, graphToPrompt: async () => ({ output: current }) });
+  const past = { ...current, 32: { class_type: "bno84.LyricsStyle", inputs: { ...values, instrumental: true,
+    instrumental_lyrics: "[intro]\n[outro]", instrumental_style: "ambient" } } };
+  const panel = Object.create(mod.SongHistoryPanel.prototype);
+  panel.open = "song"; panel.message = () => {}; panel.compare = () => {};
+  panel.details = new Map([["song", { abc: "FINAL", settings: mod.runSettings(past) }]]);
+  await panel.restore({ lyricsStyle: true });
+  assert.deepEqual(["instrumental", "lyrics", "style", "instrumental_lyrics", "instrumental_style"].map(name => value(n, name)),
+    [true, "[verse]\nmine", "pop", "[intro]\n[outro]", "ambient"]);
+});
+
+test("an instrumental node saved before the variants keeps its prompt as the Instrumental pair", () => {
+  const saved = { instrumental: true, lyrics: "[intro]\n[outro]", style: "trance", instrumental_lyrics: "DEFAULT", instrumental_style: "DEFAULT" };
+  for (const info of [{ widgets_values: [true, "[intro]\n[outro]", "trance"] },
+    { widgets_values_named: { instrumental: true, lyrics: "[intro]\n[outro]", style: "trance" } }]) {
+    const n = node(saved);
+    assert.equal(lyricsStyle.migrateSavedPair(n, info), true);
+    assert.deepEqual([value(n, "instrumental_lyrics"), value(n, "instrumental_style"), value(n, "lyrics")], ["[intro]\n[outro]", "trance", "[intro]\n[outro]"]);
+  }
+  const base = node({ ...saved, instrumental: false });
+  assert.equal(lyricsStyle.migrateSavedPair(base, { widgets_values: [false, "sung", "pop"] }), false);
+  assert.equal(value(base, "instrumental_lyrics"), "DEFAULT");
+  const current = node(saved);
+  assert.equal(lyricsStyle.migrateSavedPair(current, { widgets_values: [true, "a", "b", "c", "d"] }), false);
+  assert.equal(value(current, "instrumental_lyrics"), "DEFAULT");
 });

@@ -114,11 +114,13 @@ Continuation bars from their embedded Score widgets.
 lack public Score settings. Timing estimates can drift from audio, so
 **FLAC from ≈** starts playback a little early.
 
-**Instrumental LoRA:** enable **instrumental** in Lyrics + style and choose Score
-**Full** mode. The flag selects the instrumental AR LoRA in Models for both Score
-and Acoustic. Use `[instrumental]` or lowercase section tags such as `[intro]`,
-`[verse]`, `[chorus]` on separate lines, without sung words. Timed tags are guidance,
-not exact timing. The node warns without rewriting the input.
+**Instrumental LoRA:** choose the **Instrumental** tab in Lyrics + style and Score
+**Full** mode. Base and Instrumental each keep their own lyrics and style, so switching
+does not lose either prompt; the tab picks which pair is output. It also selects the
+instrumental AR LoRA in Models for both Score and Acoustic. Use `[instrumental]` or
+lowercase section tags such as `[intro]`, `[verse]`, `[chorus]`, `[interlude]` on separate
+lines, without sung words. Timed tags are guidance, not exact timing. The node warns
+without rewriting the input. **Restore lyrics + style** restores the pair a song used.
 
 **NAR LoRA:** use the root node between Models and Acoustic to choose the adapter, which pairs well with
 Instrumental. Start at strength **1.0**; select **(none)** or strength **0** to

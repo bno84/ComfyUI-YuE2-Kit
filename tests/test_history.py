@@ -193,3 +193,15 @@ class SummaryPrecisionTests(unittest.TestCase):
         abc = HEADER.replace("1/4=120", "1/4=145") + ("V: Vocal\nz16|\nV: Ins\ne16|\n" * 141)
         result = history.summary(history.parse_score(abc))
         self.assertEqual(result["seconds"], round(141 * 4 * 60 / 145, 3))
+
+
+class LyricsStyleTests(unittest.TestCase):
+    def test_the_instrumental_flag_picks_the_pair_the_run_used(self):
+        inputs = {"lyrics": "[verse]\nsung", "style": "pop", "instrumental_lyrics": "[intro]", "instrumental_style": "ambient"}
+        for instrumental, expected in ((False, ("[verse]\nsung", "pop")), (True, ("[intro]", "ambient"))):
+            found = history.lyrics_style({"32": {"class_type": "bno84.LyricsStyle", "inputs": {**inputs, "instrumental": instrumental}}})
+            self.assertEqual((found["lyrics"], found["style"], found["instrumental"]), (*expected, instrumental))
+        # Older nodes without variants keep their single pair.
+        old = history.lyrics_style({"32": {"class_type": "bno84.LyricsStyle", "inputs": {"instrumental": True, "lyrics": "[intro]", "style": "rave"}}})
+        self.assertEqual((old["lyrics"], old["style"]), ("[intro]", "rave"))
+

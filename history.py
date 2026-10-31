@@ -94,15 +94,21 @@ def embedded_prompt(tags):
 
 
 def lyrics_style(prompt):
-    """The run's lyrics, style and instrumental flag, from Lyrics + style or the first node with them."""
+    """The run's lyrics, style and instrumental flag, from Lyrics + style or the first node with them.
+
+    Lyrics + style keeps a Base and an Instrumental pair; the flag picks the one the run used.
+    """
     nodes = sorted((prompt or {}).values(), key=lambda node: node.get("class_type") != "bno84.LyricsStyle")
     for node in nodes:
         inputs = node.get("inputs", {})
-        if isinstance(inputs.get("lyrics"), str) or isinstance(inputs.get("style"), str):
+        instrumental = inputs.get("instrumental") if isinstance(inputs.get("instrumental"), bool) else None
+        prefix = "instrumental_" if instrumental and node.get("class_type") == "bno84.LyricsStyle" and "instrumental_lyrics" in inputs else ""
+        lyrics, style = inputs.get(prefix + "lyrics"), inputs.get(prefix + "style")
+        if isinstance(lyrics, str) or isinstance(style, str):
             return {
-                "lyrics": inputs.get("lyrics") if isinstance(inputs.get("lyrics"), str) else "",
-                "style": inputs.get("style") if isinstance(inputs.get("style"), str) else "",
-                "instrumental": inputs.get("instrumental") if isinstance(inputs.get("instrumental"), bool) else None,
+                "lyrics": lyrics if isinstance(lyrics, str) else "",
+                "style": style if isinstance(style, str) else "",
+                "instrumental": instrumental,
             }
     return {"lyrics": "", "style": "", "instrumental": None}
 

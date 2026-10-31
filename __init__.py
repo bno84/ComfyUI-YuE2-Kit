@@ -218,6 +218,12 @@ if getattr(PromptServer, "instance", None) is not None:
         return web.json_response({"abc": abc, "warnings": warnings})
 
 
+# Defaults from the instrumental LoRA's model card: its untimed caption form and example style.
+# https://huggingface.co/Mothersuperior/YuE2-instrumental-cot-full-loras#prompting-three-caption-styles
+INSTRUMENTAL_LYRICS = "[intro]\n[verse]\n[chorus]\n[bridge]\n[chorus]\n[outro]"
+INSTRUMENTAL_STYLE = "dark ambient, water phone, theremin, piano, slow"
+
+
 class LyricsStyle(io.ComfyNode):
     @classmethod
     def define_schema(cls):
@@ -225,13 +231,19 @@ class LyricsStyle(io.ComfyNode):
             node_id="bno84.LyricsStyle",
             display_name="Lyrics + style",
             category="audio/YuE2",
-            description="Lyrics or an instrumental section plan, style, and the optional instrumental LoRA control. Instrumental format warnings are advisory; text is passed through unchanged.",
+            description="Base and Instrumental lyrics and style, each kept separately; instrumental picks which pair is output and selects the instrumental LoRA. Instrumental format warnings are advisory; text is passed through unchanged.",
             inputs=[
                 io.Boolean.Input("instrumental", default=False),
                 io.String.Input("lyrics", multiline=True, default="", dynamic_prompts=False,
-                                tooltip="Instrumental: [instrumental], lowercase section tags, or timed tags such as [intro 0:00-0:15]. One tag per line; no sung words or production notes."),
+                                tooltip="Base lyrics with section tags such as [verse] and [chorus]."),
                 io.String.Input("style", multiline=True, default="", dynamic_prompts=False,
                                 tooltip="YuE2 style tags: genre, instruments, mood, and BPM."),
+                # Appended after the original three, so older saved widget values still line up.
+                # Optional: older API prompts lack them and keep their single pair.
+                io.String.Input("instrumental_lyrics", multiline=True, default=INSTRUMENTAL_LYRICS, dynamic_prompts=False, optional=True,
+                                tooltip="Instrumental: [instrumental], lowercase section tags, or timed tags such as [intro 0:00-0:15]. One tag per line; no sung words or production notes."),
+                io.String.Input("instrumental_style", multiline=True, default=INSTRUMENTAL_STYLE, dynamic_prompts=False, optional=True,
+                                tooltip="YuE2 style tags for the instrumental: genre, instruments, mood, and BPM."),
             ],
             outputs=[
                 io.String.Output("lyrics", display_name="Lyrics"),
@@ -241,8 +253,11 @@ class LyricsStyle(io.ComfyNode):
         )
 
     @classmethod
-    def execute(cls, instrumental, lyrics, style):
-        return io.NodeOutput(lyrics, style, instrumental)
+    def execute(cls, instrumental, lyrics, style, instrumental_lyrics=None, instrumental_style=None):
+        if instrumental:
+            return io.NodeOutput(lyrics if instrumental_lyrics is None else instrumental_lyrics,
+                                 style if instrumental_style is None else instrumental_style, True)
+        return io.NodeOutput(lyrics, style, False)
 
 
 class OptionalLoadAudio(LoadAudio):

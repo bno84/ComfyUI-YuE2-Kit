@@ -43,15 +43,28 @@ const isLink = (value) => Array.isArray(value) && value.length === 2 && typeof v
 
 // Where a compiled input's value comes from: follow links to the node that
 // holds it, as long as that node has an input of the same name or a "value".
+const LYRICS_STYLE = "bno84.LyricsStyle";
+
+// Lyrics + style keeps a Base and an Instrumental pair; its flag picks the output (see lyrics_style.js).
+const lyricsVariant = (name, instrumental) => instrumental ? `instrumental_${name}` : name;
+
+// The input behind a Lyrics + style output; older nodes without variants use the Base names.
+export function lyricsStyleInput(node, name) {
+  if (node?.class_type !== LYRICS_STYLE || !["lyrics", "style"].includes(name)) return name;
+  const variant = lyricsVariant(name, node.inputs?.instrumental === true);
+  return variant in (node.inputs ?? {}) ? variant : name;
+}
+
 export function resolveInput(prompt, id, name) {
   let node = prompt?.[id], value = node?.inputs?.[name];
   for (let depth = 0; node && isLink(value) && depth < 16; depth++) {
     const source = prompt[value[0]];
-    const input = source && (name in (source.inputs ?? {}) ? name : "value" in (source.inputs ?? {}) ? "value" : null);
+    const linked = lyricsStyleInput(source, name);
+    const input = source && (linked in (source.inputs ?? {}) ? linked : "value" in (source.inputs ?? {}) ? "value" : null);
     if (!input) return null;
     [id, node, name, value] = [value[0], source, input, source.inputs[input]];
   }
-  return node && scalar(value) && value !== undefined ? { id, input: name, value, title: node._meta?.title ?? "" } : null;
+  return node && scalar(value) && value !== undefined ? { id, input: name, value, title: node._meta?.title ?? "", classType: node.class_type } : null;
 }
 
 const RESTORED = ["seed", "lyrics", "style"];
@@ -72,7 +85,7 @@ export function runSettings(prompt) {
   }
   for (const [id, node] of nodes) {
     const inputs = node.inputs ?? {};
-    if (node.class_type === "bno84.LyricsStyle" && !settings.values.instrumental.length && typeof inputs.instrumental === "boolean") {
+    if (node.class_type === LYRICS_STYLE && !settings.values.instrumental.length && typeof inputs.instrumental === "boolean") {
       settings.values.instrumental.push({ sampler: "", id, input: "instrumental", value: inputs.instrumental, title: node._meta?.title ?? "" });
     } else if (node.class_type === "bno84.ReferenceInput" && !settings.reference) {
       settings.reference = { id, source: inputs.source, extend: !!inputs.extend };
@@ -1067,7 +1080,9 @@ class SongHistoryPanel {
         let set = 0;
         for (const entry of targets) {
           const publicValue = recorded && past.values[name].find(source => source.samplerId === recorded.id);
-          const node = setInput(root, entry.id, entry.input, publicValue ? publicValue.value : pastValueFor(past, name, entry));
+          // Into Lyrics + style, write the variant the run used; the instrumental flag is restored with it.
+          const input = entry.classType === LYRICS_STYLE ? lyricsVariant(name, shown(past, "instrumental")?.value === true) : entry.input;
+          const node = setInput(root, entry.id, input, publicValue ? publicValue.value : pastValueFor(past, name, entry));
           if (node) { set++; after?.(node, entry); }
         }
         if (set) done.push(label(set));
