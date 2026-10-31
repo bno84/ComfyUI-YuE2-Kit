@@ -286,3 +286,23 @@ test("Restore all repairs invalid saved reference properties and preserves valid
     assert.equal(value(n, "opening_generate"), opening_generate);
   }
 });
+
+
+test("Score state normalizes reference updates before widget callbacks", () => {
+  const n = node(state.SCORE_DEFAULTS);
+  const observed = [];
+  n.widgets.find(w => w.name === "anchor_use").callback = () => observed.push(value(n, "header_mode"));
+  state.setValues(n, { anchor_use: true, anchor_abc: "ABC" });
+  assert.equal(value(n, "header_mode"), "reference");
+  assert.deepEqual(observed, ["reference"]);
+  state.setValues(n, { header_mode: "generated" });
+  assert.equal(value(n, "header_mode"), "reference");
+  state.setValues(n, { opening_generate: true, header_mode: "generated" });
+  assert.equal(value(n, "header_mode"), "generated");
+  state.setValues(n, { opening_generate: false });
+  assert.equal(value(n, "header_mode"), "reference");
+  state.setValues(n, { header_mode: "locked" });
+  assert.equal(value(n, "header_mode"), "locked");
+  state.setValues(n, { anchor_use: false, header_mode: "generated" });
+  assert.equal(value(n, "header_mode"), "generated");
+});

@@ -25,11 +25,26 @@ export function readValues(node) {
   return Object.fromEntries(Object.keys(SCORE_DEFAULTS).map(name =>
     [name, node.widgets?.find(w => w.name === name)?.value ?? SCORE_DEFAULTS[name]]));
 }
+// Normalize a complete Score configuration before applying a batch of changes.
+// Referenced scores can generate tempo/key only when generating an opening.
+export function normalizeValues(values) {
+  const plan = valuesPlan(values);
+  return plan.source.kind !== "none" && !plan.opening.bars
+    && [plan.header.tempo, plan.header.key].some(field => field.policy === "free")
+    ? {...values, header_mode:"reference"} : values;
+}
+
 export function setValues(node, values) {
-  for (const [name, value] of Object.entries(values)) {
+  const proposed = {...readValues(node), ...values};
+  const normalized = normalizeValues(proposed);
+  const updates = {...values, ...(normalized.header_mode !== proposed.header_mode ? {header_mode:normalized.header_mode} : {})};
+  const changed = [];
+  for (const [name, value] of Object.entries(updates)) {
     const widget = node.widgets?.find(w => w.name === name);
-    if (widget) { widget.value = value; widget.callback?.(value); }
+    if (widget) { widget.value = value; changed.push(widget); }
   }
+  // Callbacks must see the complete configuration, including any repaired mode.
+  for (const widget of changed) widget.callback?.(widget.value);
   node.yue2ScorePanel?.refresh(); node.graph?.setDirtyCanvas(true, true);
 }
 // Internal representation for history descriptions, never a serialized widget.
