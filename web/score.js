@@ -20,6 +20,31 @@ function separator(node, before) {
     }});
   insertBefore(node, widget, before);
 }
+export function bindReferenceTextbox(input, panel) {
+  if (!input) return () => {};
+  input.placeholder = "Paste reference ABC, or drop an ABC or audio file";
+  const over = event => {
+    if (!Array.from(event.dataTransfer?.types ?? []).includes("Files")) return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    event.dataTransfer.dropEffect = "copy";
+  };
+  const drop = event => {
+    const file = event.dataTransfer?.files?.[0];
+    if (!referenceFileKind(file)) return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    void panel.load(file);
+  };
+  // Capture before the native textarea's drop handling and stop canvas routing
+  // from importing or transcribing the same file a second time.
+  const options = {capture: true};
+  input.addEventListener("dragover", over, options);
+  input.addEventListener("drop", drop, options);
+  return () => {
+    input.removeEventListener("dragover", over, options);
+    input.removeEventListener("drop", drop, options);
+  };
+}
+
 export function updateWidgets(node) {
   const header = node.widgets?.find(w => w.name === "header_mode");
   if (header) header.value = propertyMode(header.value);
@@ -253,6 +278,7 @@ app.registerExtension({
     const abc=node.widgets.find(w=>w.name==="anchor_abc");
     const changed=()=>panel.refresh();
     abc?.element?.addEventListener("input",changed);
+    const unbindTextbox = bindReferenceTextbox(abc?.element, panel);
     // Full-width widgets always follow the node. ComfyUI's side panel writes its own
     // narrower width into widgets it shows, which would otherwise stick on the canvas.
     for (const w of node.widgets ?? []) {
@@ -261,7 +287,7 @@ app.registerExtension({
       }
     }
     const removed = node.onRemoved;
-    node.onRemoved = function (...args) { abc?.element?.removeEventListener("input",changed); panel.destroy(); return removed?.apply(this,args); };
+    node.onRemoved = function (...args) { abc?.element?.removeEventListener("input",changed); unbindTextbox(); panel.destroy(); return removed?.apply(this,args); };
     const over = node.onDragOver, drop = node.onDragDrop;
     node.onDragOver = function (event) { return Array.from(event.dataTransfer?.types ?? []).includes("Files") || over?.call(this, event); };
     node.onDragDrop = async function (event) {

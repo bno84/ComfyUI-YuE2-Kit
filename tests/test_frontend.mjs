@@ -12,6 +12,7 @@ const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rang
 const strip = load(["score_strip.js"], "shortLabel,sectionColor,sourceSummary");
 const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceTargets");
 const transcribe = load(["reference_transcribe.js"], "buildTranscriptionPrompt");
+const textbox = load(["reference_input.js", "score.js"], "bindReferenceTextbox");
 const node = (values) => ({ widgets: Object.entries(values).map(([name, value]) => ({ name, value })), inputs: [], graph: { setDirtyCanvas() {} } });
 const value = (n, name) => n.widgets.find((w) => w.name === name).value;
 
@@ -184,4 +185,33 @@ test("old Score node IDs migrate in root and nested workflows without changing c
   const settings = history.runSettings({ score: { class_type: "bno84.YuE2Score", inputs: { ...state.SCORE_DEFAULTS, header_mode: "fixed" } } });
   assert.equal(settings.planners.length, 1);
   assert.equal(settings.planners[0].values.header_mode, "fixed");
+});
+
+
+test("reference textbox imports ABC and routes audio to the shared loader once", () => {
+  const input = new EventTarget();
+  input.placeholder = "anchor_abc";
+  const loaded = [];
+  const unbind = textbox.bindReferenceTextbox(input, { load: file => loaded.push(file) });
+  assert.match(input.placeholder, /reference ABC/);
+  assert.doesNotMatch(input.placeholder, /anchor_abc/);
+  const dispatch = (type, file, types = ["Files"]) => {
+    const event = new Event(type, { cancelable: true });
+    Object.defineProperty(event, "dataTransfer", { value: { files: file ? [file] : [], types } });
+    input.dispatchEvent(event);
+    return event;
+  };
+  assert.equal(dispatch("dragover").defaultPrevented, true);
+  assert.equal(dispatch("dragover", null, ["text/plain"]).defaultPrevented, false);
+  const abc = { name: "reference.abc", type: "text/plain" };
+  const audio = { name: "reference.wav", type: "audio/wav" };
+  let bubbled = 0;
+  input.addEventListener("drop", () => bubbled++);
+  for (const file of [abc, audio]) assert.equal(dispatch("drop", file).defaultPrevented, true);
+  assert.deepEqual(loaded, [abc, audio]);
+  assert.equal(bubbled, 0);
+  assert.equal(dispatch("drop", { name: "workflow.json", type: "application/json" }).defaultPrevented, false);
+  unbind();
+  assert.equal(dispatch("drop", abc).defaultPrevented, false);
+  assert.deepEqual(loaded, [abc, audio]);
 });
