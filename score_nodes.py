@@ -25,10 +25,23 @@ def generated_outputs():
 
 
 def capacity(tokenizer, abc, style, lyrics, mode):
+    """Fail only when the prompts leave no room for music.
+
+    A longer score is not an error: the music stage renders what fits in
+    its context and stops there, so the report warns instead.
+    """
     tokens = tokenizer.tokenize_with_weights(style, lyrics=lyrics, cot=mode, abc=abc)
-    used, available = planning.check_music_context(tokens, score.analyze(abc)["seconds"])
-    return dict(used=used, context=planning.CONTEXT, audio_seconds=available / 25,
-                checks=["structure", "header", "prompt tokens", "audio capacity"])
+    used, available = planning.check_music_context(tokens)
+    analysis = score.analyze(abc)
+    audio_seconds = available / 25
+    diagnostics = []
+    if analysis["seconds"] > audio_seconds:
+        bar = int(analysis["bars"] * audio_seconds / analysis["seconds"]) + 1
+        diagnostics.append(score.diagnostic("result", "audio_capacity",
+            f"Audio context holds about {audio_seconds:.1f} s of the score's {analysis['seconds']:.1f} s; "
+            f"the audio stops early, near bar {bar}.", bar - 1))
+    return dict(used=used, context=planning.CONTEXT, audio_seconds=audio_seconds, diagnostics=diagnostics,
+                checks=["structure", "header", "prompt tokens", "room for audio"])
 
 
 def generate(clip, settings, style, lyrics, mode, seed):
@@ -290,7 +303,7 @@ def result_payload(abc, data, context, facts, lyrics, style, mode, seed):
     analysis = score.analyze(abc, style)
     analysis.pop("written_seconds")
     checked = capacity(context, abc, style, lyrics, mode)
-    diagnostics = facts["diagnostics"] + data["diagnostics"] + analysis.pop("diagnostics")
+    diagnostics = facts["diagnostics"] + data["diagnostics"] + analysis.pop("diagnostics") + checked.pop("diagnostics")
     diagnostics += [score.diagnostic("result", "field_change", f"{event['field']}:{event['value']} change at bar {event['bar'] + 1}.", event["bar"])
                     for event in analysis["events"] if event["field"] in ("M", "K")]
     diagnostics += [score.diagnostic("result", "tie_warning", text) for text in splice.fragment_problems(splice.parse(abc))]

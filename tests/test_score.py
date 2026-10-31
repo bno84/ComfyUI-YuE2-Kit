@@ -271,5 +271,28 @@ class PreviewPlanTests(unittest.TestCase):
         self.assertEqual(result["errors"], ["Generated tempo needs an opening."])
 
 
+
+class CapacityTests(unittest.TestCase):
+    """The music stage renders what fits; Score fails only when nothing can."""
+
+    @staticmethod
+    def tokenizer(seconds_of_room):
+        prefix = nodes.planning.CONTEXT - 2 - 10 - int(seconds_of_room * 25)
+        return types.SimpleNamespace(tokenize_with_weights=lambda *a, **k: dict(prefix=[0] * prefix, abc_ids=[0] * 10))
+
+    def test_a_score_longer_than_the_audio_context_warns_where_audio_stops(self):
+        # ANCHOR is 4 bars at 120 BPM: 8 s.
+        checked = nodes.capacity(self.tokenizer(5), ANCHOR, "s", "l", "full")
+        self.assertEqual(checked["audio_seconds"], 5)
+        [warning] = checked["diagnostics"]
+        self.assertEqual((warning["code"], warning["bar"]), ("audio_capacity", 2))
+        self.assertIn("about 5.0 s of the score's 8.0 s", warning["message"])
+        self.assertEqual(nodes.capacity(self.tokenizer(8), ANCHOR, "s", "l", "full")["diagnostics"], [])
+
+    def test_prompts_without_room_for_music_still_fail(self):
+        with self.assertRaisesRegex(ValueError, "audio context"):
+            nodes.capacity(self.tokenizer(-1), ANCHOR, "s", "l", "full")
+
+
 if __name__ == "__main__":
     unittest.main()
