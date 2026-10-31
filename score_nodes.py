@@ -378,7 +378,7 @@ def score_inputs():
         io.Combo.Input("header_key", options=list(score.KEYS), default="C major", display_name="Key"),
         io.Boolean.Input("opening_generate", default=False, display_name="Generate opening"),
         io.Int.Input("opening_bars", default=8, min=1, max=256, display_name="Opening bars"),
-        io.String.Input("opening_hint", default="intro", display_name="Opening hint (opening only)", dynamic_prompts=False),
+        io.String.Input("opening_hint", default="intro", display_name="Opening section", dynamic_prompts=False),
         io.Int.Input("opening_candidates", default=4, min=1, max=16, display_name="Opening candidates", tooltip="Always generates and ranks four candidates. Retained for saved workflow compatibility."),
         io.Boolean.Input("anchor_use", default=False, display_name="Use reference"),
         io.String.Input("anchor_abc", default="", multiline=True, dynamic_prompts=False, display_name="Reference ABC"),
