@@ -17,7 +17,7 @@ def canonical(value):
 
 def model_inputs():
     return [io.Clip.Input("clip"), io.String.Input("style"), io.String.Input("lyrics"),
-            io.Combo.Input("mode", options=["full", "melody"]), io.Int.Input("seed", min=0, max=score.UINT64)]
+            io.Combo.Input("mode", options=["full", "melody"]), io.Int.Input("seed", min=score.SEED_MIN, max=score.UINT64)]
 
 
 def generated_outputs():
@@ -348,7 +348,7 @@ class ScoreResult(io.ComfyNode):
         return io.Schema(node_id="bno84.ScoreResult", is_dev_only=True,
                          inputs=[io.String.Input("abc"), Data.Input("data"), Context.Input("context"),
                                  io.String.Input("facts"), io.String.Input("lyrics"), io.String.Input("style"),
-                                 io.Combo.Input("mode", options=["full", "melody"]), io.Int.Input("seed", min=0, max=score.UINT64)], outputs=score_outputs())
+                                 io.Combo.Input("mode", options=["full", "melody"]), io.Int.Input("seed", min=score.SEED_MIN, max=score.UINT64)], outputs=score_outputs())
 
     @classmethod
     def execute(cls, abc, data, context, facts, lyrics, style, mode, seed):
@@ -368,7 +368,7 @@ def score_inputs():
     return [io.Clip.Input("clip", lazy=True),
         io.String.Input("lyrics", force_input=True),
         io.String.Input("style", force_input=True),
-        io.Int.Input("seed", min=0, max=score.UINT64, force_input=True),
+        io.Int.Input("seed", min=score.SEED_MIN, max=score.UINT64, force_input=True),
         io.Combo.Input("header_mode", options=["generated", "locked", "reference"], default="generated", display_name="Score properties"),
         io.Int.Input("header_tempo", default=120, min=1, max=1000, display_name="Tempo (BPM)"),
         io.Combo.Input("header_meter", options=["4/4", "3/4", "6/8", "2/4", "12/8", "2/2", "5/4", "7/8"], display_name="Meter"),
@@ -415,7 +415,7 @@ class YuE2AdvancedScore(io.ComfyNode):
         mode = widgets.get("mode", "full")
         if mode not in ("full", "melody"):
             raise ValueError("Score mode must be full or melody.")
-        score.integer(seed, 0, score.UINT64, "Seed")
+        score.integer(seed, score.SEED_MIN, score.UINT64, "Seed")
         plan = score.widgets_to_plan(widgets)
         return cls.expand_plan(lyrics, style, seed, mode, plan, clip)
 

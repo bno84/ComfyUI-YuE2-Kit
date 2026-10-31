@@ -44,7 +44,13 @@ class PlanTests(unittest.TestCase):
         seeds = [s.derive_seed(s.UINT64, "opening", i) for i in range(16)]
         self.assertEqual(seeds[:4], [s.derive_seed(s.UINT64, "opening", i) for i in range(4)])
         self.assertEqual(len(set(seeds + [s.derive_seed(s.UINT64, "continuation")])), 17)
-        for bad in (-1, 1 << 64, True, float("inf")):
+        # The shared Int primitive randomizes over signed values; stage seeds stay unsigned.
+        negative = s.derive_seed(-944726594670549, "fresh")
+        self.assertEqual(negative, s.derive_seed(-944726594670549, "fresh"))
+        self.assertNotEqual(negative, s.derive_seed(944726594670549, "fresh"))
+        self.assertTrue(0 <= negative <= s.UINT64)
+        self.assertTrue(0 <= s.derive_seed(s.SEED_MIN, "opening") <= s.UINT64)
+        for bad in (s.SEED_MIN - 1, 1 << 64, True, float("inf")):
             with self.assertRaises(ValueError):
                 s.derive_seed(bad, "fresh")
 

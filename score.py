@@ -13,6 +13,8 @@ from . import splice
 
 VERSION = 1
 UINT64 = (1 << 64) - 1
+# ComfyUI's Int primitive randomizes over signed 64-bit values; YuE2 seeds torch with either sign.
+SEED_MIN = -(1 << 63)
 
 
 def default_plan(source=False):
@@ -157,7 +159,7 @@ def plan_from(value):
 
 
 def derive_seed(base, stage, candidate=0):
-    base = integer(base, 0, UINT64, "Seed")
+    base = integer(base, SEED_MIN, UINT64, "Seed")
     candidate = integer(candidate, 0, UINT64, "Candidate index")
     if stage not in ("fresh", "opening", "continuation"):
         raise ValueError("Unknown Score seed stage.")

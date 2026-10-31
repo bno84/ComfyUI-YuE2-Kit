@@ -193,6 +193,15 @@ class ScoreTests(unittest.TestCase):
         settings = json.loads(out.expand["opening"]["inputs"]["settings"])
         self.assertEqual(settings["opening"]["bars"], 8)
 
+    def test_negative_shared_seed_expands_with_unsigned_stage_seeds(self):
+        nodes.YuE2AdvancedScore.hidden = types.SimpleNamespace(
+            unique_id="score", dynprompt=types.SimpleNamespace(get_node=lambda id: dict(inputs={})))
+        out = nodes.YuE2AdvancedScore.execute(lyrics="l", style="s", seed=-944726594670549)
+        self.assertTrue(0 <= out.expand["fresh"]["inputs"]["seed"] <= score.UINT64)
+        self.assertEqual(out.expand["result"]["inputs"]["seed"], -944726594670549)
+        inputs = {item.id: item for item in nodes.score_inputs()}
+        self.assertEqual(inputs["seed"].min, score.SEED_MIN)
+
     def test_sampling_ranges_reject_zero_before_model_work(self):
         inputs = {item.id: item for item in nodes.score_inputs()}
         for name in ("top_k", "penalty_window"):
