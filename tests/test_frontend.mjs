@@ -464,3 +464,83 @@ test("an instrumental node saved before the variants keeps its prompt as the Ins
   assert.equal(lyricsStyle.migrateSavedPair(current, { widgets_values: [true, "a", "b", "c", "d"] }), false);
   assert.equal(value(current, "instrumental_lyrics"), "DEFAULT");
 });
+
+// Song 165 used the same settings in its legacy generator and extender.
+const legacyScore165 = {
+  mode: "full", max_abc_tokens: 8192, temperature: 1.08, top_p: 0.9,
+  top_k: 30, repetition_penalty: 1.005, penalty_window: 100,
+};
+const legacyPrompt165 = () => ({
+  "30:5": { class_type: "YuE2GenerateABC", inputs: { ...legacyScore165 } },
+  "30:36:18": { class_type: "bno84.YuE2ExtendABC", inputs: { ...legacyScore165 } },
+  "31:6": { class_type: "YuE2GenerateMusic", inputs: { temperature: 1.05, top_p: 0.95, top_k: 100, repetition_penalty: 1.2, cfg_scale: 2.5 } },
+});
+function legacyRestoreFixture() {
+  const score = { ...node({ ...state.SCORE_DEFAULTS, continuation_tokens: 2048, mode: "melody" }), id: 1, comfyClass: "bno84.YuE2AdvancedScore" };
+  const music = { ...node({ temperature: 0.8, top_p: 0.9, top_k: 30, repetition_penalty: 1, cfg_scale: 1 }), id: 2, comfyClass: "YuE2GenerateMusic" };
+  const graph = { _nodes: [score, music], beforeChange() {}, afterChange() {}, setDirtyCanvas() {} };
+  score.graph = music.graph = graph;
+  const output = () => Object.fromEntries(graph._nodes.map(n => [n.id, { class_type: n.comfyClass,
+    inputs: Object.fromEntries(n.widgets.map(w => [w.name, w.value])) }]));
+  const mod = load(["score_strip.js", "score_state.js", "song_history.js"], "SongHistoryPanel,runSettings,compareSettings,legacyScoreSettings",
+    { registerExtension() {}, rootGraph: graph, graphToPrompt: async () => ({ output: output() }) });
+  const panel = Object.create(mod.SongHistoryPanel.prototype);
+  panel.open = "song"; panel.compare = () => {};
+  panel.message = (text, error) => { panel.lastMessage = { text, error }; };
+  const past = mod.runSettings(legacyPrompt165());
+  panel.details = new Map([["song", { abc: "SAVED FINAL ABC", settings: past }]]);
+  return { score, music, graph, mod, panel, past, output };
+}
+
+test("Restore all migrates song 165 score sampling, mode and token limit to Advanced Score", async () => {
+  const { score, music, mod, panel, past, output } = legacyRestoreFixture();
+  assert.equal(mod.compareSettings(past, mod.runSettings(output())).sampling, "differs");
+  await panel.restoreAll({});
+  for (const [name, expected] of Object.entries(legacyScore165)) {
+    assert.equal(value(score, name === "max_abc_tokens" ? "continuation_tokens" : name), expected, name);
+  }
+  assert.equal(value(score, "opening_tokens"), 768);
+  assert.equal(value(score, "anchor_abc"), "SAVED FINAL ABC");
+  assert.equal(value(score, "continue_generate"), false);
+  assert.equal(value(music, "temperature"), 1.05);
+  assert.equal(value(music, "cfg_scale"), 2.5);
+  assert.deepEqual(panel.lastMessage, { text: "", error: false });
+  assert.equal(mod.compareSettings(past, mod.runSettings(output())).sampling, "same");
+});
+
+test("legacy score migration warns about conflicting values and still restores shared settings", async () => {
+  const { score, panel, mod } = legacyRestoreFixture();
+  const prompt = legacyPrompt165();
+  prompt["30:36:18"].inputs.temperature = 0.6;
+  panel.details.get("song").settings = mod.runSettings(prompt);
+  await panel.restoreAll({});
+  assert.equal(value(score, "temperature"), 0.7);
+  assert.equal(value(score, "continuation_tokens"), 8192);
+  assert.match(panel.lastMessage.text, /conflicting legacy Score settings: temperature/);
+  assert.equal(panel.lastMessage.error, true);
+});
+
+test("legacy migration follows primitive sources and reports linked destination controls", async () => {
+  const { score, graph, panel, mod } = legacyRestoreFixture();
+  const prompt = legacyPrompt165();
+  prompt.temp = { class_type: "PrimitiveFloat", inputs: { value: 1.08 } };
+  prompt["30:5"].inputs.temperature = ["temp", 0];
+  panel.details.get("song").settings = mod.runSettings(prompt);
+  assert.equal(mod.legacyScoreSettings(panel.details.get("song").settings).values.temperature, 1.08);
+  score.inputs = [{ name: "temperature", link: 42 }];
+  graph.links = { 42: { origin_id: 3, origin_slot: 0 } };
+  graph._nodes.push({ id: 3, type: "FloatMath", widgets: [] });
+  await panel.restoreAll({});
+  assert.equal(value(score, "temperature"), 0.7);
+  assert.match(panel.lastMessage.text, /set by a linked node: temperature/);
+});
+
+test("unmatched legacy sampling is reported when restoring to Reference input", async () => {
+  const { score, panel } = legacyRestoreFixture();
+  score.comfyClass = "bno84.ReferenceInput";
+  score.widgets = node({ source: "None", abc: "", extend: true }).widgets;
+  await panel.restoreAll({});
+  assert.equal(value(score, "abc"), "SAVED FINAL ABC");
+  assert.match(panel.lastMessage.text, /sampling for YuE2GenerateABC/);
+  assert.equal(panel.lastMessage.error, true);
+});

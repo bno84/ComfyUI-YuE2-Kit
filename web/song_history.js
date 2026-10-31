@@ -14,7 +14,24 @@ const PAGE = 20;
 const PREROLL = 2;
 const SCORE = "bno84.YuE2AdvancedScore";
 const SCORE_SAMPLING = { temperature: 0.7, top_p: 0.9, top_k: 30, repetition_penalty: 1.005, penalty_window: 100 };
-const SAMPLERS = [SCORE, "YuE2GenerateMusic", "YuE2GenerateABC", "bno84.YuE2ExtendABC"];
+const LEGACY_SCORES = ["YuE2GenerateABC", "bno84.YuE2ExtendABC"];
+const SAMPLERS = [SCORE, "YuE2GenerateMusic", ...LEGACY_SCORES];
+const LEGACY_SCORE_INPUTS = { ...Object.fromEntries(Object.keys(SCORE_SAMPLING).map(name => [name, name])),
+  mode: "mode", max_abc_tokens: "continuation_tokens" };
+
+// Old graphs can contain both a generator and an extender (including inactive
+// switch branches). Only migrate values they agree on; never pick one silently.
+export function legacyScoreSettings(settings) {
+  const entries = settings.sampling.filter(entry => LEGACY_SCORES.includes(entry.class_type));
+  const values = {}, conflicts = [];
+  for (const [oldName, name] of Object.entries(LEGACY_SCORE_INPUTS)) {
+    const saved = entries.filter(entry => oldName in entry.values).map(entry => entry.values[oldName]);
+    if (!saved.length) continue;
+    if (saved.every(value => value === saved[0])) values[name] = saved[0];
+    else conflicts.push(name);
+  }
+  return {values, conflicts};
+}
 
 export function clock(seconds) {
   const whole = Math.max(0, Math.round(seconds));
@@ -95,6 +112,12 @@ export function runSettings(prompt) {
       settings.sampling.push({id, class_type:SCORE, values:Object.fromEntries(Object.keys(SCORE_SAMPLING).map(name => [name, values[name]]))});
     } else if (SAMPLERS.includes(node.class_type)) {
       const values = Object.fromEntries(Object.entries(inputs).filter(([name, value]) => !RESTORED.includes(name) && scalar(value)));
+      if (LEGACY_SCORES.includes(node.class_type)) {
+        for (const name of Object.keys(LEGACY_SCORE_INPUTS)) {
+          const resolved = resolveInput(prompt, id, name);
+          if (resolved) values[name] = resolved.value;
+        }
+      }
       settings.sampling.push({ id, class_type: node.class_type, values });
     }
   }
@@ -146,6 +169,13 @@ export function compareSettings(past, current) {
     if (!now) return "";
     return Object.entries(entry.values).every(([name, value]) => !(name in now.values) || same(value, now.values[name])) ? "same" : "differs";
   }).filter(Boolean);
+  const scores = current.planners;
+  if (!past.planners.length && scores.length === 1) {
+    const migrated = legacyScoreSettings(past);
+    if (migrated.conflicts.length) sampling.push("differs");
+    if (Object.keys(migrated.values).length) sampling.push(Object.entries(migrated.values)
+      .every(([name, value]) => same(value, scores[0].values[name])) ? "same" : "differs");
+  }
   return {
     seed: compare("seed"), style: compare("style"), lyrics: compare("lyrics"), instrumental: compare("instrumental"),
     sampling: sampling.length ? (sampling.includes("differs") ? "differs" : "same") : "",
@@ -1085,7 +1115,7 @@ class SongHistoryPanel {
     if (what.plan && planners.length && !recorded) {
       return this.message("Choose a matching recorded Score node; multiple saved scores cannot be mapped automatically.", true);
     }
-    const done = [], missing = [], linked = new Set();
+    const done = [], missing = [], linked = new Set(), warnings = [];
     changeGraph(() => {
       const past = detail.settings;
       // Every source the current graph uses, set to the past value for its sampler.
@@ -1132,15 +1162,31 @@ class SongHistoryPanel {
       }
       if (what.sampling) {
         let changed = 0;
+        const migrateScore = !planners.length && target && isScore(target.node);
+        if (migrateScore) {
+          const migrated = legacyScoreSettings(past);
+          for (const [name, value] of Object.entries(migrated.values)) {
+            const result = setInput(root, target.id, name, value);
+            if (result?.node) changed++;
+            else if (result) linked.add(name);
+            else missing.push(name);
+          }
+          if (migrated.conflicts.length) warnings.push(`Not restored, conflicting legacy Score settings: ${migrated.conflicts.join(", ")}.`);
+          showPlan(target.node);
+        }
         for (const entry of past.sampling.filter(entry => entry.class_type !== SCORE)) {
           const target = current.sampling.find((other) => other.id === entry.id && other.class_type === entry.class_type)
             ?? current.sampling.find((other) => other.class_type === entry.class_type);
-          if (!target) continue;
+          if (!target) {
+            if (!(migrateScore && LEGACY_SCORES.includes(entry.class_type))) missing.push(`sampling for ${entry.class_type} · ${entry.id}`);
+            continue;
+          }
           for (const [name, value] of Object.entries(entry.values)) {
             if (!(name in target.values) || same(value, target.values[name])) continue;
             const result = setInput(root, target.id, name, value);
             if (result?.node) changed++;
             else if (result) linked.add(name);
+            else missing.push(name);
           }
         }
         done.push(changed ? `${changed} sampling setting${changed === 1 ? "" : "s"}` : "sampling (already the same)");
@@ -1148,7 +1194,7 @@ class SongHistoryPanel {
     });
     const text = done.length ? `Restored ${done.join(", ")}.` : "Nothing restored.";
     const problems = [missing.length && `Not found in this workflow: ${missing.join(", ")}.`,
-      linked.size && `Not restored, set by a linked node: ${[...linked].join(", ")}.`].filter(Boolean);
+      linked.size && `Not restored, set by a linked node: ${[...linked].join(", ")}.`, ...warnings].filter(Boolean);
     this.message(problems.length ? problems.join(" ") : done.length ? "" : text, problems.length > 0 || !done.length);
     this.compare();
   }
