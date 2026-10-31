@@ -116,6 +116,16 @@ class HistoryTests(unittest.TestCase):
         self.assertEqual(warnings, ["A note is tied into bar 9 from before the selection."])
         self.assertIn("M:3/4\nL:1/16\nQ:1/4=90\n", history.slice_score(SCORE + "V: Vocal\ng12|\nV: Ins\nd12|\n", 4, 5)[0])
 
+    def test_planner_spans_accepts_both_score_ids(self):
+        for kind in ("bno84.YuE2Score", "bno84.YuE2AdvancedScore"):
+            with self.subTest(kind=kind):
+                prompt = {"score": dict(class_type=kind, inputs=dict(header_mode="locked",
+                    anchor_use=True, anchor_abc=SCORE, anchor_start=1, anchor_end=0,
+                    opening_generate=True, opening_bars=8))}
+                spans = history.planner_spans(prompt, 26)
+                self.assertEqual([(s["stage"], s["start"], s["end"]) for s in spans],
+                                 [("Opening", 0, 8), ("Reference", 8, 22), ("Continuation", 22, 26)])
+
     def test_lists_saved_pairs_and_refuses_outside_paths(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

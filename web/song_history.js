@@ -12,9 +12,10 @@ import {fillStrip, barAxis, selectionOverlay, releaseStrip, sectionColor} from "
 const NODE = "bno84.SongHistory";
 const PAGE = 20;
 const PREROLL = 2;
-const SCORE = "bno84.YuE2Score";
+const SCORE = "bno84.YuE2AdvancedScore";
+const LEGACY_SCORE = "bno84.YuE2Score";
 const SCORE_SAMPLING = { temperature: 0.7, top_p: 0.9, top_k: 30, repetition_penalty: 1.005, penalty_window: 100 };
-const SAMPLERS = [SCORE, "YuE2GenerateMusic", "YuE2GenerateABC", "bno84.YuE2ExtendABC"];
+const SAMPLERS = [SCORE, LEGACY_SCORE, "YuE2GenerateMusic", "YuE2GenerateABC", "bno84.YuE2ExtendABC"];
 
 export function clock(seconds) {
   const whole = Math.max(0, Math.round(seconds));
@@ -75,7 +76,7 @@ export function runSettings(prompt) {
       settings.values.instrumental.push({ sampler: "", id, input: "instrumental", value: inputs.instrumental, title: node._meta?.title ?? "" });
     } else if (node.class_type === "bno84.ReferenceInput" && !settings.reference) {
       settings.reference = { id, source: inputs.source, extend: !!inputs.extend };
-    } else if (node.class_type === SCORE) {
+    } else if ([SCORE, LEGACY_SCORE].includes(node.class_type)) {
       const values = Object.fromEntries(Object.entries(SCORE_DEFAULTS).map(([name, fallback]) => [name, resolveInput(prompt,id,name)?.value ?? fallback]));
       let error = "";
       if (!("header_mode" in inputs)) error = "Original standard-widget Score settings are unavailable.";
@@ -252,7 +253,7 @@ export function useReference(node, abc, saved = false) {
   }
 }
 
-const referenceLabel = node => node.title || ((node.comfyClass ?? node.type) === SCORE ? "YuE2 Score" : "Reference input");
+const referenceLabel = node => node.title || ((node.comfyClass ?? node.type) === SCORE ? "YuE2 Advanced Score" : "Reference input");
 
 const rootGraph = () => app.rootGraph ?? app.graph;
 
@@ -792,7 +793,7 @@ class SongHistoryPanel {
   useAsReference(abc, saved = false) {
     try {
       const target = this.referenceTarget();
-      if (!target) throw new Error("Add a YuE2 Score or Reference input node to use this score as a reference.");
+      if (!target) throw new Error("Add a YuE2 Advanced Score or Reference input node to use this score as a reference.");
       useReference(target.node, abc, saved);
       this.message(`Reference sent to ${referenceLabel(target.node)} · ${target.id}.`);
       this.compare();
@@ -843,7 +844,7 @@ class SongHistoryPanel {
     const use = button("Use as reference", () => this.useAsReference(this.slice.abc), "primary");
     use.disabled = !ready || !targets.length;
     use.title = targets.length ? "Load the selected ABC as the reference; keep generation settings."
-      : "Add a YuE2 Score or Reference input node to the workflow.";
+      : "Add a YuE2 Advanced Score or Reference input node to the workflow.";
     if (targets.length > 1) items.push(this.targetSelect());
     items.push(use);
     if (this.slice?.error) items.push(element("div", "h-warn", `⚠ ${this.slice.error}`));
@@ -942,9 +943,9 @@ class SongHistoryPanel {
     const target = this.referenceTarget();
     const planners = detail.settings.planners;
     const recorded = planners.find(entry => entry.id === this.recordedId) ?? planners.find(entry => entry.id === target?.id) ?? (planners.length === 1 ? planners[0] : null);
-    if (what.plan && !target) return this.message("Add a YuE2 Score or Reference input node to restore the score.", true);
+    if (what.plan && !target) return this.message("Add a YuE2 Advanced Score or Reference input node to restore the score.", true);
     if (what.plan && planners.length && (target.node.comfyClass ?? target.node.type) !== SCORE) {
-      return this.message("Restore all requires a YuE2 Score destination to restore the saved Score settings. Use saved score loads only the final ABC into Reference input.", true);
+      return this.message("Restore all requires a YuE2 Advanced Score destination to restore the saved Score settings. Use saved score loads only the final ABC into Reference input.", true);
     }
     if (what.plan && planners.length && (!recorded || recorded.error)) {
       return this.message(recorded?.error ?? "Choose a matching recorded Score node; multiple saved scores cannot be mapped automatically.", true);

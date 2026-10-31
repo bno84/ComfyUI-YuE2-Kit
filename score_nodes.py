@@ -398,10 +398,10 @@ def score_inputs():
                          tooltip="SheetSage2 file from Models. Used when audio is dropped on the node.")]
 
 
-class YuE2Score(io.ComfyNode):
+class YuE2AdvancedScore(io.ComfyNode):
     @classmethod
     def define_schema(cls):
-        return io.Schema(node_id="bno84.YuE2Score", display_name="YuE2 Score", category="audio/YuE2",
+        return io.Schema(node_id="bno84.YuE2AdvancedScore", display_name="YuE2 Advanced Score", category="audio/YuE2",
                          description="Plan a fresh score or reuse a reference with an opening and continuation. Opening must match; continuation is checked and reported.",
                          enable_expand=True,
                          inputs=score_inputs(), outputs=score_outputs(),
@@ -474,4 +474,4 @@ class YuE2Score(io.ComfyNode):
         return io.NodeOutput(*(result.out(index) for index in range(7)), expand=graph.finalize())
 
 
-SCORE_NODES = [YuE2Score, ScoreGenerate, ScoreOpening, ScoreJoin, ScoreContinue, ScoreContext, ScoreResult]
+SCORE_NODES = [YuE2AdvancedScore, ScoreGenerate, ScoreOpening, ScoreJoin, ScoreContinue, ScoreContext, ScoreResult]

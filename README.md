@@ -32,7 +32,7 @@ load [the workflow JSON](<example_workflows/YuE2 Kit - Song workflow.json>).
 ## Basic usage
 
 1. Set **Lyrics + style** and the shared **Seed**.
-2. Connect **lyrics**, **style** and **seed** to **YuE2 Score**; these are socket-only
+2. Connect **lyrics**, **style** and **seed** to **YuE2 Advanced Score**; these are socket-only
    inputs. Use the ordinary ComfyUI widgets in score order: timeline, Header,
    Opening, Reference, Continue and Sampling. The Song template
    starts with a **32-bar cap**, fixed **4/4**, **C major** and **88 BPM**.
@@ -96,7 +96,7 @@ forced on and generates the whole song. It runs until the model ends the song or
 bars and reports it. Sampling controls and both token budgets are always visible.
 
 **Song history** sits above Score. Browse saved pairs, select sections or drag bar
-handles, then **Use as reference**. Choose a destination when multiple YuE2 Score
+handles, then **Use as reference**. Choose a destination when multiple YuE2 Advanced Score
 or Reference input nodes are present. Only that node is updated. In Score, the
 selected ABC becomes the whole stored source with a reset range; header and
 sampling widgets retain their values. In Reference input, it selects ABC and
@@ -105,7 +105,7 @@ follow the reference; its tempo remains editable.
 **Use saved score** loads final ABC as-is, turns Opening/Continue off and explicitly
 selects reference score properties. **Restore lyrics + style** and **Restore seed (fixed)** restore
 those settings. **Restore all** also restores the Score widgets, including the
-original source and mode. Restoring saved Score settings requires a YuE2 Score
+original source and mode. Restoring saved Score settings requires a YuE2 Advanced Score
 destination; **Restore all** refuses an incompatible Reference input destination.
 **Use saved score** can load the final ABC into either node type; Reference input
 uses ABC with Extend off. Saved songs outline their Opening / Reference /
@@ -136,7 +136,7 @@ and the selected codecs.
 
 ## Template migration
 
-The Song template and its API example now use **YuE2 Score**. In a custom
+The Song template and its API example now use **YuE2 Advanced Score**. In a custom
 template, replace Reference input, the Planning/Reference score/Audio
 transcription nodes, Extend ABC and ABC Timeline with Score. Store source ABC
 and planning options in its named widgets; wire its ABC to Preview, its six
@@ -160,3 +160,7 @@ UI uses Score properties with `generated`, `locked` and `reference`. Legacy
 node --test tests/*.mjs
 python3 -m unittest discover -s tests
 ```
+
+The node's internal ID is `bno84.YuE2AdvancedScore`. Existing editor workflows
+using `bno84.YuE2Score` migrate when loaded, including nodes in subgraphs.
+API clients must use the new ID. Song history continues reading older saved runs.

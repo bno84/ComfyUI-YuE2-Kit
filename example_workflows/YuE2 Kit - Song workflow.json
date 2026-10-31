@@ -804,7 +804,7 @@
     },
     {
       "id": 65,
-      "type": "bno84.YuE2Score",
+      "type": "bno84.YuE2AdvancedScore",
       "pos": [
         -21.366603196819582,
         1414.866746433687
@@ -898,7 +898,7 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "bno84.YuE2Score",
+        "Node name for S&R": "bno84.YuE2AdvancedScore",
         "cnr_id": "comfyui-yue2-kit",
         "ver": "0.1.0"
       },
@@ -949,7 +949,7 @@
         "opening_tokens": 768,
         "continuation_tokens": 8192
       },
-      "title": "YuE2 Score"
+      "title": "YuE2 Advanced Score"
     },
     {
       "id": 12,

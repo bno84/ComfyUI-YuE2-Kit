@@ -8,7 +8,7 @@ const read = (name) => readFileSync(new URL(`../web/${name}`, import.meta.url), 
 const load = (sources, names, app = { registerExtension() {} }) =>
   new Function("app", "api", sources.map(read).join("\n") + `\nreturn {${names}};`)(app, {});
 
-const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,valuesPlan,applicable,restoreLegacyWidgets,propertyMode");
+const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,valuesPlan,applicable,restoreLegacyWidgets,propertyMode,migrateScoreWorkflow");
 const strip = load(["score_strip.js"], "shortLabel,sectionColor,sourceSummary");
 const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceTargets");
 const transcribe = load(["reference_transcribe.js"], "buildTranscriptionPrompt");
@@ -75,7 +75,7 @@ test("transcription runs as its own job from the reference settings", () => {
 
 
 test("reference destinations include both node types with distinct subgraph paths", () => {
-  const score = { ...node(state.SCORE_DEFAULTS), id: 1, comfyClass: "bno84.YuE2Score" };
+  const score = { ...node(state.SCORE_DEFAULTS), id: 1, comfyClass: "bno84.YuE2AdvancedScore" };
   const reference = { ...node({ source: "None", abc: "OLD", extend: true }), id: 1, comfyClass: "bno84.ReferenceInput" };
   const graph = { _nodes: [score, { id: 2, subgraph: { _nodes: [reference] } }] };
   const targets = history.referenceTargets(graph);
@@ -101,7 +101,7 @@ test("Restore all refuses saved Score features for Reference input before changi
   const mod = load(["score_strip.js", "score_state.js", "song_history.js"], "SongHistoryPanel,runSettings", testApp);
   const panel = Object.create(mod.SongHistoryPanel.prototype);
   panel.open = "song";
-  const prompt = { score: { class_type: "bno84.YuE2Score", inputs: { ...state.SCORE_DEFAULTS,
+  const prompt = { score: { class_type: "bno84.YuE2AdvancedScore", inputs: { ...state.SCORE_DEFAULTS,
     header_mode: "from reference", anchor_use: true, anchor_abc: "SOURCE", opening_generate: true } } };
   panel.details = new Map([["song", { abc: "FINAL", settings: mod.runSettings(prompt) }]]);
   let message;
@@ -109,7 +109,7 @@ test("Restore all refuses saved Score features for Reference input before changi
   panel.compare = () => {};
   await panel.restore({ plan: true, seed: true, lyricsStyle: true, sampling: true });
   assert.equal(message.error, true);
-  assert.match(message.text, /requires a YuE2 Score destination/);
+  assert.match(message.text, /requires a YuE2 Advanced Score destination/);
   assert.equal(changes, 0);
   assert.equal(value(reference, "abc"), "OLD");
   // An older run can restore its final ABC into the same Reference input.
@@ -134,7 +134,7 @@ test("unit note length is fixed-only and older Score widgets retain their values
   state.setValues(n, { header_unit: "1/32" });
   state.restoreLegacyWidgets(n, { widgets_values: Array(22).fill(null) });
   assert.equal(value(n, "header_unit"), "1/32");
-  const settings = history.runSettings({ score: { class_type: "bno84.YuE2Score", inputs: { ...values, header_unit: "1/32" } } });
+  const settings = history.runSettings({ score: { class_type: "bno84.YuE2AdvancedScore", inputs: { ...values, header_unit: "1/32" } } });
   assert.equal(settings.planners[0].values.header_unit, "1/32");
 });
 
@@ -166,4 +166,22 @@ test("opening defaults to 768 tokens and the fixed four-candidate count is disab
   assert.equal(state.applicable(v).opening_candidates, false);
   assert.equal(state.applicable(v).opening_tokens, true);
   assert.equal(state.valuesPlan(v).opening.attempts, 4);
+});
+
+
+test("old Score node IDs migrate in root and nested workflows without changing custom titles", () => {
+  const old = (title) => ({ type: "bno84.YuE2Score", title, properties: { "Node name for S&R": "bno84.YuE2Score" }, widgets_values: ["fixed", 88] });
+  const root = old("YuE2 Score"), nested = old("My custom score");
+  const workflow = { nodes: [root], definitions: { subgraphs: [{ nodes: [nested] }] } };
+  state.migrateScoreWorkflow(workflow);
+  assert.equal(root.type, "bno84.YuE2AdvancedScore");
+  assert.equal(root.title, "YuE2 Advanced Score");
+  assert.equal(nested.type, "bno84.YuE2AdvancedScore");
+  assert.equal(nested.title, "My custom score");
+  assert.equal(nested.properties["Node name for S&R"], "bno84.YuE2AdvancedScore");
+  assert.deepEqual(root.widgets_values, ["fixed", 88]);
+  state.migrateScoreWorkflow(workflow);
+  const settings = history.runSettings({ score: { class_type: "bno84.YuE2Score", inputs: { ...state.SCORE_DEFAULTS, header_mode: "fixed" } } });
+  assert.equal(settings.planners.length, 1);
+  assert.equal(settings.planners[0].values.header_mode, "fixed");
 });

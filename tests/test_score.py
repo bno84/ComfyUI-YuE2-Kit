@@ -124,6 +124,9 @@ class ScoreTests(unittest.TestCase):
         self.assertEqual(preview["header"]["fixed"], dict(M="3/4", K="Dm", L="1/32", Q="1/4=110"))
 
     def test_score_property_labels_and_legacy_modes(self):
+        schema = nodes.YuE2AdvancedScore.define_schema()
+        self.assertEqual(schema.node_id, "bno84.YuE2AdvancedScore")
+        self.assertEqual(schema.display_name, "YuE2 Advanced Score")
         self.assertEqual(score.widgets_to_plan(dict(header_mode="locked")),
                          score.widgets_to_plan(dict(header_mode="fixed")))
         values = dict(anchor_use=True, anchor_abc=ANCHOR)
@@ -174,7 +177,7 @@ class ScoreTests(unittest.TestCase):
         self.assertIn("from anchor", inputs["header_mode"].options)
 
     def test_stage_routing(self):
-        nodes.YuE2Score.hidden = types.SimpleNamespace(
+        nodes.YuE2AdvancedScore.hidden = types.SimpleNamespace(
             unique_id="score", dynprompt=types.SimpleNamespace(get_node=lambda id: dict(inputs={})))
         for values, stages in ((dict(), {"fresh", "result"}),
                                (dict(anchor_use=True, header_mode="from anchor", continue_generate=False),
@@ -182,7 +185,7 @@ class ScoreTests(unittest.TestCase):
                                (dict(anchor_use=True, opening_generate=True), {"opening", "join", "continue", "result"})):
             with self.subTest(values=values):
                 plan = score.widgets_to_plan(dict(values, anchor_abc=ANCHOR))
-                out = nodes.YuE2Score.expand_plan(lyrics="l", style="s", seed=1, mode="full", plan=plan)
+                out = nodes.YuE2AdvancedScore.expand_plan(lyrics="l", style="s", seed=1, mode="full", plan=plan)
                 self.assertEqual(set(out.expand), stages)
         settings = json.loads(out.expand["opening"]["inputs"]["settings"])
         self.assertEqual(settings["opening"]["bars"], 8)

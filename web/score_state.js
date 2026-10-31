@@ -85,3 +85,25 @@ export function previewValues(node, output, id) {
   }
   return values;
 }
+
+
+// Migrate editor workflows before node types are resolved; API prompts use the new ID.
+export function migrateScoreWorkflow(workflow) {
+  const seen = new Set();
+  function visit(graph) {
+    if (!graph || typeof graph !== "object" || seen.has(graph)) return;
+    seen.add(graph);
+    for (const node of graph.nodes ?? []) {
+      if (node.type === "bno84.YuE2Score") {
+        node.type = "bno84.YuE2AdvancedScore";
+        if (node.title === "YuE2 Score") node.title = "YuE2 Advanced Score";
+        if (node.properties?.["Node name for S&R"] === "bno84.YuE2Score") {
+          node.properties["Node name for S&R"] = "bno84.YuE2AdvancedScore";
+        }
+      }
+      visit(node.subgraph);
+    }
+    for (const subgraph of graph.definitions?.subgraphs ?? []) visit(subgraph);
+  }
+  visit(workflow);
+}
