@@ -126,9 +126,9 @@ export class ScorePanel {
         ...section,bar:span.start+section.bar}));
       const label={fresh:"Song",opening:v.opening_hint || "Opening",continuation:"Continuation",anchor:"Reference"}[span.stage];
       const seconds=span.stage==="opening" ? bars*(data.source?.bar_seconds ?? 0)*(data.source?.bpm ?? 120)/(data.timing?.bpm ?? 120) : null;
-      return [{bar:span.start,bars,label,unknown:span.end==null,fade:span.stage==="opening" || span.end==null,seconds:seconds || null}];
+      return [{bar:span.start,bars,label,unknown:span.end==null,fade:span.stage==="opening" || span.end==null,generated:["opening","continuation"].includes(span.stage),color:span.stage==="continuation" ? "#80858c" : undefined,seconds:seconds || null}];
     });
-    fillStrip(track,segments,total,{grid:false}); body.append(track); this.track.append(header,body);
+    fillStrip(track,segments,total,{grid:false}); body.append(track,barAxis(total)); this.track.append(header,body);
     this.renderRange({...v,...(data?.anchor ? {anchor_start:data.anchor.start+1,anchor_end:data.anchor.end} : {})}, data?.source);
   }
   renderRange(v, source) {
