@@ -396,7 +396,7 @@ function styles() {
   const style = document.createElement("style");
   style.id = "yue2-history-style";
   style.textContent = `
-.yue2-history {container:yue2-history / inline-size;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;width:100%;height:100%;min-height:0;color:var(--input-text,#ddd);font:12px/1.45 sans-serif;padding:4px;}
+.yue2-history {container:yue2-history / inline-size;contain:size;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;width:100%;height:100%;min-height:0;color:var(--input-text,#ddd);font:12px/1.45 sans-serif;padding:4px;}
 .yue2-history [hidden] {display:none!important;}
 .yue2-history button,.yue2-history input,.yue2-history select {font:inherit;color:inherit;background:var(--comfy-input-bg,#252525);border:1px solid var(--border-color,#555);border-radius:4px;padding:4px 8px;}
 .yue2-history button {cursor:pointer;white-space:nowrap;}
@@ -576,6 +576,11 @@ class SongHistoryPanel {
     this.color = sectionColors();
     styles();
     this.root = element("div", "yue2-history");
+    // Nodes 2.0 forwards wheel events before our bubbling listener runs.
+    // Its wheel-capture marker is honored while this panel or a child has focus.
+    this.root.dataset.captureWheel = "true";
+    this.root.tabIndex = 0;
+
     const bar = element("div", "h-bar");
     this.filter = element("input");
     this.filter.type = "search";
@@ -597,7 +602,7 @@ class SongHistoryPanel {
     this.audio.onplay = () => this.renderPlayState();
     for (const event of ["pointerdown", "mousedown", "keydown", "wheel"]) this.root.addEventListener(event, (e) => e.stopPropagation());
     this.widget = node.addDOMWidget("song_history", "song_history", this.root, {
-      serialize: false, canvasOnly: true, hideOnZoom: false, getMinHeight: () => 300,
+      serialize: false, hideInPanel: true, hideOnZoom: false, getMinHeight: () => 300,
     });
     this.widget.serialize = false;
     if (node.size[0] < 620 || node.size[1] < 560) node.setSize([Math.max(node.size[0], 620), Math.max(node.size[1], 560)]);

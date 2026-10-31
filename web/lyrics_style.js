@@ -105,7 +105,7 @@ class LyricsStylePanel {
     this.style.oninput = () => this.set(variantInput("style", this.instrumental()), this.style.value, false);
     for (const event of ["pointerdown", "mousedown", "keydown", "wheel"]) this.root.addEventListener(event, (e) => e.stopPropagation());
     this.widget = node.addDOMWidget("lyrics_style_panel", "lyrics_style_panel", this.root, {
-      serialize: false, canvasOnly: true, hideOnZoom: false,
+      serialize: false, hideInPanel: true, hideOnZoom: false,
       getMinHeight: () => 320,
     });
     this.widget.serialize = false;

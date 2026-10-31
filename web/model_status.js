@@ -120,7 +120,7 @@ class ModelStatusPanel {
     row.append(this.button, this.note);
     this.root.append(this.list, row);
     this.widget = node.addDOMWidget("model_status", "model_status", this.root, {
-      serialize: false, canvasOnly: true, hideOnZoom: false,
+      serialize: false, hideInPanel: true, hideOnZoom: false,
       getMinHeight: () => 140,
     });
     this.widget.serialize = false;

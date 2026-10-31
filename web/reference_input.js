@@ -106,7 +106,7 @@ class ReferencePanel {
       event.preventDefault(); event.stopPropagation(); this.drop(file);
     };
     this.widget = node.addDOMWidget("reference_panel", "reference_panel", this.root, {
-      serialize: false, canvasOnly: true, hideOnZoom: false,
+      serialize: false, hideInPanel: true, hideOnZoom: false,
       getMinHeight: () => 260,
     });
     this.widget.serialize = false;
