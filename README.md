@@ -72,7 +72,7 @@ CFG controls acoustic diffusion.
 - **reference**: requires Use reference and keeps its header, including the
   reference's `L:` line.
 
-**Generate opening** adds the requested bars before the reference. **Opening section** labels the generated opening. Four candidates are always generated and ranked by structural
+**Generate opening** adds the requested bars before the reference. **Opening section** labels the generated opening. **Opening candidates** accepts 1–10 (default 4). All requested candidates are generated and ranked by structural
 warnings and chord-root cadence; the best usable join wins. The opening token
 budget defaults to 768 per candidate. Without chord scoring, ranking uses structural
 warnings and breaks ties in generation order. The report includes per-candidate

@@ -161,12 +161,14 @@ test("Score properties use generated, locked and reference with legacy aliases",
 });
 
 
-test("opening defaults to 768 tokens and the fixed four-candidate count is disabled", () => {
+test("opening defaults to 768 tokens and enables the configured candidate count", () => {
   assert.equal(state.SCORE_DEFAULTS.opening_tokens, 768);
   const v = { ...state.SCORE_DEFAULTS, anchor_use: true, opening_generate: true, opening_candidates: 1 };
-  assert.equal(state.applicable(v).opening_candidates, false);
+  assert.equal(state.applicable(v).opening_candidates, true);
+  assert.equal(state.applicable({ ...v, opening_generate: false }).opening_candidates, false);
+  assert.equal(state.SCORE_DEFAULTS.opening_candidates, 4);
   assert.equal(state.applicable(v).opening_tokens, true);
-  assert.equal(state.valuesPlan(v).opening.attempts, 4);
+  assert.equal(state.valuesPlan(v).opening.attempts, 1);
 });
 
 

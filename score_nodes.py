@@ -125,7 +125,7 @@ def opening_candidates(clip, anchor_abc, settings, style, lyrics, mode, seed):
     settings = {**settings, "budget": options["max_tokens"]}
     candidates, records = [], []
     started = time.perf_counter()
-    for index in range(score.OPENING_CANDIDATES):
+    for index in range(options["attempts"]):
         candidate_seed = score.derive_seed(seed, "opening", index)
         candidate = splice.Candidate(seed=candidate_seed)
         record = dict(seed=str(candidate_seed), header=[], error="")
@@ -379,7 +379,7 @@ def score_inputs():
         io.Boolean.Input("opening_generate", default=False, display_name="Generate opening"),
         io.Int.Input("opening_bars", default=8, min=1, max=256, display_name="Opening bars"),
         io.String.Input("opening_hint", default="intro", display_name="Opening section", dynamic_prompts=False),
-        io.Int.Input("opening_candidates", default=4, min=1, max=16, display_name="Opening candidates", tooltip="Always generates and ranks four candidates. Retained for saved workflow compatibility."),
+        io.Int.Input("opening_candidates", default=4, min=1, max=10, display_name="Opening candidates", tooltip="Generate this many opening candidates and rank all of them."),
         io.Boolean.Input("anchor_use", default=False, display_name="Use reference"),
         io.String.Input("anchor_abc", default="", multiline=True, dynamic_prompts=False, display_name="Reference ABC"),
         io.Int.Input("anchor_start", default=1, min=1, max=1000000, display_name="Reference start"),

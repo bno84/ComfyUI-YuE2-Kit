@@ -38,7 +38,7 @@ export function valuesPlan(v) {
   const key = v.header_key.replace(" major", "").replace(" minor", "m");
   return {version: 1, source: {kind: v.anchor_use ? "abc" : "none", abc: v.anchor_abc},
     anchor: {start: v.anchor_start - 1, end: v.anchor_end || null},
-    opening: {bars: v.anchor_use && v.opening_generate ? v.opening_bars : 0, label: v.opening_hint, attempts: 4},
+    opening: {bars: v.anchor_use && v.opening_generate ? v.opening_bars : 0, label: v.opening_hint, attempts: v.opening_candidates},
     continuation: {enabled: !v.anchor_use || v.continue_generate},
     header: Object.fromEntries([["tempo", v.header_tempo], ["meter", v.header_meter], ["key", key], ["unit", v.header_unit]].map(([name,value]) => [name,{policy,value}]))};
 }
@@ -53,8 +53,7 @@ export function applicable(v) {
     header_tempo: propertyMode(v.header_mode) === "locked",
     ...Object.fromEntries(["header_meter", "header_key", "header_unit"].map(n => [n, propertyMode(v.header_mode) === "locked" && !v.anchor_use])),
     opening_generate: v.anchor_use,
-    opening_candidates: false,
-    ...Object.fromEntries(["opening_bars", "opening_hint", "opening_tokens"].map(n => [n, v.anchor_use && v.opening_generate])),
+    ...Object.fromEntries(["opening_bars", "opening_hint", "opening_tokens", "opening_candidates"].map(n => [n, v.anchor_use && v.opening_generate])),
     anchor_abc: v.anchor_use, anchor_start: v.anchor_use, anchor_end: v.anchor_use,
     continue_generate: v.anchor_use,
   };

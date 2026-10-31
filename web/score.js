@@ -49,8 +49,6 @@ export function updateWidgets(node) {
   const header = node.widgets?.find(w => w.name === "header_mode");
   if (header) header.value = propertyMode(header.value);
   if (Array.isArray(header?.options?.values)) header.options.values = header.options.values.filter(v => ["generated", "locked", "reference"].includes(v));
-  const candidates = node.widgets?.find(w => w.name === "opening_candidates");
-  if (candidates) candidates.value = 4;
   const v = readValues(node);
   // Only native disabled support. Never install a custom disabled draw override.
   for (const [name, enabled] of Object.entries(applicable(v))) {

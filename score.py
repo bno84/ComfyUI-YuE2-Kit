@@ -29,7 +29,6 @@ KEYS = {f"{note} {kind}": note + suffix
         for kind, suffix in (("major", ""), ("minor", "m"))
         for note in ("C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B")}
 OPENING_TOKENS_MIN = 256
-OPENING_CANDIDATES = 4
 WIDGET_DEFAULTS = dict(header_mode="generated", header_tempo=120, header_meter="4/4", header_key="C major", header_unit="1/16",
     opening_generate=False, opening_bars=8, opening_hint="intro", opening_candidates=4,
     anchor_use=False, anchor_abc="", anchor_start=1, anchor_end=0,
@@ -55,7 +54,7 @@ def widgets_to_plan(values):
             end=integer(v["anchor_end"], 0, 1000000, "Reference end") or None)
     plan["opening"].update(bars=v["opening_bars"] if enabled and v["opening_generate"] else 0,
         label=v["opening_hint"] if enabled and v["opening_generate"] else "",
-        attempts=OPENING_CANDIDATES,
+        attempts=v["opening_candidates"],
         max_tokens=v["opening_tokens"] if enabled and v["opening_generate"] else 0)
     plan["continuation"].update(enabled=v["continue_generate"] if enabled else True,
         max_tokens=v["continuation_tokens"] if plan["continuation"]["enabled"] else 0)
@@ -122,9 +121,8 @@ def plan_from(value):
         anchor["start"] = integer(anchor["start"], 0, 1000000, "Reference start")
         if anchor["end"] is not None:
             anchor["end"] = integer(anchor["end"], anchor["start"] + 1, 1000000, "Reference end")
-        for key, low, high in (("bars", 0, 256), ("attempts", 1, 16), ("max_tokens", 0, 20000)):
+        for key, low, high in (("bars", 0, 256), ("attempts", 1, 10), ("max_tokens", 0, 20000)):
             opening[key] = integer(opening[key], low, high, "Opening " + key)
-        opening["attempts"] = OPENING_CANDIDATES
         if opening["bars"] and opening["max_tokens"] < OPENING_TOKENS_MIN:
             raise ValueError(f"Opening token budget must be at least {OPENING_TOKENS_MIN}.")
         opening["label"] = single_line(opening["label"], "Opening label")
