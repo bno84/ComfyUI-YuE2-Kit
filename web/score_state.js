@@ -1,11 +1,24 @@
 // Public Score state is ordinary widgets, serialized by ComfyUI.
 export const SCORE_DEFAULTS = {
-  header_mode: "generated", header_tempo: 120, header_meter: "4/4", header_key: "C major",
+  header_mode: "generated", header_tempo: 120, header_meter: "4/4", header_key: "C major", header_unit: "1/16",
   opening_generate: false, opening_bars: 8, opening_hint: "intro", opening_candidates: 4,
   anchor_use: false, anchor_abc: "", anchor_start: 1, anchor_end: 0,
   continue_generate: true, mode: "full", temperature: 0.7, top_p: 0.9,
   top_k: 30, repetition_penalty: 1.005, penalty_window: 100, opening_tokens: 1024, continuation_tokens: 8192,
 };
+// Older workflows stored 21 positional widgets, before Unit note length existed.
+export function restoreLegacyWidgets(node, config) {
+  const names = Object.keys(SCORE_DEFAULTS).filter(name => name !== "header_unit");
+  const values = config?.widgets_values;
+  if (!Array.isArray(values) || values.length !== names.length) return;
+  for (const [index, name] of names.entries()) {
+    const widget = node.widgets?.find(w => w.name === name);
+    if (widget) widget.value = values[index];
+  }
+  const unit = node.widgets?.find(w => w.name === "header_unit");
+  if (unit) unit.value = SCORE_DEFAULTS.header_unit;
+}
+
 export function readValues(node) {
   return Object.fromEntries(Object.keys(SCORE_DEFAULTS).map(name =>
     [name, node.widgets?.find(w => w.name === name)?.value ?? SCORE_DEFAULTS[name]]));
@@ -25,7 +38,7 @@ export function valuesPlan(v) {
     anchor: {start: v.anchor_start - 1, end: v.anchor_end || null},
     opening: {bars: v.anchor_use && v.opening_generate ? v.opening_bars : 0, label: v.opening_hint, attempts: v.opening_candidates},
     continuation: {enabled: !v.anchor_use || v.continue_generate},
-    header: Object.fromEntries([["tempo", v.header_tempo], ["meter", v.header_meter], ["key", key]].map(([name,value]) => [name,{policy,value}]))};
+    header: Object.fromEntries([["tempo", v.header_tempo], ["meter", v.header_meter], ["key", key], ["unit", v.header_unit]].map(([name,value]) => [name,{policy,value}]))};
 }
 export function rangeSelection(total, start, end, side, from, to) {
   const clamp = n => Math.max(0, Math.min(total - 1, Math.floor(n)));
@@ -35,7 +48,7 @@ export function rangeSelection(total, start, end, side, from, to) {
 }
 export function applicable(v) {
   return {
-    ...Object.fromEntries(["header_tempo", "header_meter", "header_key"].map(n => [n, v.header_mode === "fixed"])),
+    ...Object.fromEntries(["header_tempo", "header_meter", "header_key", "header_unit"].map(n => [n, v.header_mode === "fixed"])),
     opening_generate: v.anchor_use,
     ...Object.fromEntries(["opening_bars", "opening_hint", "opening_candidates", "opening_tokens"].map(n => [n, v.anchor_use && v.opening_generate])),
     anchor_abc: v.anchor_use, anchor_start: v.anchor_use, anchor_end: v.anchor_use,

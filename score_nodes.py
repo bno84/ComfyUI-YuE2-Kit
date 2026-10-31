@@ -368,6 +368,8 @@ def score_inputs():
         io.Combo.Input("header_mode", options=["generated", "fixed", "from reference", "from anchor"], default="generated", display_name="Header mode"),
         io.Int.Input("header_tempo", default=120, min=1, max=1000, display_name="Header tempo (BPM)"),
         io.Combo.Input("header_meter", options=["4/4", "3/4", "6/8", "2/4", "12/8", "2/2", "5/4", "7/8"], display_name="Header meter"),
+        io.Combo.Input("header_unit", options=["1/4", "1/8", "1/16", "1/32", "1/64"], default="1/16",
+                       display_name="Unit note length", tooltip="ABC L: base duration for unqualified notes. Used with fixed headers."),
         io.Combo.Input("header_key", options=list(score.KEYS), default="C major", display_name="Header key"),
         io.Boolean.Input("opening_generate", default=False, display_name="Opening generate"),
         io.Int.Input("opening_bars", default=8, min=1, max=256, display_name="Opening bars"),

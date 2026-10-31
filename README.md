@@ -63,10 +63,13 @@ CFG controls acoustic diffusion.
 - **generated**: model chooses the header. With an reference, an opening is required;
   meter and voice/unit declarations remain compatible, the opening's tempo is
   adopted across the reference, and key changes remain experimental for audio.
-- **fixed**: the visible tempo, meter and named key values apply. With an reference,
-  meter and key must match it; a differing tempo retimes it. Conflicts fail before
+- **fixed**: the visible tempo, meter, named key and **Unit note length** apply.
+  Unit note length is ABC's `L:` field (for example, `1/32`); it is supplied directly,
+  with no separate model pass. With an reference,
+  meter, key and unit note length must match it; a differing tempo retimes it. Conflicts fail before
   model work.
-- **from reference**: requires Reference use and keeps its header.
+- **from reference**: requires Reference use and keeps its header, including the
+  reference's `L:` line.
 
 **Opening generate** adds the requested bars before the reference. Its hint labels
 only that opening. Candidates use first good fit, then the best available join;

@@ -8,7 +8,7 @@ const read = (name) => readFileSync(new URL(`../web/${name}`, import.meta.url), 
 const load = (sources, names, app = { registerExtension() {} }) =>
   new Function("app", "api", sources.map(read).join("\n") + `\nreturn {${names}};`)(app, {});
 
-const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,valuesPlan,applicable");
+const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,valuesPlan,applicable,restoreLegacyWidgets");
 const strip = load(["score_strip.js"], "shortLabel,sectionColor,sourceSummary");
 const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceTargets");
 const transcribe = load(["reference_transcribe.js"], "buildTranscriptionPrompt");
@@ -117,4 +117,23 @@ test("Restore all refuses saved Score features for Reference input before changi
   await panel.restore({ plan: true });
   assert.equal(value(reference, "abc"), "FINAL");
   assert.equal(value(reference, "extend"), false);
+});
+
+
+test("unit note length is fixed-only and older Score widgets retain their values", () => {
+  const values = { ...state.SCORE_DEFAULTS, header_mode: "fixed", header_key: "D minor", header_tempo: 88, opening_bars: 12 };
+  const names = Object.keys(state.SCORE_DEFAULTS).filter(name => name !== "header_unit");
+  const n = node(state.SCORE_DEFAULTS);
+  state.restoreLegacyWidgets(n, { widgets_values: names.map(name => values[name]) });
+  assert.equal(value(n, "header_key"), "D minor");
+  assert.equal(value(n, "opening_bars"), 12);
+  assert.equal(value(n, "header_unit"), "1/16");
+  assert.equal(state.applicable(values).header_unit, true);
+  assert.equal(state.applicable({ ...values, header_mode: "from reference" }).header_unit, false);
+  // Current workflows retain their chosen unit instead of being migrated again.
+  state.setValues(n, { header_unit: "1/32" });
+  state.restoreLegacyWidgets(n, { widgets_values: Array(22).fill(null) });
+  assert.equal(value(n, "header_unit"), "1/32");
+  const settings = history.runSettings({ score: { class_type: "bno84.YuE2Score", inputs: { ...values, header_unit: "1/32" } } });
+  assert.equal(settings.planners[0].values.header_unit, "1/32");
 });

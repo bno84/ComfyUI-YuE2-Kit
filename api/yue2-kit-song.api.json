@@ -100,6 +100,7 @@
       "header_mode": "fixed",
       "header_tempo": 88,
       "header_meter": "4/4",
+      "header_unit": "1/16",
       "header_key": "C major",
       "opening_generate": false,
       "opening_bars": 8,

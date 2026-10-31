@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { readValues, setValues, applicable, rangeSelection, previewValues } from "./score_state.js";
+import { readValues, setValues, applicable, rangeSelection, previewValues, restoreLegacyWidgets } from "./score_state.js";
 import { referenceExecutionId, buildTranscriptionPrompt, queueTranscription, transcriptionError } from "./reference_transcribe.js";
 import { referenceFileKind } from "./reference_input.js";
 
@@ -110,7 +110,8 @@ export class ScorePanel {
       const mode={set:"fixed",anchor:"reference",free:"model"}[policy];
       const raw=fixed[field] ?? (policy==="set" ? {Q:v.header_tempo,M:v.header_meter,K:v.header_key}[field] : null);
       const value=label==="Key" ? (raw ? keyWords(String(raw)) : "model") : label==="Tempo" ? (data?.timing?.bpm ?? raw ?? "model") : (raw ?? "model");
-      header.append(element("div",`${label} ${value} · ${mode}`));
+      const unit = field === "M" ? (fixed.L ?? (v.header_mode === "fixed" ? v.header_unit : null)) : null;
+      header.append(element("div",`${label} ${value}${unit ? ` · L:${unit}` : ""} · ${mode}`));
     }
     const body=element("div"); body.style.cssText="flex:1;min-width:0";
     const track=element("div");
@@ -223,7 +224,9 @@ app.registerExtension({
     const panel = node.yue2ScorePanel = new ScorePanel(node);
     for (const hook of ["onConfigure", "onGraphConfigured", "onWidgetChanged", "onConnectionsChange"]) {
       const previous = node[hook]; node[hook] = function (...args) {
-        const value = previous?.apply(this,args); if (!panel.dragging) panel.refresh(); return value;
+        const value = previous?.apply(this,args);
+        if (hook === "onConfigure") restoreLegacyWidgets(this, args[0]);
+        if (!panel.dragging) panel.refresh(); return value;
       };
     }
     for (const widget of node.widgets ?? []) {

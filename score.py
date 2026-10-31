@@ -29,7 +29,7 @@ KEYS = {f"{note} {kind}": note + suffix
         for kind, suffix in (("major", ""), ("minor", "m"))
         for note in ("C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B")}
 OPENING_TOKENS_MIN = 256
-WIDGET_DEFAULTS = dict(header_mode="generated", header_tempo=120, header_meter="4/4", header_key="C major",
+WIDGET_DEFAULTS = dict(header_mode="generated", header_tempo=120, header_meter="4/4", header_key="C major", header_unit="1/16",
     opening_generate=False, opening_bars=8, opening_hint="intro", opening_candidates=4,
     anchor_use=False, anchor_abc="", anchor_start=1, anchor_end=0,
     continue_generate=True, mode="full", temperature=0.7, top_p=0.9,
@@ -77,6 +77,11 @@ def widgets_to_plan(values):
                     raise ValueError(f"Fixed header {name} must equal the reference's {name}; transposition and re-metering are not supported.")
         for name, value in (("tempo", v["header_tempo"]), ("meter", v["header_meter"]), ("key", key)):
             plan["header"][name] = dict(policy="anchor" if enabled and name != "tempo" else "set", value=value)
+        unit = single_line(v["header_unit"], "Unit note length", False)
+        normalize_field("L", unit)
+        if anchor is not None and normalize_field("L", unit) != note_unit(anchor):
+            raise ValueError("Fixed unit note length must equal the reference's; changing note lengths is not supported.")
+        plan["header"]["unit"] = dict(policy="set", value=unit)
     elif mode == "generated":
         for name in ("tempo", "key"):
             plan["header"][name]["policy"] = "free"
@@ -128,9 +133,11 @@ def plan_from(value):
         continuation["max_tokens"] = integer(continuation["max_tokens"], 0, 20000, "Continuation budget")
         if not has_source and not continuation["enabled"]:
             raise ValueError("Source none requires whole-score generation.")
-        for name in ("tempo", "meter", "key"):
+        header.setdefault("unit", dict(policy="anchor" if has_source else
+            "set" if header["meter"]["policy"] == "set" else "free", value="1/16"))
+        for name in ("tempo", "meter", "key", "unit"):
             field = header[name]
-            allowed = (("anchor", "set", "free") if name == "tempo" else ("anchor", "free") if name == "key" else ("anchor",)) if has_source else ("set", "free")
+            allowed = (("anchor", "set") if name == "unit" else ("anchor", "set", "free") if name == "tempo" else ("anchor", "free") if name == "key" else ("anchor",)) if has_source else ("set", "free")
             if not isinstance(field, dict) or field["policy"] not in allowed:
                 raise ValueError(f"Invalid {name} policy for this source.")
             value = field["value"]
@@ -140,7 +147,7 @@ def plan_from(value):
                 field["value"] = int(value) if int(value) == value else value
             else:
                 field["value"] = single_line(value, name, False)
-                normalize_field("M" if name == "meter" else "K", field["value"])
+                normalize_field({"meter": "M", "key": "K", "unit": "L"}[name], field["value"])
     except (KeyError, TypeError) as error:
         raise ValueError("Incomplete Score plan.") from error
     if has_source and opening["bars"] == 0:
@@ -225,12 +232,12 @@ def resolve_header(plan, anchor=None):
     """Fixed candidate values, with None for a model-selected field."""
     state = anchor.bars[anchor.voices[0]][0].state if anchor is not None else {}
     result = {}
-    for field, name in (("M", "meter"), ("Q", "tempo"), ("K", "key")):
+    for field, name in (("M", "meter"), ("Q", "tempo"), ("K", "key"), ("L", "unit")):
         policy = plan["header"][name]
         if policy["policy"] == "anchor":
             if anchor is None:
                 raise ValueError("A reference policy requires a reference score.")
-            result[field] = state[field] or ("1/4=120" if field == "Q" else state[field])
+            result[field] = (anchor.field("L") or str(note_unit(anchor))) if field == "L" else state[field] or ("1/4=120" if field == "Q" else state[field])
         elif policy["policy"] == "set":
             result[field] = f"1/4={policy['value']:g}" if field == "Q" else policy["value"]
         else:
@@ -249,7 +256,7 @@ def header_spec(plan, anchor=None):
         return []  # Exactly native free/fresh generation.
     # Voice lines are kept byte for byte: the native dialect writes "V: Vocal ...".
     voices = [("V", line.split(":", 1)[1]) for line in anchor.header if line.startswith("V:")] if anchor is not None else NATIVE_VOICES
-    unit = anchor.field("L") or str(note_unit(anchor)) if anchor is not None else None
+    unit = fixed["L"]
     return [("X", "1"), ("T", ""), ("M", fixed["M"]), ("L", unit), ("Q", fixed["Q"]), *voices, ("K", fixed["K"])]
 
 
@@ -291,7 +298,7 @@ def validate_header_changes(score, fixed, stage="opening", start=0, anchor=None)
             raise ValueError("Note units differ from the reference.")
     if stage == "fresh":
         for field, value in fixed.items():
-            if value is not None and normalize_field(field, score.field(field)) != normalize_field(field, value):
+            if value is not None and normalize_field(field, score.field(field) or (str(note_unit(score)) if field == "L" else "")) != normalize_field(field, value):
                 raise ValueError(f"{field}: initial header does not match the requested lock.")
     diagnostics = []
     for voice in score.voices:
@@ -300,6 +307,8 @@ def validate_header_changes(score, fixed, stage="opening", start=0, anchor=None)
             if index < start:
                 continue
             for field, value in fixed.items():
+                if field == "L":
+                    continue  # The parser rejects mid-score L changes.
                 if value is None or normalize_field(field, bar.state[field]) == normalize_field(field, value):
                     continue
                 # Report the start of each drift region, rather than every repeated bar.

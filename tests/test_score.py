@@ -4,6 +4,7 @@ import json
 import sys
 import types
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -80,13 +81,35 @@ class ScoreTests(unittest.TestCase):
         # Disabled groups are ignored, and without an anchor the whole song is generated.
         plan = score.widgets_to_plan(dict(opening_generate=True, opening_bars=-3, continue_generate=False))
         self.assertEqual((plan["opening"]["bars"], plan["continuation"]["enabled"]), (0, True))
-        # A fixed header leaves only the note length to the model; the voices are native.
+        # A fixed header supplies every line, including the unit note length.
         spec = score.header_spec(score.widgets_to_plan(dict(header_mode="fixed")))
-        self.assertEqual([field for field, value in spec if value is None], ["L"])
+        self.assertEqual([field for field, value in spec if value is None], [])
+        self.assertIn(("L", "1/16"), spec)
         self.assertIn(("V", ' Vocal clef=treble name="Vocal Melody" snm="Vocal"'), spec)
         # A fixed tempo may differ from the anchor's: that retimes it.
         plan = score.widgets_to_plan(dict(anchored, header_mode="fixed", header_tempo=90))
         self.assertEqual(plan["header"]["tempo"], dict(policy="set", value=90))
+
+    def test_fixed_and_reference_units_do_not_generate_header_lines(self):
+        for values, unit in ((dict(header_mode="fixed", header_unit="1/32"), "1/32"),
+                             (dict(header_mode="from reference", anchor_use=True, anchor_abc=ANCHOR), "1/16")):
+            with self.subTest(values=values):
+                plan = score.widgets_to_plan(values)
+                anchor = score.cut_anchor(ANCHOR, plan["anchor"])[0] if values.get("anchor_use") else None
+                spec = score.header_spec(plan, anchor)
+                self.assertIn(("L", unit), spec)
+                self.assertFalse(any(value is None for field, value in spec))
+                def complete(*args, prefix="", **kwargs):
+                    return prefix + "V: Vocal\nc32|\nV: Ins\nC32|\n", True, {}
+                with patch.object(nodes.planning, "generate_abc", side_effect=complete) as generate:
+                    abc, detail = nodes.generate(object(), dict(spec=spec, budget=1024, sampling={}), "style", "lyrics", "full", 1)
+                self.assertEqual(generate.call_count, 1)
+                self.assertIn("L:" + unit + "\n", abc)
+                self.assertTrue(all(line["given"] for line in detail["header"]))
+        with self.assertRaisesRegex(ValueError, "unit note length must equal"):
+            score.widgets_to_plan(dict(header_mode="fixed", header_unit="1/32", anchor_use=True, anchor_abc=ANCHOR))
+        with self.assertRaises(ValueError):
+            score.widgets_to_plan(dict(header_mode="fixed", header_unit="invalid"))
 
     def test_reference_labels_keep_legacy_workflows_compatible(self):
         values = dict(anchor_use=True, anchor_abc=ANCHOR)
