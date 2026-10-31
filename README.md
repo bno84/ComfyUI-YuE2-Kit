@@ -26,8 +26,7 @@ Lyrics + style, Seed and Models form the left column; Song history sits above Sc
 and ABC Preview branches up from Score. Score's six outputs feed Acoustic, then
 Final outputs and the optional visualizer on the right.
 
-Open **YuE2 Kit - Song workflow** in the template browser under **ComfyUI-YuE2-Kit**, or
-load [the workflow JSON](<example_workflows/YuE2 Kit - Song workflow.json>).
+Open **YuE2 Kit - Song workflow** in the template browser under **ComfyUI-YuE2-Kit**.
 
 ## Basic usage
 
