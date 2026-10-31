@@ -45,7 +45,7 @@ export class ScorePanel {
     this.status = element("div"); this.status.style.cssText = "white-space:pre-wrap;padding:4px 0";
     this.root.append(this.track, this.status);
     const timeline = node.addDOMWidget("score_timeline", "score_timeline", this.root,
-      {serialize: false, getMinHeight: () => 112, getMaxHeight: () => 112, hideOnZoom:false});
+      {serialize: false, getMinHeight: () => 94, getMaxHeight: () => 94, hideOnZoom:false});
     timeline.serialize = false; insertBefore(node, timeline, "header_mode");
     separator(node, "header_mode");
     for (const before of ["opening_generate", "anchor_use", "continue_generate", "mode"]) separator(node, before);
@@ -107,7 +107,7 @@ export class ScorePanel {
     const header=element("div"); header.className="yue2-score-header";
     header.style.cssText="flex:0 0 150px;min-width:0;font:11px/18px sans-serif;border-right:1px solid #78889a55;padding-right:8px;box-sizing:border-box";
     const fixed=data?.header?.fixed ?? {}, policies=data?.header?.policies ?? {};
-    for (const [label,field,name] of [["Tempo","Q","tempo"],["Meter","M","meter"],["Unit note length","L","unit"],["Key","K","key"]]) {
+    for (const [label,field,name] of [["Tempo","Q","tempo"],["Meter","M","meter"],["Key","K","key"]]) {
       const policy=policies[name]?.policy ?? (propertyMode(v.header_mode)==="locked" ? "set" : propertyMode(v.header_mode)==="reference" ? "anchor" : "free");
       const mode={set:"locked",anchor:"reference",free:"generated"}[policy];
       const raw=fixed[field] ?? (policy==="set" ? {Q:v.header_tempo,M:v.header_meter,L:v.header_unit,K:v.header_key}[field] : null);
@@ -116,7 +116,15 @@ export class ScorePanel {
       const text=element(policy==="set" ? "strong" : "span", String(value));
       text.style.cssText="min-width:0;overflow:hidden;text-overflow:ellipsis";
       row.title=`${label} ${value} · ${mode}`;
-      row.append(element("span",label),text); header.append(row);
+      row.append(element("span",label),text);
+      if (field === "Q" && value !== "model") row.append(element("span","BPM"));
+      if (field === "M") {
+        const unitPolicy = policies.unit?.policy ?? policy;
+        const unit = fixed.L ?? (unitPolicy === "set" ? v.header_unit : "model");
+        row.append(element("span","· unit"),element(unitPolicy === "set" ? "strong" : "span",String(unit)));
+        row.title += `; Unit note length ${unit}`;
+      }
+      header.append(row);
     }
     const body=element("div"); body.style.cssText="flex:1;min-width:0";
     const track=element("div");
@@ -128,7 +136,7 @@ export class ScorePanel {
         ...section,bar:span.start+section.bar}));
       const label={fresh:"Song",opening:v.opening_hint || "Opening",continuation:"Continuation",anchor:"Reference"}[span.stage];
       const seconds=span.stage==="opening" ? bars*(data.source?.bar_seconds ?? 0)*(data.source?.bpm ?? 120)/(data.timing?.bpm ?? 120) : null;
-      return [{bar:span.start,bars,label,unknown:span.end==null,fade:span.stage==="opening" || span.end==null,generated:["opening","continuation"].includes(span.stage),color:span.stage==="continuation" ? "#80858c" : undefined,seconds:seconds || null}];
+      return [{bar:span.start,bars,label,unknown:span.end==null,fade:span.stage==="opening" || span.end==null,generated:["fresh","opening","continuation"].includes(span.stage),color:["fresh","continuation"].includes(span.stage) ? "#80858c" : undefined,seconds:seconds || null}];
     });
     fillStrip(track,segments,total,{grid:false}); body.append(track,barAxis(total)); this.track.append(header,body);
     this.renderRange({...v,...(data?.anchor ? {anchor_start:data.anchor.start+1,anchor_end:data.anchor.end} : {})}, data?.source);
