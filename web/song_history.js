@@ -127,9 +127,9 @@ export function samplingText(sampling) {
   const music = sampling.find((entry) => entry.class_type === "YuE2GenerateMusic")?.values;
   const plan = sampling.find((entry) => entry.class_type !== "YuE2GenerateMusic")?.values;
   return [
-    plan && `ABC t ${plan.temperature}`,
-    music && `audio t ${music.temperature}`,
-    music && music.cfg_scale !== undefined && `cfg ${music.cfg_scale}`,
+    plan && `Score temp ${plan.temperature}`,
+    music && `Music temp ${music.temperature}`,
+    music && music.cfg_scale !== undefined && `CFG ${music.cfg_scale}`,
   ].filter(Boolean).join(" · ");
 }
 
@@ -893,11 +893,12 @@ class SongHistoryPanel {
       : `${reference.source} reference · extend ${reference.extend ? "on" : "off"}`);
     const fields = detail.score.fields;
     const tempo = /(\d+(?:\.\d+)?)\s*$/.exec(fields.Q ?? "")?.[1];
-    fact("Score", `${detail.score.bars} bars · ≈${clock(detail.score.seconds)}${tempo ? ` at Q:${tempo}` : ""}`);
+    fact("Score", `${detail.score.bars} bars · ≈${clock(detail.score.seconds)}${tempo ? ` at ${tempo} BPM` : ""}`);
     fact("Audio", !detail.seconds ? "–" : detail.score.audio_end_bar == null ? `FLAC ${clock(detail.seconds)}`
       : `FLAC ${clock(detail.seconds)} · stops ≈ bar ${Math.floor(detail.score.audio_end_bar) + 1}`, false,
       cutText(detail.score, detail.seconds));
-    fact("Header", ["M", "K"].filter((name) => fields[name]).map((name) => `${name}:${fields[name]}`).join(" · ") || "–", true);
+    fact("Meter", fields.M || "–");
+    fact("Key", fields.K || "–");
     scoreBox.append(scoreKv);
     columns.append(runBox, scoreBox);
 

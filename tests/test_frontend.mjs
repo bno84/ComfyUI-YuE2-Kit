@@ -44,7 +44,7 @@ test("Song history follows sampler links and selects whole groups", () => {
   const settings = history.runSettings(prompt);
   assert.equal(settings.values.seed[0].value, 7);
   assert.equal(settings.values.style[0].value, "pop");
-  assert.equal(history.samplingText(settings.sampling), "audio t 1 · cfg 2.5");
+  assert.equal(history.samplingText(settings.sampling), "Music temp 1 · CFG 2.5");
   const groups = [{ label: "intro", starts_section: true, bar: 0, bars: 4, seconds: 8 },
     { label: "verse", starts_section: true, bar: 4, bars: 4, seconds: 8 }, { label: "chorus", starts_section: true, bar: 8, bars: 2, seconds: 3 }];
   assert.deepEqual(history.dragRange(groups, 9, 2), [0, 3]);
