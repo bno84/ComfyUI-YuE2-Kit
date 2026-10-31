@@ -57,7 +57,7 @@ test("Use as reference fills Score and keeps header and sampling", () => {
   assert.equal(value(n, "anchor_abc"), "NEW");
   assert.equal(value(n, "header_mode"), "fixed");
   history.useInPlanner(n, "FINAL", true);
-  assert.equal(value(n, "header_mode"), "reference");
+  assert.equal(value(n, "header_mode"), "fixed");
 });
 
 test("transcription runs as its own job from the reference settings", () => {
@@ -252,4 +252,37 @@ test("Planning describes generated stages and legacy reference modes", () => {
   }
   assert.equal(history.planningText({ planners: [], reference: null }), "-");
   assert.equal(history.planningText({ planners: [{ error: "Missing settings" }], reference: { source: "ABC" } }), "-");
+});
+
+
+test("history reference actions change score properties only when required", () => {
+  for (const saved of [false, true]) for (const mode of ["generated", "locked", "fixed", "reference", "from reference", "from anchor"]) {
+    for (const opening_generate of [false, true]) {
+      const n = { ...node({ ...state.SCORE_DEFAULTS, header_mode: mode, opening_generate, temperature: 0.83 }), comfyClass: "bno84.YuE2AdvancedScore" };
+      history.useReference(n, "NEW", saved);
+      assert.equal(value(n, "header_mode"), mode === "generated" && (saved || !opening_generate) ? "reference" : mode);
+      assert.equal(value(n, "opening_generate"), saved ? false : opening_generate);
+      assert.equal(value(n, "continue_generate"), !saved);
+      assert.equal(value(n, "temperature"), 0.83);
+      assert.equal(value(n, "anchor_use"), true);
+      assert.equal(value(n, "anchor_abc"), "NEW");
+    }
+  }
+});
+
+test("Restore all repairs invalid saved reference properties and preserves valid modes", async () => {
+  const n = { ...node(state.SCORE_DEFAULTS), id: 1, comfyClass: "bno84.YuE2AdvancedScore" };
+  const graph = { _nodes: [n], beforeChange() {}, afterChange() {} };
+  const mod = load(["score_strip.js", "score_state.js", "song_history.js"], "SongHistoryPanel,runSettings",
+    { registerExtension() {}, rootGraph: graph, graphToPrompt: async () => ({ output: {} }) });
+  const panel = Object.create(mod.SongHistoryPanel.prototype);
+  panel.open = "song"; panel.message = () => {}; panel.compare = () => {};
+  for (const header_mode of ["generated", "locked", "reference"]) for (const opening_generate of [false, true]) {
+    const values = { ...state.SCORE_DEFAULTS, anchor_use: true, anchor_abc: "ORIGINAL", header_mode, opening_generate };
+    panel.details = new Map([["song", { abc: "FINAL", settings: mod.runSettings({ 1: { class_type: "bno84.YuE2AdvancedScore", inputs: values } }) }]]);
+    await panel.restore({ plan: true });
+    assert.equal(value(n, "header_mode"), header_mode === "generated" && !opening_generate ? "reference" : header_mode);
+    assert.equal(value(n, "anchor_abc"), "ORIGINAL");
+    assert.equal(value(n, "opening_generate"), opening_generate);
+  }
 });

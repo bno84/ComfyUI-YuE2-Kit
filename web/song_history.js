@@ -246,10 +246,20 @@ export function flashPlanner(node) {
   node.graph?.setDirtyCanvas?.(true, true);
 }
 
+// Generated tempo/key need an opening when a reference is enabled.
+function referenceProperties(values) {
+  const plan = valuesPlan(values);
+  return plan.source.kind !== "none" && !plan.opening.bars
+    && [plan.header.tempo, plan.header.key].some(field => field.policy === "free")
+    ? {header_mode:"reference"} : {};
+}
+
 export function useInPlanner(node, abc, saved = false) {
+  const values = {anchor_use:true,anchor_abc:abc,anchor_start:1,anchor_end:0,
+    ...(saved ? {opening_generate:false,continue_generate:false} : {})};
+  Object.assign(values, referenceProperties({...readValues(node), ...values}));
   node.graph?.beforeChange?.();
-  setValues(node, {anchor_use:true,anchor_abc:abc,anchor_start:1,anchor_end:0,
-    ...(saved ? {opening_generate:false,continue_generate:false,header_mode:"reference"} : {})});
+  setValues(node, values);
   node.graph?.afterChange?.();
   showPlan(node); flashPlanner(node);
 }
@@ -987,7 +997,8 @@ class SongHistoryPanel {
         else missing.push(name);
       };
       if (what.plan && recorded && !recorded.error) {
-        for (const [name,value] of Object.entries(recorded.values)) {
+        const values = {...recorded.values, ...referenceProperties(recorded.values)};
+        for (const [name,value] of Object.entries(values)) {
           if (!setInput(root,target.id,name,value)) missing.push(name);
         }
         showPlan(target.node); flashPlanner(target.node); done.push("Score widgets");
