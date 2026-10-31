@@ -340,7 +340,6 @@ function styles() {
 .yue2-history .h-track {display:flex;flex-direction:column;gap:3px;min-width:0;}
 .yue2-history .h-mini {position:relative;height:12px;border-radius:2px;overflow:hidden;background:#252525;}
 .yue2-history .h-mini i {position:absolute;top:0;bottom:0;border-left:1px solid #0006;}
-.yue2-history .h-stage-box {position:absolute;top:0;bottom:0;box-sizing:border-box;border:2px solid;border-radius:3px;box-shadow:inset 0 0 0 1px #000a;pointer-events:none;}
 .yue2-history .h-progress {position:relative;height:3px;border-radius:2px;background:#252525;}
 .yue2-history .h-progress b {position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:#76a5eb;}
 .yue2-history .h-zoom {background:#2c3644;border-radius:0 0 4px 4px;padding:8px 8px 10px;margin-bottom:6px;cursor:default;}
@@ -374,7 +373,8 @@ function styles() {
 .yue2-history .h-diff.differs {background:#e0b05033;color:#ffd890;}
 .yue2-history .h-actions {display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center;}
 .yue2-history .h-actions .spacer {margin-left:auto;}
-.yue2-history .h-status {min-height:1.45em;margin-top:6px;color:#9fd8a8;overflow-wrap:anywhere;}
+.yue2-history .h-status {margin-top:6px;overflow-wrap:anywhere;}
+.yue2-history .h-status:empty {display:none;}
 .yue2-history .h-status[data-error=true] {color:#ff9d9d;}
 .yue2-history .h-more {flex:none;align-self:center;}
 .yue2-history .h-note {padding:8px;opacity:.7;}
@@ -428,28 +428,12 @@ function scoreGap(score, label = "") {
   return overlay;
 }
 
-function stageSpans(score) {
-  const spans = score.planner_spans ?? [];
-  return spans.length === 1 && ["Song", "fresh"].includes(spans[0].stage) ? [] : spans;
-}
-// Stages outline their bars on the section strip rather than taking a band of their own.
-// Light tints of the Score timeline's stage colours, which vanish against the sections.
-const STAGE_OUTLINE = { Opening: "#c4baff", Reference: "#74e8c0", Anchor: "#74e8c0", Continuation: "#a8cdf7" };
-function stageOutlines(lane, score) {
-  for (const span of stageSpans(score)) {
-    const box = element("div", "h-stage-box");
-    Object.assign(box.style, { left: `${(100 * span.start) / score.bars}%`, width: `${(100 * (span.end - span.start)) / score.bars}%`, borderColor: STAGE_OUTLINE[span.stage] ?? "#edf5ff" });
-    box.title = span.stage === "Anchor" ? "Reference" : span.stage;
-    lane.append(box);
-  }
-}
 function miniStrip(score, color) {
   const strip = element("div", "h-mini");
   strip.style.height="16px";
   const lane=element("div", "h-mini-score");
   lane.style.width=`${100*scoreShare(score)}%`;
   fillStrip(lane,score.sections,score.bars,{color,compact:true});
-  stageOutlines(lane, score);
   strip.append(lane);
   if (score.audio_end_bar != null) lane.append(cutOverlay(score.audio_end_bar, score.bars));
   if (score.audio_extra_seconds != null) strip.append(scoreGap(score));
@@ -458,6 +442,22 @@ function miniStrip(score, color) {
 
 function firstLine(text) {
   return (text ?? "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean).join(" ");
+}
+
+export function scoreViews(graph) {
+  return [
+    ...nodesOfClass(graph, "bno84.ABCPreview").filter(node => node.abcPreview),
+    ...nodesOfClass(graph, "bno84.ABCTimeline").filter(node => node.setAbcTimeline),
+  ];
+}
+
+export async function showScore(views, abc) {
+  const results = await Promise.allSettled(views.map(async node => {
+    if (node.abcPreview) node.abcPreview.setAbc(abc);
+    if (node.setAbcTimeline) await node.setAbcTimeline(abc);
+  }));
+  const failed = results.find(result => result.status === "rejected");
+  if (failed) throw failed.reason;
 }
 
 class SongHistoryPanel {
@@ -670,9 +670,9 @@ class SongHistoryPanel {
   }
 
   message(text, error = false) {
-    this.status = { text, error };
+    this.status = error ? { text, error } : null;
     if (this.statusElement) {
-      this.statusElement.textContent = text;
+      this.statusElement.textContent = error ? text : "";
       this.statusElement.dataset.error = String(error);
     }
   }
@@ -703,7 +703,6 @@ class SongHistoryPanel {
       sections.at(-1).bars += group.bars; sections.at(-1).seconds += group.seconds;
     });
     fillStrip(strip,sections,total,{color:this.color});
-    stageOutlines(strip, detail.score);
     for (const group of groups.slice(1)) {
       const line = element("div", "h-grid");
       line.style.left = `${(100 * group.bar) / total}%`;
@@ -811,17 +810,20 @@ class SongHistoryPanel {
     });
     const whole = this.selection[0] === 0 && this.selection[1] === groups.length;
     const text = element("span", "info");
-    text.append(element("b", "", whole ? "Whole score" : `Bars ${info.firstBar}–${info.lastBar}`),
+    text.append(element("b", "", `Bars ${info.firstBar}–${info.lastBar}`),
       ` · ${info.labels.join(", ") || "no sections"} · ${info.bars} bars · ≈${clock(info.duration)}`);
     text.title = "The duration follows the score's tempo and meter. The rendered audio can differ by seconds.";
     const ready = this.slice && !this.slice.error && this.slice.range[0] === this.selection[0] && this.slice.range[1] === this.selection[1];
-    const previews = nodesOfClass(rootGraph(), "bno84.ABCPreview").filter((node) => node.abcPreview);
-    const preview = button("Show in ABC Preview", () => {
-      for (const node of previews) node.abcPreview.setAbc(this.slice.abc);
-      this.message("Shown in ABC Preview. Press play there to hear the notes; it returns to the workflow's score on the next run.");
+    const views = scoreViews(rootGraph());
+    const preview = button("Show in ABC Preview", async () => {
+      try {
+        await showScore(views, this.slice.abc);
+        this.message("");
+      } catch (error) { this.message(error.message ?? String(error), true); }
     });
-    preview.disabled = !ready || !previews.length;
-    preview.title = previews.length ? "Show this selection's score in the workflow's ABC Preview" : "Add an ABC Preview node to the workflow";
+    preview.disabled = !ready || !views.length;
+    preview.title = views.length ? "Show this selection in ABC Preview and ABC Timeline"
+      : "Add an ABC Preview or ABC Timeline node to the workflow";
     const song = this.songs.find((entry) => entry.path === detail.path);
     const from = Math.max(0, info.seconds - PREROLL);
     const audioEnd = detail.score.audio_end_bar;
@@ -840,7 +842,7 @@ class SongHistoryPanel {
     });
     copy.disabled = !ready;
     const targets = referenceTargets(rootGraph());
-    const items = [text, preview, flac, copy];
+    const items = whole ? [preview, flac, copy] : [text, preview, flac, copy];
     const use = button("Use as reference", () => this.useAsReference(this.slice.abc), "primary");
     use.disabled = !ready || !targets.length;
     use.title = targets.length ? "Load the selected ABC as the reference; keep generation settings."
@@ -1000,7 +1002,7 @@ class SongHistoryPanel {
       }
     });
     const text = done.length ? `Restored ${done.join(", ")}.` : "Nothing restored.";
-    this.message(missing.length ? `${text} Not found in this workflow: ${missing.join(", ")}.` : text, !done.length);
+    this.message(missing.length ? `Not found in this workflow: ${missing.join(", ")}.` : done.length ? "" : text, missing.length > 0 || !done.length);
     this.compare();
   }
 

@@ -10,7 +10,7 @@ const load = (sources, names, app = { registerExtension() {} }) =>
 
 const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,valuesPlan,applicable,restoreLegacyWidgets,propertyMode,migrateScoreWorkflow");
 const strip = load(["score_strip.js"], "shortLabel,sectionColor,sourceSummary");
-const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceTargets");
+const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceTargets,scoreViews,showScore,SongHistoryPanel");
 const transcribe = load(["reference_transcribe.js"], "buildTranscriptionPrompt");
 const textbox = load(["reference_input.js", "score.js"], "bindReferenceTextbox");
 const node = (values) => ({ widgets: Object.entries(values).map(([name, value]) => ({ name, value })), inputs: [], graph: { setDirtyCanvas() {} } });
@@ -214,4 +214,24 @@ test("reference textbox imports ABC and routes audio to the shared loader once",
   unbind();
   assert.equal(dispatch("drop", abc).defaultPrevented, false);
   assert.deepEqual(loaded, [abc, audio]);
+});
+
+
+test("history shows the same selection in both ABC views and reports failures", async () => {
+  const seen = [];
+  const graph = { _nodes: [
+    { comfyClass: "bno84.ABCPreview", abcPreview: { setAbc: abc => seen.push(["preview", abc]) } },
+    { comfyClass: "bno84.ABCTimeline", setAbcTimeline: async abc => seen.push(["timeline", abc]) },
+  ] };
+  const views = history.scoreViews(graph);
+  assert.equal(views.length, 2);
+  await history.showScore(views, "SELECTED");
+  assert.deepEqual(seen, [["preview", "SELECTED"], ["timeline", "SELECTED"]]);
+  await assert.rejects(history.showScore([{ setAbcTimeline() { throw new Error("Cannot load timeline"); } }], "ABC"), /Cannot load timeline/);
+  const panel = { statusElement: { textContent: "", dataset: {} } };
+  history.SongHistoryPanel.prototype.message.call(panel, "Error", true);
+  assert.equal(panel.statusElement.textContent, "Error");
+  history.SongHistoryPanel.prototype.message.call(panel, "Copied");
+  assert.equal(panel.statusElement.textContent, "");
+  assert.equal(panel.status, null);
 });
