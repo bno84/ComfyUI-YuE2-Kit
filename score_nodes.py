@@ -161,6 +161,8 @@ def opening_candidates(clip, anchor_abc, settings, style, lyrics, mode, seed):
                 lead.labels[0] = [options["label"]]
             adapted, _ = score.adapt_anchor_tempo(anchor, lead)
             joined, join_warnings = splice.join(lead, adapted)
+            # The opening now precedes more music, so its last bar must fit.
+            score.validate_score(joined)
             candidate.lead, candidate.score = lead, joined
             candidate.warnings = warnings + join_warnings
             keys = {bar.state["K"] for bar in lead.bars[lead.voices[0]]}

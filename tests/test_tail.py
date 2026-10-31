@@ -54,6 +54,22 @@ class TailTests(unittest.TestCase):
         text, _ = nodes.finish_tail(voices("c16|" * 4, "C16|" * 4) + "\nV: Voc", False)
         self.assertEqual(score.analyze(text)["bars"], 4)
 
+    def test_finished_final_bar_may_be_short_or_overfull(self):
+        for vocal, ins in (("z8|", "C16|"), ("z16zz12z4|", "C32|"),
+                           ("c20|", "C8|")):
+            with self.subTest(vocal=vocal, ins=ins):
+                header = HEADER.replace("L:1/16", "L:1/32") if "z16zz12" in vocal else HEADER
+                text = header + "V: Vocal\n" + vocal + "\nV: Ins\n" + ins
+                finished, detail = nodes.finish_tail(text, True)
+                self.assertEqual(finished, text)
+                self.assertEqual(score.splice.check(score.splice.parse(finished)), [])
+                self.assertEqual(detail, {"diagnostics": []})
+
+    def test_an_irregular_final_bar_is_invalid_before_more_music(self):
+        for last in ("z8|", "z20|"):
+            with self.subTest(last=last), self.assertRaisesRegex(ValueError, "Vocal: bar 1"):
+                nodes.finish_tail(voices(last + "z16|", "C16|C16|"), True)
+
     def test_never_repairs_a_finished_or_interior_error(self):
         broken = voices("c16|" * 11, "C16|" * 10 + "C8")
         with self.assertRaises(ValueError):

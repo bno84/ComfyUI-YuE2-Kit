@@ -72,7 +72,7 @@ class ParseWriteTests(unittest.TestCase):
                 splice.parse(HEADER + f"V: Vocal\n{music}\nV: Ins\nZ|\n")
 
     def test_reports_unequal_voices_and_bars_of_the_wrong_length(self):
-        score = splice.parse(HEADER + "V: Vocal\ne16|e8|\nV: Ins\nZ|\n")
+        score = splice.parse(HEADER + "V: Vocal\ne16|e8|e16|\nV: Ins\nZ|\n")
         self.assertTrue(any("different bar counts" in note for note in score.notes))
         with self.assertRaises(splice.ScoreError):
             splice.write(score)

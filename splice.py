@@ -333,7 +333,11 @@ def note_unit(score):
 
 
 def check(score):
-    """Problems worth knowing before a score is used: notes from parsing, and bars of the wrong length."""
+    """Report parse problems and meter mismatches before the final bar.
+
+    A finished song can end with a partial bar or excess trailing rests.
+    Preserve that final bar as written; no later bar depends on its length.
+    """
     problems = list(score.notes)
     unit = note_unit(score)
     for voice, bars in score.bars.items():
@@ -341,7 +345,7 @@ def check(score):
                    if bar.text != "Z" and bar_units(bar.text, unit) is None]
         if unknown:
             problems.append(f"{voice}: cannot validate notation in bars {', '.join(map(str, unknown[:8]))}.")
-        wrong = [index + 1 for index, bar in enumerate(bars)
+        wrong = [index + 1 for index, bar in enumerate(bars[:-1])
                  if (units := bar_units(bar.text, unit)) is not None
                  and units != _fraction(bar.state["M"], Fraction(1))]
         if wrong:
