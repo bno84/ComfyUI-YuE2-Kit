@@ -45,7 +45,7 @@ export function fillStrip(track, segments, total, {color=sectionColor, compact=f
     const block=el("div","yue2-bar-segment");
     const base = segment.color ?? color(segment.label);
     const background = segment.fade ? `linear-gradient(to right,${base} 0%,transparent 65%)` : base;
-    block.style.cssText=`position:absolute;left:${100*segment.bar/total}%;width:${100*segment.bars/total}%;height:100%;box-sizing:border-box;background:${background};border-right:${segment.fade ? "none" : "1px solid #ffffff55"};padding:${compact ? "0" : "2px"} 8px;overflow:hidden;color:#fff;font:11px/16px sans-serif;white-space:nowrap`;
+    block.style.cssText=`position:absolute;left:${100*segment.bar/total}%;width:${100*segment.bars/total}%;height:100%;box-sizing:border-box;background:${background};background-origin:border-box;background-repeat:no-repeat;border-right:${segment.fade ? "none" : "1px solid #ffffff55"};padding:${compact ? "0" : "2px"} 8px;overflow:hidden;color:#fff;font:11px/16px sans-serif;white-space:nowrap`;
     if (segment.generated) block.style.border = "1px dotted #d6dce4";
     const label=el("div","yue2-bar-label"), detail=el("div","yue2-bar-count");
     label.style.fontWeight="600"; detail.style.cssText="font:10px/14px sans-serif;color:#f0f0f0";
