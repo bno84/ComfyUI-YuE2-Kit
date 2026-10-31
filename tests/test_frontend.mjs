@@ -10,7 +10,7 @@ const load = (sources, names, app = { registerExtension() {} }) =>
 
 const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,valuesPlan,applicable,restoreLegacyWidgets,propertyMode,migrateScoreWorkflow");
 const strip = load(["score_strip.js"], "shortLabel,sectionColor,sourceSummary");
-const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceTargets,scoreViews,showScore,SongHistoryPanel");
+const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceTargets,scoreViews,showScore,SongHistoryPanel,planningText");
 const transcribe = load(["reference_transcribe.js"], "buildTranscriptionPrompt");
 const textbox = load(["reference_input.js", "score.js"], "bindReferenceTextbox");
 const node = (values) => ({ widgets: Object.entries(values).map(([name, value]) => ({ name, value })), inputs: [], graph: { setDirtyCanvas() {} } });
@@ -234,4 +234,20 @@ test("history shows the same selection in both ABC views and reports failures", 
   history.SongHistoryPanel.prototype.message.call(panel, "Copied");
   assert.equal(panel.statusElement.textContent, "");
   assert.equal(panel.status, null);
+});
+
+
+test("Planning describes generated stages and legacy reference modes", () => {
+  const current = values => history.runSettings({ 1: { class_type: "bno84.YuE2AdvancedScore", inputs: { ...state.SCORE_DEFAULTS, ...values } } });
+  for (const opening_generate of [false, true]) for (const continue_generate of [false, true]) {
+    assert.equal(history.planningText(current({ anchor_use: false, opening_generate, continue_generate })), "Generated");
+    const expected = (opening_generate ? "Opening + reference" : "Reference") + (continue_generate ? " + continuation" : "");
+    assert.equal(history.planningText(current({ anchor_use: true, opening_generate, continue_generate })), expected);
+  }
+  for (const source of ["None", "ABC", "Transcribe"]) for (const extend of [false, true]) {
+    assert.equal(history.planningText({ planners: [], reference: { source, extend } }),
+      source === "None" ? "Generated" : source + (extend ? " + continuation" : ""));
+  }
+  assert.equal(history.planningText({ planners: [], reference: null }), "-");
+  assert.equal(history.planningText({ planners: [{ error: "Missing settings" }], reference: { source: "ABC" } }), "-");
 });

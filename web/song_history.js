@@ -133,6 +133,21 @@ export function samplingText(sampling) {
   ].filter(Boolean).join(" · ");
 }
 
+export function planningText(settings) {
+  if (settings.planners.length) return settings.planners.map(entry => {
+    if (entry.error || !entry.plan) return "-";
+    const plan = entry.plan;
+    if (plan.source.kind === "none") return "Generated";
+    return [plan.opening.bars > 0 && "Opening", "reference", plan.continuation.enabled && "continuation"]
+      .filter(Boolean).join(" + ").replace(/^reference/, "Reference");
+  }).join(" / ");
+  const reference = settings.reference;
+  if (!reference) return "-";
+  if (reference.source === "None") return "Generated";
+  if (!["ABC", "Transcribe"].includes(reference.source)) return "-";
+  return reference.source + (reference.extend ? " + continuation" : "");
+}
+
 // Selections are half-open ranges of group indexes [start, end).
 export function sectionRange(groups, index) {
   let start = index, end = index + 1;
@@ -320,7 +335,7 @@ function styles() {
   const style = document.createElement("style");
   style.id = "yue2-history-style";
   style.textContent = `
-.yue2-history {box-sizing:border-box;display:flex;flex-direction:column;gap:6px;width:100%;height:100%;min-height:0;color:var(--input-text,#ddd);font:12px/1.45 sans-serif;padding:4px;}
+.yue2-history {container:yue2-history / inline-size;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;width:100%;height:100%;min-height:0;color:var(--input-text,#ddd);font:12px/1.45 sans-serif;padding:4px;}
 .yue2-history [hidden] {display:none!important;}
 .yue2-history button,.yue2-history input,.yue2-history select {font:inherit;color:inherit;background:var(--comfy-input-bg,#252525);border:1px solid var(--border-color,#555);border-radius:4px;padding:4px 8px;}
 .yue2-history button {cursor:pointer;white-space:nowrap;}
@@ -362,7 +377,10 @@ function styles() {
 .yue2-history .h-selbar .info {flex-basis:100%;}
 .yue2-history .h-selbar .primary {margin-left:auto;}
 .yue2-history .h-warn {color:#ffcf7a;flex-basis:100%;}
-.yue2-history .h-cols {display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;}
+.yue2-history .h-cols {display:grid;grid-template-columns:minmax(0,1fr);gap:8px;}
+@container yue2-history (min-width:668px) {
+  .yue2-history .h-cols {grid-template-columns:minmax(0,2fr) minmax(0,1fr);}
+}
 .yue2-history .h-box {background:#262f3b;border-radius:4px;padding:8px;min-width:0;}
 .yue2-history .h-box h4 {margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;opacity:.6;font-weight:600;}
 .yue2-history .h-kv {display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:4px 8px;align-items:center;}
@@ -888,9 +906,7 @@ class SongHistoryPanel {
       shown.title = warning || value;
       scoreKv.append(element("span", "muted", label), shown, element("span"));
     };
-    const reference = settings.reference;
-    fact("Source", settings.planners.length ? settings.planners.map(entry => entry.error ? "Unavailable plan" : entry.plan.source.kind === "none" ? "Lyrics + style" : `${entry.plan.source.kind} source`).join(" / ") : !reference ? "–" : reference.source === "None" ? "Planned from lyrics + style"
-      : `${reference.source} reference · extend ${reference.extend ? "on" : "off"}`);
+    fact("Planning", planningText(settings));
     const fields = detail.score.fields;
     const tempo = /(\d+(?:\.\d+)?)\s*$/.exec(fields.Q ?? "")?.[1];
     fact("Score", `${detail.score.bars} bars · ≈${clock(detail.score.seconds)}${tempo ? ` at ${tempo} BPM` : ""}`);
