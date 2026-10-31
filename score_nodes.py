@@ -1,6 +1,7 @@
 """Public Score planner and independently cached execution stages."""
 
 import json
+import time
 
 from comfy_api.latest import io
 from comfy_execution.graph_utils import GraphBuilder
@@ -123,13 +124,14 @@ def opening_candidates(clip, anchor_abc, settings, style, lyrics, mode, seed):
     options = settings["opening"]
     settings = {**settings, "budget": options["max_tokens"]}
     candidates, records = [], []
-    first_fit = None
-    for index in range(options["attempts"]):
+    started = time.perf_counter()
+    for index in range(score.OPENING_CANDIDATES):
         candidate_seed = score.derive_seed(seed, "opening", index)
         candidate = splice.Candidate(seed=candidate_seed)
         record = dict(seed=str(candidate_seed), header=[], error="")
         candidates.append(candidate)
         records.append(record)
+        candidate_started = time.perf_counter()
         try:
             text, detail = generate(clip, settings, style, lyrics, mode, candidate_seed)
             record.update(detail)
@@ -167,21 +169,20 @@ def opening_candidates(clip, anchor_abc, settings, style, lyrics, mode, seed):
             candidate.abc = splice.write(lead)
             record.update(cadence=None if unscored else candidate.cadence, unscored=unscored,
                           warnings=candidate.warnings)
-            if unscored or (not candidate.warnings and candidate.cadence >= 1):
-                first_fit = candidate
-                break
         except (ValueError, splice.ScoreError) as error:
             candidate.error = record["error"] = str(error)
+        finally:
+            record["elapsed_seconds"] = time.perf_counter() - candidate_started
     usable = sorted((item for item in candidates if item.usable), key=splice.Candidate.rank)
     if not usable:
         raise ValueError("No usable opening.\n" + "\n".join(f"Seed {r['seed']}: {r['error']}" for r in records))
-    chosen = first_fit or usable[0]
+    chosen = usable[0]
     selected = next(item for item in records if item["seed"] == str(chosen.seed))
-    reason = ("chord join unscored; first valid candidate wins" if selected["unscored"] else
-              "first good fit (warning-free, favorable cadence)" if first_fit else
-              f"no candidate met first good fit (warning-free, favorable cadence); picked the best of {len(records)}")
+    reason = (f"ranked all {len(records)} candidates by structural warnings; chord join unscored" if selected["unscored"] else
+              f"ranked all {len(records)} candidates by warnings and cadence; selected the best usable join")
     return chosen.abc, dict(candidates=records, selected=selected, selection_reason=reason,
-                            opening_bars=options["bars"], diagnostics=[])
+                            opening_bars=options["bars"], diagnostics=[], elapsed_seconds=time.perf_counter() - started)
+
 
 
 class ScoreGenerate(io.ComfyNode):
@@ -315,13 +316,16 @@ def result_payload(abc, data, context, facts, lyrics, style, mode, seed):
             lines.append(f"Song: one generation (seed {detail['seed']}) · header: {given} given; {generated} generated")
             continue
         lines.append(f"Seed {detail['seed']}: " + ("rejected. " + detail["error"] if detail.get("error") else "accepted."))
+        if "elapsed_seconds" in detail:
+            lines.append(f"  Wall time: {detail['elapsed_seconds']:.2f} s.")
         lines += [f"  {'given' if item['given'] else 'generated'} {item['line']}" for item in detail["header"]]
         lines += ["  " + text for text in detail.get("warnings", [])]
     if "selected" in data:
         selected = data["selected"]
-        lines.append(f"Selected seed {selected['seed']}; " + ("chord join unscored; first valid candidate wins." if selected["unscored"] else f"cadence {selected['cadence']}/2."))
+        lines.append(f"Selected seed {selected['seed']}; " + ("chord join unscored." if selected["unscored"] else f"cadence {selected['cadence']}/2."))
     if data.get("selection_reason"):
-        lines.append("Opening: " + data["selection_reason"] + ".")
+        elapsed = f" ({data['elapsed_seconds']:.2f} s total)" if "elapsed_seconds" in data else ""
+        lines.append("Opening: " + data["selection_reason"] + elapsed + ".")
     lines += [item["message"] for item in diagnostics]
     for stage in ("fresh", "continuation"):
         if stage in data:
@@ -375,7 +379,7 @@ def score_inputs():
         io.Boolean.Input("opening_generate", default=False, display_name="Generate opening"),
         io.Int.Input("opening_bars", default=8, min=1, max=256, display_name="Opening bars"),
         io.String.Input("opening_hint", default="intro", display_name="Opening hint (opening only)", dynamic_prompts=False),
-        io.Int.Input("opening_candidates", default=4, min=1, max=16, display_name="Opening candidates"),
+        io.Int.Input("opening_candidates", default=4, min=1, max=16, display_name="Opening candidates", tooltip="Always generates and ranks four candidates. Retained for saved workflow compatibility."),
         io.Boolean.Input("anchor_use", default=False, display_name="Reference use"),
         io.String.Input("anchor_abc", default="", multiline=True, dynamic_prompts=False, display_name="Reference ABC"),
         io.Int.Input("anchor_start", default=1, min=1, max=1000000, display_name="Reference start"),
@@ -387,7 +391,7 @@ def score_inputs():
         io.Int.Input("top_k", default=30, min=1, max=1000000, display_name="Top k"),
         io.Float.Input("repetition_penalty", default=1.005, min=0.001, max=100, step=0.001, display_name="Repetition penalty"),
         io.Int.Input("penalty_window", default=100, min=1, max=1000000, display_name="Penalty window"),
-        io.Int.Input("opening_tokens", default=1024, min=score.OPENING_TOKENS_MIN, max=20000, display_name="Opening token budget"),
+        io.Int.Input("opening_tokens", default=768, min=score.OPENING_TOKENS_MIN, max=20000, display_name="Opening token budget"),
         io.Int.Input("continuation_tokens", default=8192, min=0, max=20000, display_name="Continuation token budget"),
         # The encoder file, never a loaded model: only the browser's transcription job loads it.
         io.AnyType.Input("sheetsage2", optional=True, lazy=True,

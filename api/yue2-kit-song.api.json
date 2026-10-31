@@ -117,7 +117,7 @@
       "top_k": 30,
       "repetition_penalty": 1.005,
       "penalty_window": 100,
-      "opening_tokens": 1024,
+      "opening_tokens": 768,
       "continuation_tokens": 8192,
       "clip": [
         "34:45",

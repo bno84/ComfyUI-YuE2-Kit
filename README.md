@@ -72,8 +72,11 @@ CFG controls acoustic diffusion.
   reference's `L:` line.
 
 **Generate opening** adds the requested bars before the reference. Its hint labels
-only that opening. Candidates use first good fit, then the best available join;
-this is a chord-root/structural heuristic, so audition the join in ABC Preview.
+only that opening. Four candidates are always generated and ranked by structural
+warnings and chord-root cadence; the best usable join wins. The opening token
+budget defaults to 768 per candidate. Without chord scoring, ranking uses structural
+warnings and breaks ties in generation order. The report includes per-candidate
+and total wall times. Audition the join in ABC Preview.
 Opening controls have no effect with Reference use off.
 
 **Reference use** enables the **Reference ABC** source. Its section strip updates as you

@@ -135,6 +135,34 @@ class ScoreTests(unittest.TestCase):
                             ("opening_generate", "Generate opening"), ("continue_generate", "Generate continuation")):
             self.assertEqual(inputs[name].display_name, label)
 
+    def test_opening_generates_all_four_then_ranks(self):
+        def candidate(chord, duration=16):
+            return HEADER + f'% intro\nV: Vocal\n"{chord}"c{duration}|\nV: Ins\nC{duration}|\n'
+        texts = [candidate("C"), candidate("G"), candidate("D", 8), candidate("F")]
+        for mode, chosen_index in (("full", 1), ("melody", 0)):
+            with self.subTest(mode=mode):
+                plan = score.widgets_to_plan(dict(header_mode="reference", anchor_use=True,
+                    anchor_abc=ANCHOR, opening_generate=True, opening_bars=1, opening_candidates=1))
+                self.assertEqual(plan["opening"]["attempts"], 4)
+                self.assertEqual(plan["opening"]["max_tokens"], 768)
+                settings = dict(opening=plan["opening"], fixed=score.resolve_header(plan, splice.parse(ANCHOR)))
+                receipts = [(text, dict(seed=str(score.derive_seed(7, "opening", i)), header=[], ended=True, generation={}))
+                            for i, text in enumerate(texts)]
+                clip = types.SimpleNamespace(tokenizer=object())
+                with patch.object(nodes, "generate", side_effect=receipts) as generate, patch.object(nodes, "capacity"):
+                    abc, data = nodes.opening_candidates(clip, ANCHOR, settings, "style", "lyrics", mode, 7)
+                self.assertEqual(generate.call_count, 4)
+                self.assertTrue(all(call.args[1]["budget"] == 768 for call in generate.call_args_list))
+                self.assertEqual(len(data["candidates"]), 4)
+                self.assertEqual(data["selected"]["seed"], str(score.derive_seed(7, "opening", chosen_index)))
+                self.assertTrue(data["candidates"][2]["error"])
+                self.assertIn("ranked all 4", data["selection_reason"])
+                self.assertGreaterEqual(data["elapsed_seconds"], 0)
+                self.assertTrue(all(item["elapsed_seconds"] >= 0 for item in data["candidates"]))
+                if mode == "full":
+                    self.assertEqual(data["selected"]["cadence"], 2)
+                    self.assertIn('"G"', abc)
+
     def test_reference_labels_keep_legacy_workflows_compatible(self):
         values = dict(anchor_use=True, anchor_abc=ANCHOR)
         self.assertEqual(score.widgets_to_plan(dict(values, header_mode="from reference")),
