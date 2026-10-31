@@ -4,7 +4,7 @@ import { readValues, setValues, applicable, rangeSelection, previewValues, resto
 import { referenceExecutionId, buildTranscriptionPrompt, queueTranscription, transcriptionError } from "./reference_transcribe.js";
 import { referenceFileKind } from "./reference_input.js";
 
-import {fillStrip, barAxis, selectionOverlay, releaseStrip, STAGE_PALETTE, keyWords, sourceSummary} from "./score_strip.js";
+import {fillStrip, barAxis, selectionOverlay, releaseStrip, keyWords, sourceSummary} from "./score_strip.js";
 
 const OPEN = "Open ABC or audio…";
 const element = (tag, text = "") => { const el = document.createElement(tag); el.textContent = text; return el; };
@@ -103,15 +103,18 @@ export class ScorePanel {
     const data = this.data, v = readValues(this.node);
     releaseStrip(this.track); this.track.replaceChildren();
     const header=element("div"); header.className="yue2-score-header";
-    header.style.cssText="flex:0 0 140px;font:11px/18px sans-serif;border-right:1px solid #78889a55;padding-right:8px";
+    header.style.cssText="flex:0 0 150px;min-width:0;font:11px/18px sans-serif;border-right:1px solid #78889a55;padding-right:8px;box-sizing:border-box";
     const fixed=data?.header?.fixed ?? {}, policies=data?.header?.policies ?? {};
-    for (const [label,field,name] of [["Tempo","Q","tempo"],["Meter","M","meter"],["Key","K","key"]]) {
+    for (const [label,field,name] of [["Tempo","Q","tempo"],["Meter","M","meter"],["Unit note length","L","unit"],["Key","K","key"]]) {
       const policy=policies[name]?.policy ?? (propertyMode(v.header_mode)==="locked" ? "set" : propertyMode(v.header_mode)==="reference" ? "anchor" : "free");
       const mode={set:"locked",anchor:"reference",free:"generated"}[policy];
-      const raw=fixed[field] ?? (policy==="set" ? {Q:v.header_tempo,M:v.header_meter,K:v.header_key}[field] : null);
+      const raw=fixed[field] ?? (policy==="set" ? {Q:v.header_tempo,M:v.header_meter,L:v.header_unit,K:v.header_key}[field] : null);
       const value=label==="Key" ? (raw ? keyWords(String(raw)) : "model") : label==="Tempo" ? (data?.timing?.bpm ?? raw ?? "model") : (raw ?? "model");
-      const unit = field === "M" ? (fixed.L ?? (propertyMode(v.header_mode) === "locked" ? v.header_unit : null)) : null;
-      header.append(element("div",`${label} ${value}${unit ? ` · L:${unit}` : ""} · ${mode}`));
+      const row=element("div"); row.style.cssText="display:flex;gap:4px;white-space:nowrap";
+      const text=element(policy==="set" ? "strong" : "span", String(value));
+      text.style.cssText="min-width:0;overflow:hidden;text-overflow:ellipsis";
+      row.title=`${label} ${value} · ${mode}`;
+      row.append(element("span",label),text); header.append(row);
     }
     const body=element("div"); body.style.cssText="flex:1;min-width:0";
     const track=element("div");
@@ -123,9 +126,9 @@ export class ScorePanel {
         ...section,bar:span.start+section.bar}));
       const label={fresh:"Song",opening:v.opening_hint || "Opening",continuation:"Continuation",anchor:"Reference"}[span.stage];
       const seconds=span.stage==="opening" ? bars*(data.source?.bar_seconds ?? 0)*(data.source?.bpm ?? 120)/(data.timing?.bpm ?? 120) : null;
-      return [{bar:span.start,bars,label,unknown:span.end==null,color:STAGE_PALETTE[span.stage],seconds:seconds || null}];
+      return [{bar:span.start,bars,label,unknown:span.end==null,fade:span.stage==="opening" || span.end==null,seconds:seconds || null}];
     });
-    fillStrip(track,segments,total); body.append(track,barAxis(total)); this.track.append(header,body);
+    fillStrip(track,segments,total,{grid:false}); body.append(track); this.track.append(header,body);
     this.renderRange({...v,...(data?.anchor ? {anchor_start:data.anchor.start+1,anchor_end:data.anchor.end} : {})}, data?.source);
   }
   renderRange(v, source) {

@@ -1,6 +1,5 @@
 // Shared bar geometry, palette and labels for Score and Song history.
 export const SECTION_PALETTE = {intro:"#7f77dd",verse:"#d4552b",interlude:"#1d9e75",chorus:"#d4537e",bridge:"#ba7517",outro:"#378add",hook:"#d4537e",melody:"#409494"};
-export const STAGE_PALETTE = {opening:"#7165ac",anchor:"#287d66",continuation:"#456185",fresh:"#456185"};
 export const sectionColor = label => SECTION_PALETTE[label?.toLowerCase().replace(/[\s\d]+$/, "")] ?? (label ? "#639922" : "#666");
 const el = (tag, cls, text) => { const e=document.createElement(tag); e.className=cls; if (text != null) e.textContent=text; return e; };
 export function shortLabel(label, width) {
@@ -37,14 +36,16 @@ export function releaseStrip(root) {
   root?.yue2Observer?.disconnect();
   for(const child of root?.querySelectorAll?.("*") ?? []) child.yue2Observer?.disconnect();
 }
-export function fillStrip(track, segments, total, {color=sectionColor, compact=false, details=true}={}) {
+export function fillStrip(track, segments, total, {color=sectionColor, compact=false, details=true, grid=true}={}) {
   track.style.position="relative";
   track.style.height=compact ? "16px" : "38px";
   track.style.background="#202730"; track.style.borderRadius="3px";
   track.style.userSelect="none"; track.style.touchAction="none";
   for(const segment of segments){
     const block=el("div","yue2-bar-segment");
-    block.style.cssText=`position:absolute;left:${100*segment.bar/total}%;width:${100*segment.bars/total}%;height:100%;box-sizing:border-box;background:${segment.color ?? color(segment.label)};border-right:1px solid #ffffff55;padding:${compact ? "0" : "2px"} 8px;overflow:hidden;color:#fff;font:11px/16px sans-serif;white-space:nowrap`;
+    const base = segment.color ?? color(segment.label);
+    const background = segment.fade ? `linear-gradient(to right,${base} 0%,${base} 20%,transparent 100%)` : base;
+    block.style.cssText=`position:absolute;left:${100*segment.bar/total}%;width:${100*segment.bars/total}%;height:100%;box-sizing:border-box;background:${background};border-right:${segment.fade ? "none" : "1px solid #ffffff55"};padding:${compact ? "0" : "2px"} 8px;overflow:hidden;color:#fff;font:11px/16px sans-serif;white-space:nowrap`;
     const label=el("div","yue2-bar-label"), detail=el("div","yue2-bar-count");
     label.style.fontWeight="600"; detail.style.cssText="font:10px/14px sans-serif;color:#f0f0f0";
     block.append(label); if(!compact && details) block.append(detail);
@@ -62,10 +63,10 @@ export function fillStrip(track, segments, total, {color=sectionColor, compact=f
     track.append(block);
   }
   // Compact strips are overviews; bar lines there are only noise.
-  if(compact) return;
-  const grid=el("div","yue2-bar-grid");
-  grid.style.cssText=`position:absolute;inset:0;background:repeating-linear-gradient(to right,transparent 0 calc(${100/total}% - 1px),#0002 calc(${100/total}% - 1px) ${100/total}%);pointer-events:none`;
-  track.append(grid);
+  if(compact || !grid) return;
+  const lines=el("div","yue2-bar-grid");
+  lines.style.cssText=`position:absolute;inset:0;background:repeating-linear-gradient(to right,transparent 0 calc(${100/total}% - 1px),#0002 calc(${100/total}% - 1px) ${100/total}%);pointer-events:none`;
+  track.append(lines);
 }
 export function selectionOverlay(track) {
   const outline=el("div","yue2-bar-selection");
