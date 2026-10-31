@@ -10,7 +10,6 @@ from . import planning, score, splice
 from .history import parse_score, summary
 
 Data = io.Custom("YUE2_SCORE_DATA")
-Context = io.Custom("YUE2_SCORE_CONTEXT")
 def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
 
@@ -21,27 +20,7 @@ def model_inputs():
 
 
 def generated_outputs():
-    return [io.String.Output("abc"), Data.Output("data"), Context.Output("context")]
-
-
-def capacity(tokenizer, abc, style, lyrics, mode):
-    """Fail only when the prompts leave no room for music.
-
-    A longer score is not an error: the music stage renders what fits in
-    its context and stops there, so the report warns instead.
-    """
-    tokens = tokenizer.tokenize_with_weights(style, lyrics=lyrics, cot=mode, abc=abc)
-    used, available = planning.check_music_context(tokens)
-    analysis = score.analyze(abc)
-    audio_seconds = available / 25
-    diagnostics = []
-    if analysis["seconds"] > audio_seconds:
-        bar = int(analysis["bars"] * audio_seconds / analysis["seconds"]) + 1
-        diagnostics.append(score.diagnostic("result", "audio_capacity",
-            f"Audio context holds about {audio_seconds:.1f} s of the score's {analysis['seconds']:.1f} s; "
-            f"the audio stops early, near bar {bar}.", bar - 1))
-    return dict(used=used, context=planning.CONTEXT, audio_seconds=audio_seconds, diagnostics=diagnostics,
-                checks=["structure", "header", "prompt tokens", "room for audio"])
+    return [io.String.Output("abc"), Data.Output("data")]
 
 
 def generate(clip, settings, style, lyrics, mode, seed):
@@ -169,7 +148,6 @@ def opening_candidates(clip, anchor_abc, settings, style, lyrics, mode, seed):
                 lead.labels[0] = [options["label"]]
             adapted, _ = score.adapt_anchor_tempo(anchor, lead)
             joined, join_warnings = splice.join(lead, adapted)
-            capacity(clip.tokenizer, splice.write(joined), style, lyrics, mode)
             candidate.lead, candidate.score = lead, joined
             candidate.warnings = warnings + join_warnings
             keys = {bar.state["K"] for bar in lead.bars[lead.voices[0]]}
@@ -212,7 +190,7 @@ class ScoreGenerate(io.ComfyNode):
         detail.update(trimmed)
         diagnostics = score.validate_header_changes(splice.parse(abc), settings["fixed"], stage="fresh")
         return io.NodeOutput(abc, dict(fresh=detail, opening_bars=0, anchor_bars=0,
-                                     diagnostics=trimmed["diagnostics"] + diagnostics), clip.tokenizer)
+                                     diagnostics=trimmed["diagnostics"] + diagnostics))
 
 
 class ScoreOpening(io.ComfyNode):
@@ -225,7 +203,7 @@ class ScoreOpening(io.ComfyNode):
     @classmethod
     def execute(cls, clip, style, lyrics, mode, seed, anchor, settings):
         abc, data = opening_candidates(clip, anchor, json.loads(settings), style, lyrics, mode, seed)
-        return io.NodeOutput(abc, data, clip.tokenizer)
+        return io.NodeOutput(abc, data)
 
 
 class ScoreJoin(io.ComfyNode):
@@ -284,26 +262,14 @@ class ScoreContinue(io.ComfyNode):
         diagnostics = score.validate_header_changes(parsed, settings["fixed"], "continuation", source.length)
         data = {**data, "continuation": dict(seed=str(seed), ended=ended, generation=metadata, **trimmed),
                 "diagnostics": data["diagnostics"] + diagnostics + trimmed["diagnostics"]}
-        return io.NodeOutput(final, data, clip.tokenizer)
+        return io.NodeOutput(final, data)
 
 
-class ScoreContext(io.ComfyNode):
-    @classmethod
-    def define_schema(cls):
-        return io.Schema(node_id="bno84.ScoreContext", is_dev_only=True,
-                         inputs=[io.Clip.Input("clip")], outputs=[Context.Output("context")])
-
-    @classmethod
-    def execute(cls, clip):
-        return io.NodeOutput(clip.tokenizer)
-
-
-def result_payload(abc, data, context, facts, lyrics, style, mode, seed):
+def result_payload(abc, data, facts, lyrics, style, mode, seed):
     facts = json.loads(facts)
     analysis = score.analyze(abc, style)
     analysis.pop("written_seconds")
-    checked = capacity(context, abc, style, lyrics, mode)
-    diagnostics = facts["diagnostics"] + data["diagnostics"] + analysis.pop("diagnostics") + checked.pop("diagnostics")
+    diagnostics = facts["diagnostics"] + data["diagnostics"] + analysis.pop("diagnostics")
     diagnostics += [score.diagnostic("result", "field_change", f"{event['field']}:{event['value']} change at bar {event['bar'] + 1}.", event["bar"])
                     for event in analysis["events"] if event["field"] in ("M", "K")]
     diagnostics += [score.diagnostic("result", "tie_warning", text) for text in splice.fragment_problems(splice.parse(abc))]
@@ -347,27 +313,26 @@ def result_payload(abc, data, context, facts, lyrics, style, mode, seed):
             stop = "trimmed" if detail.get("trimmed") else "ended naturally"
             lines.append(f"{stage.capitalize()}: {actual} bars · {stop}.")
             lines.append(f"{stage.capitalize()} seed {data[stage]['seed']}: " + ("ended at ABC_END." if data[stage]["ended"] else "token budget reached."))
-    lines.append(f"Checks: {', '.join(checked['checks'])}. {checked['used']} of {checked['context']} tokens; {checked['audio_seconds']:.1f} s audio capacity.")
     report = "\n".join(lines)
     return dict(version=1, abc=abc, seconds=analysis["seconds"], seed=str(seed), mode=mode,
                 source=facts["source"], cut=facts["cut"], header=facts["header"], analysis=analysis,
                 summary=summary(parse_score(abc)), spans=spans, diagnostics=diagnostics, generation=data,
-                capacity=checked, report=report)
+                report=report)
 
 
 class ScoreResult(io.ComfyNode):
     @classmethod
     def define_schema(cls):
         return io.Schema(node_id="bno84.ScoreResult", is_dev_only=True,
-                         inputs=[io.String.Input("abc"), Data.Input("data"), Context.Input("context"),
+                         inputs=[io.String.Input("abc"), Data.Input("data"),
                                  io.String.Input("facts"), io.String.Input("lyrics"), io.String.Input("style"),
                                  io.Combo.Input("mode", options=["full", "melody"]), io.Int.Input("seed", min=score.SEED_MIN, max=score.UINT64)], outputs=score_outputs())
 
     @classmethod
-    def execute(cls, abc, data, context, facts, lyrics, style, mode, seed):
+    def execute(cls, abc, data, facts, lyrics, style, mode, seed):
         abc, normalized = score.normalize_tempo(abc)
         data = {**data, "diagnostics": data["diagnostics"] + normalized}
-        payload = result_payload(abc, data, context, facts, lyrics, style, mode, seed)
+        payload = result_payload(abc, data, facts, lyrics, style, mode, seed)
         return io.NodeOutput(abc, mode, payload["seconds"], lyrics, style, seed, payload["report"])
 
 
@@ -457,7 +422,7 @@ class YuE2AdvancedScore(io.ComfyNode):
             if settings["spec"]:
                 settings["label"] = plan["opening"]["label"]
             node = graph.node("bno84.ScoreGenerate", "fresh", **shared, seed=score.derive_seed(seed, "fresh"), settings=canonical(settings))
-            final, data, context = node.out(0), node.out(1), node.out(2)
+            final, data = node.out(0), node.out(1)
         else:
             if plan["opening"]["bars"]:
                 if not anchor.field("L"):
@@ -465,9 +430,9 @@ class YuE2AdvancedScore(io.ComfyNode):
                 settings.update(opening=plan["opening"], label=plan["opening"]["label"],
                                 budget=plan["opening"]["max_tokens"])
                 node = graph.node("bno84.ScoreOpening", "opening", **shared, seed=seed, anchor=anchor_abc, settings=canonical(settings))
-                opening, data, context = node.out(0), node.out(1), node.out(2)
+                opening, data = node.out(0), node.out(1)
             else:
-                opening, data, context = "", dict(opening_bars=0, diagnostics=[]), None
+                opening, data = "", dict(opening_bars=0, diagnostics=[])
             joined = graph.node("bno84.ScoreJoin", "join", anchor=anchor_abc, opening=opening, data=data,
                                 tempo=fixed["Q"] if not plan["opening"]["bars"] and plan["header"]["tempo"]["policy"] == "locked" else "")
             final, data = joined.out(0), joined.out(1)
@@ -475,15 +440,13 @@ class YuE2AdvancedScore(io.ComfyNode):
                 settings = dict(budget=plan["continuation"]["max_tokens"] or 8192, sampling=sampling, fixed=fixed)
                 node = graph.node("bno84.ScoreContinue", "continue", **shared, seed=score.derive_seed(seed, "continuation"),
                                   abc=final, data=data, settings=canonical(settings))
-                final, data, context = node.out(0), node.out(1), node.out(2)
-            elif context is None:
-                context = graph.node("bno84.ScoreContext", "context", clip=shared["clip"]).out(0)
+                final, data = node.out(0), node.out(1)
         facts = dict(source=plan["source"]["kind"],
                      cut=None if anchor is None else dict(start=plan["anchor"]["start"], end=plan["anchor"]["start"] + anchor.length),
                      header=plan["header"], diagnostics=diagnostics)
-        result = graph.node("bno84.ScoreResult", "result", abc=final, data=data, context=context, facts=canonical(facts),
+        result = graph.node("bno84.ScoreResult", "result", abc=final, data=data, facts=canonical(facts),
                             lyrics=shared["lyrics"], style=shared["style"], mode=mode, seed=seed)
         return io.NodeOutput(*(result.out(index) for index in range(7)), expand=graph.finalize())
 
 
-SCORE_NODES = [YuE2AdvancedScore, ScoreGenerate, ScoreOpening, ScoreJoin, ScoreContinue, ScoreContext, ScoreResult]
+SCORE_NODES = [YuE2AdvancedScore, ScoreGenerate, ScoreOpening, ScoreJoin, ScoreContinue, ScoreResult]

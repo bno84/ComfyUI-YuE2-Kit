@@ -150,7 +150,7 @@ class ScoreTests(unittest.TestCase):
                 receipts = [(text, dict(seed=str(score.derive_seed(7, "opening", i)), header=[], ended=True, generation={}))
                             for i, text in enumerate((texts + [candidate("C")] * 6)[:count])]
                 clip = types.SimpleNamespace(tokenizer=object())
-                with patch.object(nodes, "generate", side_effect=receipts) as generate, patch.object(nodes, "capacity"):
+                with patch.object(nodes, "generate", side_effect=receipts) as generate:
                     abc, data = nodes.opening_candidates(clip, ANCHOR, settings, "style", "lyrics", mode, 7)
                 self.assertEqual(generate.call_count, count)
                 self.assertTrue(all(call.args[1]["budget"] == 768 for call in generate.call_args_list))
@@ -184,7 +184,7 @@ class ScoreTests(unittest.TestCase):
             unique_id="score", dynprompt=types.SimpleNamespace(get_node=lambda id: dict(inputs={})))
         for values, stages in ((dict(), {"fresh", "result"}),
                                (dict(anchor_use=True, header_mode="reference", continue_generate=False),
-                                {"join", "context", "result"}),
+                                {"join", "result"}),
                                (dict(anchor_use=True, opening_generate=True), {"opening", "join", "continue", "result"})):
             with self.subTest(values=values):
                 plan = score.widgets_to_plan(dict(values, anchor_abc=ANCHOR))
@@ -270,28 +270,6 @@ class PreviewPlanTests(unittest.TestCase):
         self.assertIsNone(result["plan"])
         self.assertEqual(result["errors"], ["Generated tempo needs an opening."])
 
-
-
-class CapacityTests(unittest.TestCase):
-    """The music stage renders what fits; Score fails only when nothing can."""
-
-    @staticmethod
-    def tokenizer(seconds_of_room):
-        prefix = nodes.planning.CONTEXT - 2 - 10 - int(seconds_of_room * 25)
-        return types.SimpleNamespace(tokenize_with_weights=lambda *a, **k: dict(prefix=[0] * prefix, abc_ids=[0] * 10))
-
-    def test_a_score_longer_than_the_audio_context_warns_where_audio_stops(self):
-        # ANCHOR is 4 bars at 120 BPM: 8 s.
-        checked = nodes.capacity(self.tokenizer(5), ANCHOR, "s", "l", "full")
-        self.assertEqual(checked["audio_seconds"], 5)
-        [warning] = checked["diagnostics"]
-        self.assertEqual((warning["code"], warning["bar"]), ("audio_capacity", 2))
-        self.assertIn("about 5.0 s of the score's 8.0 s", warning["message"])
-        self.assertEqual(nodes.capacity(self.tokenizer(8), ANCHOR, "s", "l", "full")["diagnostics"], [])
-
-    def test_prompts_without_room_for_music_still_fail(self):
-        with self.assertRaisesRegex(ValueError, "audio context"):
-            nodes.capacity(self.tokenizer(-1), ANCHOR, "s", "l", "full")
 
 
 if __name__ == "__main__":

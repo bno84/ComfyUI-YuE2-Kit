@@ -94,8 +94,8 @@ across the strip to select single bars; the stored source stays intact.
 forced on and generates the whole song. It runs until the model ends the song or
 **Continuation tokens** runs out; an exhausted budget trims to complete aligned
 bars and reports it. Sampling controls and both token budgets are always visible.
-The score is not capped by audio length: when it is longer than the music model's
-context holds, the report warns and the audio stops early, near the bar it names.
+The score is not capped by audio length; the music stage renders what fits in
+its context.
 
 **Song history** sits above Score. Browse saved pairs, select sections or drag bar
 handles, then **Use as reference**. Choose a destination when multiple YuE2 Advanced Score

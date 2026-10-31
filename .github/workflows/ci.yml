@@ -80,7 +80,7 @@ jobs:
           --pack ComfyUI-YuE2-Kit --cnr-id comfyui-yue2-kit
           --node bno84.SaveYuE2Bundle --node bno84.YuE2ExtendABC --node bno84.YuE2AdvancedScore
           --node bno84.ScoreGenerate --node bno84.ScoreOpening --node bno84.ScoreJoin
-          --node bno84.ScoreContinue --node bno84.ScoreContext --node bno84.ScoreResult
+          --node bno84.ScoreContinue --node bno84.ScoreResult
           --node bno84.SongHistory
           --node bno84.OptionalLoadAudio --node bno84.ReferenceInput --node bno84.LyricsStyle
           --node bno84.CheckpointFile --node bno84.OptionalAudioEncoderFile
