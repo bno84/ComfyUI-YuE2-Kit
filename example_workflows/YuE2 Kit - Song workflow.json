@@ -1,19 +1,19 @@
 {
   "id": "75140c3e-0999-5e9e-8139-ff1a6450053b",
   "revision": 1,
-  "last_node_id": 89,
+  "last_node_id": 91,
   "last_link_id": 85,
   "nodes": [
     {
       "id": 32,
       "type": "bno84.LyricsStyle",
       "pos": [
-        -615.6193943999641,
-        1659.8618177946164
+        -550.0784481029937,
+        1646.1666946877867
       ],
       "size": [
-        460.31253069107913,
-        677.5626422038914
+        469.1165384026126,
+        690.2795422316624
       ],
       "flags": {},
       "order": 0,
@@ -81,19 +81,18 @@
         "instrumental": true,
         "lyrics": "[Verse]\nNeon fades along the lane\nFootsteps keep the time of rain\nFold the night and leave it here\nMorning has a sky to clear\n\n[Chorus]\nLet the day come into view\nEvery road begins with you\nHold a little room for light\nWe will sing beyond the night",
         "style": "English, warm piano pop, expressive female voice, acoustic piano, rounded bass and light drums, lyrical memorable melody, unhurried phrasing, 88 BPM"
-      },
-      "title": "Lyrics + style"
+      }
     },
     {
       "id": 3,
       "type": "PrimitiveInt",
       "pos": [
-        -615.3936027274417,
-        2396.129194819526
+        -548.8744333514119,
+        2392.216302503289
       ],
       "size": [
-        459.892686238484,
-        139.06044754683762
+        470.65314010813586,
+        121.4524321237709
       ],
       "flags": {},
       "order": 1,
@@ -136,8 +135,8 @@
       "id": 34,
       "type": "cd99ff70-b0eb-5b1e-8240-b763082c1efd",
       "pos": [
-        -5.702825341838242,
-        2655.0827658079997
+        54.232902712123725,
+        2901.701608046559
       ],
       "size": [
         400,
@@ -228,8 +227,7 @@
         "yue2": "yue2_3b_bf16.safetensors",
         "instrumental_lora": "ar_lora_inst_v3abc_comfyui.safetensors",
         "instrumental": false
-      },
-      "title": "Models"
+      }
     },
     {
       "id": 31,
@@ -461,8 +459,7 @@
         "sampler_name": "dpm_2",
         "scheduler": "sgm_uniform",
         "denoise": 1
-      },
-      "title": "Acoustic"
+      }
     },
     {
       "id": 11,
@@ -577,8 +574,8 @@
       "id": 46,
       "type": "bno84.ModelStatus",
       "pos": [
-        -3.150876102111539,
-        2950.655915086031
+        55.934776096147914,
+        3156.2236258118664
       ],
       "size": [
         400,
@@ -597,8 +594,7 @@
       "widgets_values": [],
       "widgets_values_named": {},
       "color": "#432",
-      "bgcolor": "#653",
-      "title": "Model files"
+      "bgcolor": "#653"
     },
     {
       "id": 54,
@@ -779,12 +775,12 @@
       "id": 63,
       "type": "bno84.SongHistory",
       "pos": [
-        -18.16853035593734,
-        967.3999508895827
+        -278.5963333804655,
+        777.5907187014028
       ],
       "size": [
-        719.94897025929,
-        355.1865969206083
+        977.7577224681818,
+        578.010049578213
       ],
       "flags": {},
       "order": 4,
@@ -799,19 +795,18 @@
       "widgets_values": [],
       "widgets_values_named": {},
       "color": "#432",
-      "bgcolor": "#653",
-      "title": "Song history"
+      "bgcolor": "#653"
     },
     {
       "id": 65,
       "type": "bno84.YuE2AdvancedScore",
       "pos": [
-        -21.366603196819582,
-        1414.866746433687
+        52.18966432353253,
+        1459.7604575441696
       ],
       "size": [
-        740,
-        1100
+        648.8589557240468,
+        1085.796200892059
       ],
       "flags": {},
       "order": 14,
@@ -948,8 +943,7 @@
         "penalty_window": 100,
         "opening_tokens": 768,
         "continuation_tokens": 8192
-      },
-      "title": "YuE2 Advanced Score"
+      }
     },
     {
       "id": 12,
@@ -1009,12 +1003,12 @@
       "id": 66,
       "type": "PreviewAny",
       "pos": [
-        482.57051550820955,
-        2622.4841755761663
+        968.635817257568,
+        1049.2407990549762
       ],
       "size": [
-        675.0227567107565,
-        242.15209077393047
+        584.8643011375214,
+        277.07522061052487
       ],
       "flags": {},
       "order": 18,
@@ -1033,7 +1027,7 @@
           "links": null
         }
       ],
-      "title": "Score report",
+      "title": "Score report (debug information)",
       "properties": {
         "Node name for S&R": "PreviewAny",
         "cnr_id": "comfy-core",
@@ -1046,12 +1040,12 @@
       "id": 59,
       "type": "bno84.OptionalModelLora",
       "pos": [
-        1617.1463900566714,
-        2638.914646488282
+        1613.6804263443487,
+        2618.1188642143484
       ],
       "size": [
-        425.8819548623321,
-        137.21211179096372
+        429.43912969527514,
+        147.88363628979187
       ],
       "flags": {},
       "order": 13,
@@ -1091,8 +1085,8 @@
       "id": 84,
       "type": "MarkdownNote",
       "pos": [
-        1615.1420623792872,
-        2848.3770426202314
+        1613.3634749628156,
+        2830.5911684555194
       ],
       "size": [
         436.10507000681355,
@@ -1172,8 +1166,8 @@
       "id": 87,
       "type": "bno84.ABCTimeline",
       "pos": [
-        785.9082237575992,
-        1628.5753443716135
+        780.1793581173963,
+        1632.8719936017656
       ],
       "size": [
         778.4783895861261,
@@ -1208,8 +1202,8 @@
       "id": 88,
       "type": "MarkdownNote",
       "pos": [
-        -621.6164639819714,
-        2633.8782411828875
+        -564.8012675502091,
+        2619.674442074944
       ],
       "size": [
         482.92119749489007,
@@ -1235,8 +1229,8 @@
       "id": 89,
       "type": "MarkdownNote",
       "pos": [
-        -1063.9690572245636,
-        1655.1545967862276
+        -991.5805493741782,
+        1646.3505890746942
       ],
       "size": [
         396.5536132582505,
@@ -1254,6 +1248,33 @@
       ],
       "widgets_values_named": {
         "text": "# Normal YuE2\n\n### Lyrics\n\n```\n[verse]\nFootsteps in the morning rain\nTake me down this road again\n\n[chorus]\nLet the daylight carry through\nEvery road leads back to you\n```\n\n### Style\n\nDescribe the genre, instruments, vocals, mood, and tempo.\n\n```\nwarm piano pop, female vocals, acoustic piano,\nrounded bass, light drums, hopeful, 88 BPM\n```\n\n_Note: using reference ABC/Transcription will force a different tempo._\n\nNatural language can be mixed in.\n\n```\njazz, 110 BPM, relaxed saxophone with gradual introduction of drums, acoustic piano, rounded bass and light drums, dynamic composition, experimental\n```\n\n---\n\n# Instrumental LoRA\n\n### Lyrics\n\n```\n[intro]\n[verse]\n[chorus]\n[outro]\n```\n\nSupports timed tags, but **guidance only**. The LoRA tends toward _3\u20135 minute songs_ and section timing is not exact.\n\n```\n[intro 0:00-0:15]\n[verse 0:15-0:45]\n[chorus 0:45-1:10]\n```\n\n### Style\n\nStays the same as normal YuE2."
+      },
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 91,
+      "type": "MarkdownNote",
+      "pos": [
+        51.21364743727097,
+        2621.8389857640736
+      ],
+      "size": [
+        382.15931599306964,
+        145.68714258216312
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Score generation tips",
+      "properties": {},
+      "widgets_values": [
+        "### Interesting chord progressions and melodies\n\nIf they are boring / repetitive, check if the ABC produced already has this problem, then address it in the planner.\n\n- **Increase planner temperature** for example `1.10`.\n- Adjust the style prompt to encourage more bold, surprising composition and melodies."
+      ],
+      "widgets_values_named": {
+        "text": "### Interesting chord progressions and melodies\n\nIf they are boring / repetitive, check if the ABC produced already has this problem, then address it in the planner.\n\n- **Increase planner temperature** for example `1.10`.\n- Adjust the style prompt to encourage more bold, surprising composition and melodies."
       },
       "color": "#2a363b",
       "bgcolor": "#3f5159"
@@ -2952,7 +2973,7 @@
               480
             ],
             "size": [
-              270,
+              283.0833343505859,
               78
             ],
             "flags": {},
@@ -3597,10 +3618,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.8448443904906552,
+      "scale": 0.5245818967225675,
       "offset": [
-        666.8541769365024,
-        -1129.3725819352023
+        1259.2187282297425,
+        -772.1497072433216
       ]
     },
     "workflowRendererVersion": "LG"
