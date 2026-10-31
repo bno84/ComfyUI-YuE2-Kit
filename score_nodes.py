@@ -147,7 +147,7 @@ def opening_candidates(clip, anchor_abc, settings, style, lyrics, mode, seed):
             lead, warnings = splice.cut(written, 0, options["bars"])
             score.validate_header_changes(lead, settings["fixed"], anchor=anchor)
             if lead.field("L") != anchor.field("L"):
-                raise ValueError("Opening and anchor require identical L: declarations.")
+                raise ValueError("Opening and reference require identical L: declarations.")
             if len(lead.labels.get(0, [])) > 1:
                 lead.labels[0] = [lead.labels[0][-1]]
             if options["label"] and not lead.labels.get(0):
@@ -160,7 +160,7 @@ def opening_candidates(clip, anchor_abc, settings, style, lyrics, mode, seed):
             keys = {bar.state["K"] for bar in lead.bars[lead.voices[0]]}
             target = anchor.bars[anchor.voices[0]][0].state["K"]
             if keys != {target}:
-                candidate.warnings.append(f"Opening keys {', '.join(sorted(keys))}; anchor K:{target}.")
+                candidate.warnings.append(f"Opening keys {', '.join(sorted(keys))}; reference K:{target}.")
             a, b = splice.chords(lead), splice.chords(anchor)
             unscored = mode == "melody" or not a or not b
             candidate.cadence = 0 if unscored else splice.cadence(a[-1][1], b[0][1])
@@ -233,7 +233,7 @@ class ScoreJoin(io.ComfyNode):
         lead = splice.parse(opening) if opening else None
         adapted, diagnostics = score.adapt_anchor_tempo(part, lead)
         if not opening and tempo and original_bpm != score.normalize_field("Q", tempo):
-            diagnostics = [{**score.diagnostic("join", "tempo_set", f"No opening; set tempo retimes the whole anchor to Q:{tempo}.", severity="info"),
+            diagnostics = [{**score.diagnostic("join", "tempo_set", f"No opening; set tempo retimes the whole reference to Q:{tempo}.", severity="info"),
                             "from_bpm": original_bpm, "to_bpm": score.normalize_field("Q", tempo), "bars": part.length}]
         diagnostics += retiming
         if lead is not None:
@@ -303,8 +303,8 @@ def result_payload(abc, data, context, facts, lyrics, style, mode, seed):
     cut = facts["cut"]
     cut_text = f"bars {cut['start'] + 1}–{cut['end']}" if cut else "none"
     lines = [f"Mode: {mode}. Source: {facts['source']}. Cut: {cut_text}.",
-             "Stages: " + ", ".join(f"{s['stage']} {s['end'] - s['start']} bars" for s in spans) + ".",
-             "Header policies: " + ", ".join(f"{name} {field['policy']}" for name, field in facts["header"].items()) + ".",
+             "Stages: " + ", ".join(f"{'reference' if s['stage'] == 'anchor' else s['stage']} {s['end'] - s['start']} bars" for s in spans) + ".",
+             "Header policies: " + ", ".join(f"{name} {'reference' if field['policy'] == 'anchor' else field['policy']}" for name, field in facts["header"].items()) + ".",
              "Effective header: " + ", ".join(f"{name}:{value}" for name, value in splice.parse(abc).bars[analysis["voices"][0]][0].state.items()) + "."]
     details = data.get("candidates", []) or ([data["fresh"]] if "fresh" in data else [])
     for detail in details:
@@ -365,7 +365,7 @@ def score_inputs():
         io.String.Input("lyrics", force_input=True),
         io.String.Input("style", force_input=True),
         io.Int.Input("seed", min=0, max=score.UINT64, force_input=True),
-        io.Combo.Input("header_mode", options=["generated", "fixed", "from anchor"], default="generated", display_name="Header mode"),
+        io.Combo.Input("header_mode", options=["generated", "fixed", "from reference", "from anchor"], default="generated", display_name="Header mode"),
         io.Int.Input("header_tempo", default=120, min=1, max=1000, display_name="Header tempo (BPM)"),
         io.Combo.Input("header_meter", options=["4/4", "3/4", "6/8", "2/4", "12/8", "2/2", "5/4", "7/8"], display_name="Header meter"),
         io.Combo.Input("header_key", options=list(score.KEYS), default="C major", display_name="Header key"),
@@ -373,10 +373,10 @@ def score_inputs():
         io.Int.Input("opening_bars", default=8, min=1, max=256, display_name="Opening bars"),
         io.String.Input("opening_hint", default="intro", display_name="Opening hint (opening only)", dynamic_prompts=False),
         io.Int.Input("opening_candidates", default=4, min=1, max=16, display_name="Opening candidates"),
-        io.Boolean.Input("anchor_use", default=False, display_name="Anchor use"),
-        io.String.Input("anchor_abc", default="", multiline=True, dynamic_prompts=False, display_name="Anchor ABC"),
-        io.Int.Input("anchor_start", default=1, min=1, max=1000000),
-        io.Int.Input("anchor_end", default=0, min=0, max=1000000),
+        io.Boolean.Input("anchor_use", default=False, display_name="Reference use"),
+        io.String.Input("anchor_abc", default="", multiline=True, dynamic_prompts=False, display_name="Reference ABC"),
+        io.Int.Input("anchor_start", default=1, min=1, max=1000000, display_name="Reference start"),
+        io.Int.Input("anchor_end", default=0, min=0, max=1000000, display_name="Reference end"),
         io.Boolean.Input("continue_generate", default=True, display_name="Continue generate"),
         io.Combo.Input("mode", options=["full", "melody"], default="full", display_name="Mode"),
         io.Float.Input("temperature", default=0.7, min=0.01, max=100, step=0.01, display_name="Temperature"),
@@ -395,7 +395,7 @@ class YuE2Score(io.ComfyNode):
     @classmethod
     def define_schema(cls):
         return io.Schema(node_id="bno84.YuE2Score", display_name="YuE2 Score", category="audio/YuE2",
-                         description="Plan a fresh, continued or anchored score. Opening must match; continuation is checked and reported.",
+                         description="Plan a fresh score or reuse a reference with an opening and continuation. Opening must match; continuation is checked and reported.",
                          enable_expand=True,
                          inputs=score_inputs(), outputs=score_outputs(),
                          hidden=[io.Hidden.dynprompt, io.Hidden.unique_id])
@@ -442,7 +442,7 @@ class YuE2Score(io.ComfyNode):
         else:
             if plan["opening"]["bars"]:
                 if not anchor.field("L"):
-                    raise ValueError("Opening requires an explicit anchor L: declaration; units must be identical.")
+                    raise ValueError("Opening requires an explicit reference L: declaration; units must be identical.")
                 settings.update(opening=plan["opening"], label=plan["opening"]["label"],
                                 budget=plan["opening"]["max_tokens"])
                 node = graph.node("bno84.ScoreOpening", "opening", **shared, seed=seed, anchor=anchor_abc, settings=canonical(settings))

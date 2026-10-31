@@ -10,7 +10,7 @@ const load = (sources, names, app = { registerExtension() {} }) =>
 
 const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,valuesPlan,applicable");
 const strip = load(["score_strip.js"], "shortLabel,sectionColor,sourceSummary");
-const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,samplingText,dragRange,rangeInfo,useInPlanner");
+const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceTargets");
 const transcribe = load(["reference_transcribe.js"], "buildTranscriptionPrompt");
 const node = (values) => ({ widgets: Object.entries(values).map(([name, value]) => ({ name, value })), inputs: [], graph: { setDirtyCanvas() {} } });
 const value = (n, name) => n.widgets.find((w) => w.name === name).value;
@@ -50,13 +50,13 @@ test("Song history follows sampler links and selects whole groups", () => {
   assert.deepEqual(history.rangeInfo(groups, [1, 3]).labels, ["verse", "chorus"]);
 });
 
-test("Use in planner fills the anchor and keeps header and sampling", () => {
+test("Use as reference fills Score and keeps header and sampling", () => {
   const n = node({ ...state.SCORE_DEFAULTS, header_mode: "fixed", temperature: 0.8 });
   history.useInPlanner(n, "NEW");
   assert.equal(value(n, "anchor_abc"), "NEW");
   assert.equal(value(n, "header_mode"), "fixed");
   history.useInPlanner(n, "FINAL", true);
-  assert.equal(value(n, "header_mode"), "from anchor");
+  assert.equal(value(n, "header_mode"), "from reference");
 });
 
 test("transcription runs as its own job from the reference settings", () => {
@@ -71,4 +71,50 @@ test("transcription runs as its own job from the reference settings", () => {
   assert.equal(output["33"].class_type, "SheetSage2AudioToABC");
   assert.equal(output["33"].inputs.mode, "melody");
   assert.deepEqual(output[sinkId].inputs.source, ["33", 0]);
+});
+
+
+test("reference destinations include both node types with distinct subgraph paths", () => {
+  const score = { ...node(state.SCORE_DEFAULTS), id: 1, comfyClass: "bno84.YuE2Score" };
+  const reference = { ...node({ source: "None", abc: "OLD", extend: true }), id: 1, comfyClass: "bno84.ReferenceInput" };
+  const graph = { _nodes: [score, { id: 2, subgraph: { _nodes: [reference] } }] };
+  const targets = history.referenceTargets(graph);
+  assert.deepEqual(targets.map(t => t.id), ["1", "2:1"]);
+  history.useReference(targets[1].node, "SELECTED");
+  assert.equal(value(reference, "source"), "ABC");
+  assert.equal(value(reference, "abc"), "SELECTED");
+  assert.equal(value(reference, "extend"), true);
+  assert.equal(value(score, "anchor_abc"), "");
+  history.useReference(reference, "FINAL", true);
+  assert.equal(value(reference, "extend"), false);
+  history.useReference(score, "SCORE");
+  assert.equal(value(score, "anchor_abc"), "SCORE");
+  assert.equal(value(reference, "abc"), "FINAL");
+});
+
+test("Restore all refuses saved Score features for Reference input before changing anything", async () => {
+  const reference = { ...node({ source: "None", abc: "OLD", extend: true }), id: 1, comfyClass: "bno84.ReferenceInput" };
+  const graph = { _nodes: [reference] };
+  let changes = 0;
+  graph.beforeChange = () => changes++;
+  const testApp = { registerExtension() {}, rootGraph: graph, graphToPrompt: async () => ({ output: {} }) };
+  const mod = load(["score_strip.js", "score_state.js", "song_history.js"], "SongHistoryPanel,runSettings", testApp);
+  const panel = Object.create(mod.SongHistoryPanel.prototype);
+  panel.open = "song";
+  const prompt = { score: { class_type: "bno84.YuE2Score", inputs: { ...state.SCORE_DEFAULTS,
+    header_mode: "from reference", anchor_use: true, anchor_abc: "SOURCE", opening_generate: true } } };
+  panel.details = new Map([["song", { abc: "FINAL", settings: mod.runSettings(prompt) }]]);
+  let message;
+  panel.message = (text, error) => { message = { text, error }; };
+  panel.compare = () => {};
+  await panel.restore({ plan: true, seed: true, lyricsStyle: true, sampling: true });
+  assert.equal(message.error, true);
+  assert.match(message.text, /requires a YuE2 Score destination/);
+  assert.equal(changes, 0);
+  assert.equal(value(reference, "abc"), "OLD");
+  // An older run can restore its final ABC into the same Reference input.
+  panel.details.set("song", { abc: "FINAL", settings: mod.runSettings({}) });
+  await panel.restore({ plan: true });
+  assert.equal(value(reference, "abc"), "FINAL");
+  assert.equal(value(reference, "extend"), false);
 });

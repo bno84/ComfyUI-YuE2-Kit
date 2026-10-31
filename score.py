@@ -50,19 +50,19 @@ def widgets_to_plan(values):
     plan = default_plan(enabled)
     if enabled:
         plan["source"].update(kind="abc", abc=v["anchor_abc"])
-        plan["anchor"].update(start=integer(v["anchor_start"], 1, 1000000, "Anchor start") - 1,
-            end=integer(v["anchor_end"], 0, 1000000, "Anchor end") or None)
+        plan["anchor"].update(start=integer(v["anchor_start"], 1, 1000000, "Reference start") - 1,
+            end=integer(v["anchor_end"], 0, 1000000, "Reference end") or None)
     plan["opening"].update(bars=v["opening_bars"] if enabled and v["opening_generate"] else 0,
         label=v["opening_hint"] if enabled and v["opening_generate"] else "",
         attempts=v["opening_candidates"] if enabled and v["opening_generate"] else 1,
         max_tokens=v["opening_tokens"] if enabled and v["opening_generate"] else 0)
     plan["continuation"].update(enabled=v["continue_generate"] if enabled else True,
         max_tokens=v["continuation_tokens"] if plan["continuation"]["enabled"] else 0)
-    mode = v["header_mode"]
+    mode = "from anchor" if v["header_mode"] == "from reference" else v["header_mode"]
     if mode not in ("generated", "fixed", "from anchor"):
         raise ValueError("Unknown Header mode.")
     if mode == "from anchor" and not enabled:
-        raise ValueError("Header from anchor requires Anchor use.")
+        raise ValueError("Header from reference requires Reference use.")
     source = resolve_source(plan)
     anchor = cut_anchor(source, plan["anchor"])[0] if source is not None else None
     if mode == "fixed":
@@ -74,7 +74,7 @@ def widgets_to_plan(values):
             for field, value, name in (("M", v["header_meter"], "meter"), ("K", key, "key")):
                 if (({"C":"4/4", "C|":"2/2"}.get(value, value) != {"C":"4/4", "C|":"2/2"}.get(state[field], state[field])) if field == "M"
                     else normalize_field(field, value) != normalize_field(field, state[field])):
-                    raise ValueError(f"Fixed header {name} must equal the anchor's {name}; transposition and re-metering are not supported.")
+                    raise ValueError(f"Fixed header {name} must equal the reference's {name}; transposition and re-metering are not supported.")
         for name, value in (("tempo", v["header_tempo"]), ("meter", v["header_meter"]), ("key", key)):
             plan["header"][name] = dict(policy="anchor" if enabled and name != "tempo" else "set", value=value)
     elif mode == "generated":
@@ -115,9 +115,9 @@ def plan_from(value):
         if source["kind"] not in ("none", "abc") or not isinstance(source["abc"], str):
             raise ValueError("Invalid source.")
         has_source = source["kind"] != "none"
-        anchor["start"] = integer(anchor["start"], 0, 1000000, "Anchor start")
+        anchor["start"] = integer(anchor["start"], 0, 1000000, "Reference start")
         if anchor["end"] is not None:
-            anchor["end"] = integer(anchor["end"], anchor["start"] + 1, 1000000, "Anchor end")
+            anchor["end"] = integer(anchor["end"], anchor["start"] + 1, 1000000, "Reference end")
         for key, low, high in (("bars", 0, 256), ("attempts", 1, 16), ("max_tokens", 0, 20000)):
             opening[key] = integer(opening[key], low, high, "Opening " + key)
         if opening["bars"] and opening["max_tokens"] < OPENING_TOKENS_MIN:
@@ -163,7 +163,7 @@ def resolve_source(plan):
     source = plan["source"]
     result = source["abc"] if source["kind"] != "none" else None
     if result is not None and (not isinstance(result, str) or not result.strip()):
-        raise ValueError("Anchor ABC is empty; paste or drop a score, or drop audio to transcribe.")
+        raise ValueError("Reference ABC is empty; paste or drop a score, or drop audio to transcribe.")
     return result
 
 
@@ -229,7 +229,7 @@ def resolve_header(plan, anchor=None):
         policy = plan["header"][name]
         if policy["policy"] == "anchor":
             if anchor is None:
-                raise ValueError("An anchor policy requires a source score.")
+                raise ValueError("A reference policy requires a reference score.")
             result[field] = state[field] or ("1/4=120" if field == "Q" else state[field])
         elif policy["policy"] == "set":
             result[field] = f"1/4={policy['value']:g}" if field == "Q" else policy["value"]
@@ -286,9 +286,9 @@ def validate_header_changes(score, fixed, stage="opening", start=0, anchor=None)
     validate_score(score)
     if anchor is not None:
         if score.voices != anchor.voices:
-            raise ValueError("Voices differ from the anchor.")
+            raise ValueError("Voices differ from the reference.")
         if note_unit(score) != note_unit(anchor):
-            raise ValueError("Note units differ from the anchor.")
+            raise ValueError("Note units differ from the reference.")
     if stage == "fresh":
         for field, value in fixed.items():
             if value is not None and normalize_field(field, score.field(field)) != normalize_field(field, value):
@@ -314,10 +314,10 @@ def validate_header_changes(score, fixed, stage="opening", start=0, anchor=None)
 
 
 def adapt_anchor_tempo(anchor, opening=None):
-    """Adopt the opening's initial tempo across all anchor bars; never mutate source."""
+    """Adopt the opening's initial tempo across all reference bars; never mutate source."""
     result = copy.deepcopy(anchor)
     if opening is None:
-        return result, [diagnostic("join", "tempo_retained", "No opening; retained anchor tempo.", severity="info")]
+        return result, [diagnostic("join", "tempo_retained", "No opening; retained reference tempo.", severity="info")]
     target = opening.bars[opening.voices[0]][0].state["Q"] or "1/4=120"
     diagnostics = []
     original = anchor.bars[anchor.voices[0]]
@@ -331,7 +331,7 @@ def adapt_anchor_tempo(anchor, opening=None):
             bar.state["Q"] = target
     result.header = splice.header_lines(result, result.bars[result.voices[0]][0].state)
     if changed and normalize_field("Q", original[0].state["Q"]) != normalize_field("Q", target):
-        diagnostics.insert(0, {**diagnostic("join", "tempo_adopted", f"Score edit: all anchor bars adopt Q:{target}.", severity="info"),
+        diagnostics.insert(0, {**diagnostic("join", "tempo_adopted", f"Score edit: all reference bars adopt Q:{target}.", severity="info"),
                               "from_bpm": normalize_field("Q", original[0].state["Q"]),
                               "to_bpm": normalize_field("Q", target), "bars": anchor.length})
     return result, diagnostics
@@ -430,7 +430,7 @@ def preview(plan=None, **widgets):
         if source is not None:
             anchor, warnings = cut_anchor(source, plan["anchor"])
             if plan["opening"]["bars"] and not anchor.field("L"):
-                raise ValueError("Opening requires an explicit anchor L: declaration; units must be identical.")
+                raise ValueError("Opening requires an explicit reference L: declaration; units must be identical.")
             facts = source_facts(anchor)
             facts["fields"] = dict(anchor.bars[anchor.voices[0]][0].state)
             result["anchor"] = dict(start=plan["anchor"]["start"], end=plan["anchor"]["start"] + anchor.length, **facts)

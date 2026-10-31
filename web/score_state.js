@@ -19,7 +19,7 @@ export function setValues(node, values) {
 }
 // Internal representation for history descriptions, never a serialized widget.
 export function valuesPlan(v) {
-  const policy = v.header_mode === "fixed" ? "set" : v.header_mode === "from anchor" ? "anchor" : "free";
+  const policy = v.header_mode === "fixed" ? "set" : ["from reference", "from anchor"].includes(v.header_mode) ? "anchor" : "free";
   const key = v.header_key.replace(" major", "").replace(" minor", "m");
   return {version: 1, source: {kind: v.anchor_use ? "abc" : "none", abc: v.anchor_abc},
     anchor: {start: v.anchor_start - 1, end: v.anchor_end || null},

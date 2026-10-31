@@ -3,7 +3,7 @@
 _An intuitive workflow for YuE2 power users._
 
 Turn lyrics and a style prompt into music, with an ABC score. The kit brings
-the Score planner, source anchoring, instrumental controls, and paired
+the Score planner, reusable reference scores, instrumental controls, and paired
 FLAC + ABC export into one workflow. Its custom nodes also work in your own
 workflows; some are still evolving.
 
@@ -34,7 +34,7 @@ load [the workflow JSON](<example_workflows/YuE2 Kit - Song workflow.json>).
 1. Set **Lyrics + style** and the shared **Seed**.
 2. Connect **lyrics**, **style** and **seed** to **YuE2 Score**; these are socket-only
    inputs. Use the ordinary ComfyUI widgets in score order: timeline, Header,
-   Opening, Anchor, Continue and Sampling. The Song template
+   Opening, Reference, Continue and Sampling. The Song template
    starts with a **32-bar cap**, fixed **4/4**, **C major** and **88 BPM**.
 3. Check **Model files**, then run. **ABC Preview** displays Score's ABC;
    **Score report** shows generation details and warnings. **Acoustic** renders it;
@@ -60,44 +60,50 @@ CFG controls acoustic diffusion.
 
 **Header mode** selects one policy for the whole header:
 
-- **generated**: model chooses the header. With an anchor, an opening is required;
+- **generated**: model chooses the header. With an reference, an opening is required;
   meter and voice/unit declarations remain compatible, the opening's tempo is
-  adopted across the anchor, and key changes remain experimental for audio.
-- **fixed**: the visible tempo, meter and named key values apply. With an anchor,
+  adopted across the reference, and key changes remain experimental for audio.
+- **fixed**: the visible tempo, meter and named key values apply. With an reference,
   meter and key must match it; a differing tempo retimes it. Conflicts fail before
   model work.
-- **from anchor**: requires Anchor use and keeps its header.
+- **from reference**: requires Reference use and keeps its header.
 
-**Opening generate** adds the requested bars before the anchor. Its hint labels
+**Opening generate** adds the requested bars before the reference. Its hint labels
 only that opening. Candidates use first good fit, then the best available join;
 this is a chord-root/structural heuristic, so audition the join in ABC Preview.
-Opening controls have no effect with Anchor use off.
+Opening controls have no effect with Reference use off.
 
-**Anchor use** enables the **Anchor ABC** source. Its section strip updates as you
+**Reference use** enables the **Reference ABC** source. Its section strip updates as you
 paste or edit, even if the current header conflicts. It shows the whole source with
 numbered bars; the selected range appears in the summary above it. Paste ABC, send it
 from Song history, or drop an `.abc` file on the node. Drop an audio or video file to
 transcribe it with SheetSage2 in the current **Mode**; **Open ABC or audio…** does the
-same from a file dialog. Either one replaces the anchor and turns Anchor use on.
+same from a file dialog. Either one replaces the reference and turns Reference use on.
 Transcription needs the **sheetsage2** input connected to the Models SheetSage2
 file, as in the template. Only that transcription job loads SheetSage2; ordinary
 Score runs use the stored ABC and never transcribe. Drag either range handle or drag
 across the strip to select single bars; the stored source stays intact.
 
-**Continue generate** adds a tail after the anchor. With Anchor use off it is
+**Continue generate** adds a tail after the reference. With Reference use off it is
 forced on and generates the whole song. It runs until the model ends the song or
 **Continuation tokens** runs out; an exhausted budget trims to complete aligned
 bars and reports it. Sampling controls and both token budgets are always visible.
 
 **Song history** sits above Score. Browse saved pairs, select sections or drag bar
-handles, then **Use in planner**. The selected ABC becomes the whole stored source
-with a reset range; header and sampling widgets retain their values. A fixed
+handles, then **Use as reference**. Choose a destination when multiple YuE2 Score
+or Reference input nodes are present. Only that node is updated. In Score, the
+selected ABC becomes the whole stored source with a reset range; header and
+sampling widgets retain their values. In Reference input, it selects ABC and
+keeps the Extend setting. A fixed
 header that conflicts with the new source produces a visible validation error.
 **Use saved score** loads final ABC as-is, turns Opening/Continue off and explicitly
-selects from anchor. **Restore lyrics + style** and **Restore seed (fixed)** restore
+selects from reference. **Restore lyrics + style** and **Restore seed (fixed)** restore
 those settings. **Restore all** also restores the Score widgets, including the
-original source and mode. Saved songs outline their Opening / Anchor / Continuation
-bars from their embedded Score widgets.
+original source and mode. Restoring saved Score settings requires a YuE2 Score
+destination; **Restore all** refuses an incompatible Reference input destination.
+**Use saved score** can load the final ABC into either node type; Reference input
+uses ABC with Extend off. Saved songs outline their Opening / Reference /
+Continuation bars from their embedded Score widgets.
 **Show in ABC Preview** auditions a selection until the next run. Old files may
 lack public Score settings. Timing estimates can drift from audio, so
 **FLAC from ≈** starts playback a little early.
@@ -138,8 +144,10 @@ Use [the Song API prompt](api/yue2-kit-song.api.json). Score inputs are plain
 named values.
 `anchor_start` is one-based inclusive, `anchor_end` is inclusive and 0 means
 through the end. The range strip edits these two values instead of showing
-number fields. For an external ABC source, connect `abc`, enable `anchor_use`,
-and select a compatible `header_mode`.
+number fields. For an external ABC source, connect `anchor_abc`, enable `anchor_use`,
+and select a compatible `header_mode`. The stored `anchor_*` input names and
+legacy `from anchor` header value remain supported for existing workflows; the
+UI uses Reference labels and `from reference`.
 
 ```bash
 node --test tests/*.mjs

@@ -21,6 +21,9 @@ function separator(node, before) {
   insertBefore(node, widget, before);
 }
 export function updateWidgets(node) {
+  const header = node.widgets?.find(w => w.name === "header_mode");
+  if (header?.value === "from anchor") header.value = "from reference";
+  if (Array.isArray(header?.options?.values)) header.options.values = header.options.values.filter(v => v !== "from anchor");
   const v = readValues(node);
   // Only native disabled support. Never install a custom disabled draw override.
   for (const [name, enabled] of Object.entries(applicable(v))) {
@@ -103,8 +106,8 @@ export class ScorePanel {
     header.style.cssText="flex:0 0 140px;font:11px/18px sans-serif;border-right:1px solid #78889a55;padding-right:8px";
     const fixed=data?.header?.fixed ?? {}, policies=data?.header?.policies ?? {};
     for (const [label,field,name] of [["Tempo","Q","tempo"],["Meter","M","meter"],["Key","K","key"]]) {
-      const policy=policies[name]?.policy ?? (v.header_mode==="fixed" ? "set" : v.header_mode==="from anchor" ? "anchor" : "free");
-      const mode={set:"fixed",anchor:"anchor",free:"model"}[policy];
+      const policy=policies[name]?.policy ?? (v.header_mode==="fixed" ? "set" : ["from reference","from anchor"].includes(v.header_mode) ? "anchor" : "free");
+      const mode={set:"fixed",anchor:"reference",free:"model"}[policy];
       const raw=fixed[field] ?? (policy==="set" ? {Q:v.header_tempo,M:v.header_meter,K:v.header_key}[field] : null);
       const value=label==="Key" ? (raw ? keyWords(String(raw)) : "model") : label==="Tempo" ? (data?.timing?.bpm ?? raw ?? "model") : (raw ?? "model");
       header.append(element("div",`${label} ${value} · ${mode}`));
@@ -117,7 +120,7 @@ export class ScorePanel {
       const bars=(span.end ?? span.start+8)-span.start;
       if(span.stage==="anchor" && data.anchor?.sections?.length) return data.anchor.sections.map(section=>({
         ...section,bar:span.start+section.bar}));
-      const label={fresh:"Song",opening:v.opening_hint || "Opening",continuation:"Continuation",anchor:"Anchor"}[span.stage];
+      const label={fresh:"Song",opening:v.opening_hint || "Opening",continuation:"Continuation",anchor:"Reference"}[span.stage];
       const seconds=span.stage==="opening" ? bars*(data.source?.bar_seconds ?? 0)*(data.source?.bpm ?? 120)/(data.timing?.bpm ?? 120) : null;
       return [{bar:span.start,bars,label,unknown:span.end==null,color:STAGE_PALETTE[span.stage],seconds:seconds || null}];
     });
@@ -204,7 +207,7 @@ export class ScorePanel {
     try {
       const abc = await this.job.promise;
       if (this.destroyed) return;
-      if (readValues(this.node).anchor_abc !== before) { this.note(`${file.name}: transcribed, but the anchor was edited meanwhile; kept your edits.`); return; }
+      if (readValues(this.node).anchor_abc !== before) { this.note(`${file.name}: transcribed, but the reference was edited meanwhile; kept your edits.`); return; }
       this.useAnchor(abc);
     } finally {
       this.job = null;

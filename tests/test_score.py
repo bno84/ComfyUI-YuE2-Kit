@@ -70,7 +70,7 @@ class ScoreTests(unittest.TestCase):
 
     def test_public_header_rules_fail_before_model_work(self):
         anchored = dict(anchor_use=True, anchor_abc=ANCHOR)
-        for values, error in ((dict(header_mode="from anchor"), "requires Anchor use"),
+        for values, error in ((dict(header_mode="from anchor"), "requires Reference use"),
                               (dict(anchored, header_mode="fixed", header_meter="3/4"), "meter"),
                               (dict(anchored, header_mode="fixed", header_key="D major"), "key"),
                               (dict(anchored, header_mode="generated"), "needs an opening"),
@@ -87,6 +87,16 @@ class ScoreTests(unittest.TestCase):
         # A fixed tempo may differ from the anchor's: that retimes it.
         plan = score.widgets_to_plan(dict(anchored, header_mode="fixed", header_tempo=90))
         self.assertEqual(plan["header"]["tempo"], dict(policy="set", value=90))
+
+    def test_reference_labels_keep_legacy_workflows_compatible(self):
+        values = dict(anchor_use=True, anchor_abc=ANCHOR)
+        self.assertEqual(score.widgets_to_plan(dict(values, header_mode="from reference")),
+                         score.widgets_to_plan(dict(values, header_mode="from anchor")))
+        inputs = {item.id: item for item in nodes.score_inputs()}
+        self.assertEqual(inputs["anchor_use"].display_name, "Reference use")
+        self.assertEqual(inputs["anchor_abc"].display_name, "Reference ABC")
+        self.assertIn("from reference", inputs["header_mode"].options)
+        self.assertIn("from anchor", inputs["header_mode"].options)
 
     def test_stage_routing(self):
         nodes.YuE2Score.hidden = types.SimpleNamespace(

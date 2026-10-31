@@ -362,7 +362,7 @@ def planner_spans(prompt, total):
         except (ValueError, TypeError):
             return []  # An unresolved source cannot justify a made-up boundary.
         return [dict(stage=stage, start=a, end=b, color=color) for stage,a,b,color in (
-            ("Opening",0,opening,"#7165ac"),("Anchor",opening,opening+anchor,"#287d66"),
+            ("Opening",0,opening,"#7165ac"),("Reference",opening,opening+anchor,"#287d66"),
             ("Continuation",opening+anchor,total,"#456185")) if b>a]
     return []
 

@@ -203,14 +203,14 @@ export function nodesOfClass(root, type) {
 }
 
 // Paths are option values: local IDs alone collide across subgraphs.
-export function plannerTargets(root) {
+export function referenceTargets(root) {
   const found = [];
   function visit(graph, path, ancestors) {
     if (!graph || ancestors.has(graph)) return;
     const seen = new Set(ancestors).add(graph);
     for (const node of graph._nodes ?? []) {
       const id = [...path, String(node.id)].join(":");
-      if (node.comfyClass === SCORE || node.type === SCORE) found.push({ id, node });
+      if ([SCORE, "bno84.ReferenceInput"].includes(node.comfyClass ?? node.type)) found.push({ id, node });
       if (node.subgraph) visit(node.subgraph, [...path, String(node.id)], seen);
     }
   }
@@ -233,10 +233,26 @@ export function flashPlanner(node) {
 export function useInPlanner(node, abc, saved = false) {
   node.graph?.beforeChange?.();
   setValues(node, {anchor_use:true,anchor_abc:abc,anchor_start:1,anchor_end:0,
-    ...(saved ? {opening_generate:false,continue_generate:false,header_mode:"from anchor"} : {})});
+    ...(saved ? {opening_generate:false,continue_generate:false,header_mode:"from reference"} : {})});
   node.graph?.afterChange?.();
   showPlan(node); flashPlanner(node);
 }
+
+export function useReference(node, abc, saved = false) {
+  if ((node.comfyClass ?? node.type) === SCORE) return useInPlanner(node, abc, saved);
+  node.graph?.beforeChange?.();
+  try {
+    setWidget(node, "source", "ABC");
+    setWidget(node, "abc", abc);
+    if (saved) setWidget(node, "extend", false);
+    node.yue2ReferencePanel?.render();
+  } finally {
+    node.graph?.afterChange?.();
+    node.graph?.setDirtyCanvas?.(true, true);
+  }
+}
+
+const referenceLabel = node => node.title || ((node.comfyClass ?? node.type) === SCORE ? "YuE2 Score" : "Reference input");
 
 const rootGraph = () => app.rootGraph ?? app.graph;
 
@@ -417,12 +433,12 @@ function stageSpans(score) {
 }
 // Stages outline their bars on the section strip rather than taking a band of their own.
 // Light tints of the Score timeline's stage colours, which vanish against the sections.
-const STAGE_OUTLINE = { Opening: "#c4baff", Anchor: "#74e8c0", Continuation: "#a8cdf7" };
+const STAGE_OUTLINE = { Opening: "#c4baff", Reference: "#74e8c0", Anchor: "#74e8c0", Continuation: "#a8cdf7" };
 function stageOutlines(lane, score) {
   for (const span of stageSpans(score)) {
     const box = element("div", "h-stage-box");
     Object.assign(box.style, { left: `${(100 * span.start) / score.bars}%`, width: `${(100 * (span.end - span.start)) / score.bars}%`, borderColor: STAGE_OUTLINE[span.stage] ?? "#edf5ff" });
-    box.title = span.stage;
+    box.title = span.stage === "Anchor" ? "Reference" : span.stage;
     lane.append(box);
   }
 }
@@ -754,31 +770,31 @@ class SongHistoryPanel {
     this.renderSelection();
   }
 
-  plannerTarget() {
-    const targets = plannerTargets(rootGraph());
-    if (!targets.some(entry => entry.id === this.plannerId)) this.plannerId = targets[0]?.id;
-    return targets.find(entry => entry.id === this.plannerId);
+  referenceTarget() {
+    const targets = referenceTargets(rootGraph());
+    if (!targets.some(entry => entry.id === this.referenceId)) this.referenceId = targets[0]?.id;
+    return targets.find(entry => entry.id === this.referenceId);
   }
 
   targetSelect() {
-    const targets = plannerTargets(rootGraph());
-    this.plannerTarget();
-    const select = element("select"); select.setAttribute("aria-label", "Planner destination");
+    const targets = referenceTargets(rootGraph());
+    this.referenceTarget();
+    const select = element("select"); select.setAttribute("aria-label", "Reference destination");
     for (const { id, node } of targets) {
-      const option = element("option", "", `${node.title || "YuE2 Score"} · ${id}`);
+      const option = element("option", "", `${referenceLabel(node)} · ${id}`);
       option.value = id; select.append(option);
     }
-    select.value = this.plannerId;
-    select.onchange = () => { this.plannerId = select.value; this.renderOpen(); };
+    select.value = this.referenceId;
+    select.onchange = () => { this.referenceId = select.value; this.renderOpen(); };
     return select;
   }
 
-  usePlanner(abc, saved = false) {
+  useAsReference(abc, saved = false) {
     try {
-      const target = this.plannerTarget();
-      if (!target) throw new Error("Add a YuE2 Score node to use this selection in a planner.");
-      useInPlanner(target.node, abc, saved);
-      this.message(`Score sent to ${target.node.title || "YuE2 Score"} · ${target.id}.`);
+      const target = this.referenceTarget();
+      if (!target) throw new Error("Add a YuE2 Score or Reference input node to use this score as a reference.");
+      useReference(target.node, abc, saved);
+      this.message(`Reference sent to ${referenceLabel(target.node)} · ${target.id}.`);
       this.compare();
     } catch (error) { this.message(error.message, true); }
   }
@@ -822,25 +838,14 @@ class SongHistoryPanel {
       }
     });
     copy.disabled = !ready;
-    const planners = plannerTargets(rootGraph());
+    const targets = referenceTargets(rootGraph());
     const items = [text, preview, flac, copy];
-    if (planners.length) {
-      const use = button("Use in planner", () => this.usePlanner(this.slice.abc), "primary");
-      use.disabled = !ready;
-      use.title = "Load the selected ABC as the anchor; keep the plan settings.";
-      if (planners.length > 1) items.push(this.targetSelect());
-      items.push(use);
-    } else {
-      const use = button("Use as reference", () => this.useAsReference(this.slice.abc, null), "primary");
-      use.disabled = !ready;
-      use.title = "Put this score in Reference input as ABC. The Extend reference setting is kept.";
-      const references = nodesOfClass(rootGraph(), "bno84.ReferenceInput");
-      if (references.length) items.push(use);
-      else {
-        const use = button("Use in planner", () => {}); use.disabled = true;
-        use.title = "Add a YuE2 Score node to the workflow."; items.push(use);
-      }
-    }
+    const use = button("Use as reference", () => this.useAsReference(this.slice.abc), "primary");
+    use.disabled = !ready || !targets.length;
+    use.title = targets.length ? "Load the selected ABC as the reference; keep generation settings."
+      : "Add a YuE2 Score or Reference input node to the workflow.";
+    if (targets.length > 1) items.push(this.targetSelect());
+    items.push(use);
     if (this.slice?.error) items.push(element("div", "h-warn", `⚠ ${this.slice.error}`));
     for (const warning of ready ? this.slice.warnings : []) items.push(element("div", "h-warn", `⚠ ${warning}`));
     this.selectionBar.replaceChildren(...items);
@@ -896,9 +901,10 @@ class SongHistoryPanel {
     const actions = element("div", "h-actions");
     const seed = button("Restore seed (fixed)", () => this.restore({ seed: true }), "primary");
     seed.disabled = !settings.values.seed.length;
-    const planners = plannerTargets(rootGraph());
-    const saved = button(planners.length ? "Use saved score" : "Score → Reference input", () => planners.length ? this.usePlanner(detail.abc, true) : this.useAsReference(detail.abc, false));
-    saved.title = "Load final ABC as source, opening 0 and continuation off.";
+    const planners = referenceTargets(rootGraph());
+    const saved = button("Use saved score", () => this.useAsReference(detail.abc, true));
+    saved.disabled = !planners.length;
+    saved.title = "Load final ABC as the reference, with opening and continuation off (Extend off for Reference input).";
     const lyrics = button("Restore lyrics + style", () => this.restore({ lyricsStyle: true }));
     lyrics.disabled = !settings.values.lyrics.length && !settings.values.style.length;
     const all = button("Restore all", () => this.restore({ seed: true, lyricsStyle: true, plan: true, sampling: true }));
@@ -907,11 +913,11 @@ class SongHistoryPanel {
     all.disabled = !detail.prompt || (settings.planners.length > 0 && settings.planners.every(entry => entry.error));
     if (planners.length > 1) actions.append(this.targetSelect());
     if (settings.planners.length > 1) {
-      const select = element("select"); select.setAttribute("aria-label", "Recorded planner");
+      const select = element("select"); select.setAttribute("aria-label", "Recorded Score node");
       for (const entry of settings.planners) {
-        const option = element("option", "", `Saved planner · ${entry.id}`); option.value = entry.id; select.append(option);
+        const option = element("option", "", `Saved Score · ${entry.id}`); option.value = entry.id; select.append(option);
       }
-      const match = settings.planners.find(entry => entry.id === this.plannerTarget()?.id);
+      const match = settings.planners.find(entry => entry.id === this.referenceTarget()?.id);
       if (!settings.planners.some(entry => entry.id === this.recordedId)) this.recordedId = match?.id ?? settings.planners[0].id;
       select.value = this.recordedId;
       select.onchange = () => { this.recordedId = select.value; };
@@ -921,22 +927,6 @@ class SongHistoryPanel {
     for (const entry of settings.planners.filter(entry => entry.error)) container.append(element("div", "h-warn", entry.error));
     container.append(columns, actions);
     return container;
-  }
-
-  useAsReference(abc, extend) {
-    const nodes = nodesOfClass(rootGraph(), "bno84.ReferenceInput");
-    if (!nodes.length) return this.message("Add a Reference input node to the workflow first.", true);
-    changeGraph(() => {
-      for (const node of nodes) {
-        setWidget(node, "source", "ABC");
-        setWidget(node, "abc", abc);
-        if (extend !== null) setWidget(node, "extend", extend);
-        node.yue2ReferencePanel?.render();
-      }
-    });
-    const mode = extend === null ? "Extend reference is unchanged" : `Extend reference is ${extend ? "on" : "off"}`;
-    this.message(`Reference input now uses this score. ${mode}.`);
-    this.compare();
   }
 
   async restore(what) {
@@ -949,11 +939,15 @@ class SongHistoryPanel {
       return this.message(`Cannot read the current graph: ${error.message ?? error}`, true);
     }
     const root = rootGraph();
-    const target = this.plannerTarget();
+    const target = this.referenceTarget();
     const planners = detail.settings.planners;
     const recorded = planners.find(entry => entry.id === this.recordedId) ?? planners.find(entry => entry.id === target?.id) ?? (planners.length === 1 ? planners[0] : null);
-    if (what.plan && planners.length && (!target || !recorded || recorded.error)) {
-      return this.message(recorded?.error ?? "Choose a matching recorded planner; multiple saved planners cannot be mapped automatically.", true);
+    if (what.plan && !target) return this.message("Add a YuE2 Score or Reference input node to restore the score.", true);
+    if (what.plan && planners.length && (target.node.comfyClass ?? target.node.type) !== SCORE) {
+      return this.message("Restore all requires a YuE2 Score destination to restore the saved Score settings. Use saved score loads only the final ABC into Reference input.", true);
+    }
+    if (what.plan && planners.length && (!recorded || recorded.error)) {
+      return this.message(recorded?.error ?? "Choose a matching recorded Score node; multiple saved scores cannot be mapped automatically.", true);
     }
     const done = [], missing = [];
     changeGraph(() => {
@@ -979,7 +973,7 @@ class SongHistoryPanel {
         showPlan(target.node); flashPlanner(target.node); done.push("Score widgets");
       }
       if (what.plan && !planners.length && target) {
-        useInPlanner(target.node, detail.abc, true);
+        useReference(target.node, detail.abc, true);
         done.push("saved final ABC as-is (original settings unavailable)");
       }
       if (what.seed) {
