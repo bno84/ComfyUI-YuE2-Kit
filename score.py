@@ -63,7 +63,7 @@ def widgets_to_plan(values):
     if mode not in ("generated", "fixed", "from anchor"):
         raise ValueError("Unknown Score properties mode.")
     if mode == "from anchor" and not enabled:
-        raise ValueError("Reference score properties require Reference use.")
+        raise ValueError("Reference score properties require Use reference.")
     source = resolve_source(plan)
     anchor = cut_anchor(source, plan["anchor"])[0] if source is not None else None
     if mode == "fixed":

@@ -68,7 +68,7 @@ CFG controls acoustic diffusion.
   with no separate model pass. With a reference, meter, key and unit note length
   come from the reference and their controls are disabled. Tempo stays editable;
   a differing tempo retimes the reference.
-- **reference**: requires Reference use and keeps its header, including the
+- **reference**: requires Use reference and keeps its header, including the
   reference's `L:` line.
 
 **Generate opening** adds the requested bars before the reference. Its hint labels
@@ -77,20 +77,20 @@ warnings and chord-root cadence; the best usable join wins. The opening token
 budget defaults to 768 per candidate. Without chord scoring, ranking uses structural
 warnings and breaks ties in generation order. The report includes per-candidate
 and total wall times. Audition the join in ABC Preview.
-Opening controls have no effect with Reference use off.
+Opening controls have no effect with Use reference off.
 
-**Reference use** enables the **Reference ABC** source. Its section strip updates as you
+**Use reference** enables the **Reference ABC** source. Its section strip updates as you
 paste or edit. It shows the whole source with
 numbered bars; the selected range appears in the summary above it. Paste ABC, send it
 from Song history, or drop an `.abc` file on the node. Drop an audio or video file to
 transcribe it with SheetSage2 in the current **Mode**; **Open ABC or audio…** does the
-same from a file dialog. Either one replaces the reference and turns Reference use on.
+same from a file dialog. Either one replaces the reference and turns Use reference on.
 Transcription needs the **sheetsage2** input connected to the Models SheetSage2
 file, as in the template. Only that transcription job loads SheetSage2; ordinary
 Score runs use the stored ABC and never transcribe. Drag either range handle or drag
 across the strip to select single bars; the stored source stays intact.
 
-**Generate continuation** adds a tail after the reference. With Reference use off it is
+**Generate continuation** adds a tail after the reference. With Use reference off it is
 forced on and generates the whole song. It runs until the model ends the song or
 **Continuation tokens** runs out; an exhausted budget trims to complete aligned
 bars and reports it. Sampling controls and both token budgets are always visible.

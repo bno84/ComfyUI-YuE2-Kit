@@ -380,7 +380,7 @@ def score_inputs():
         io.Int.Input("opening_bars", default=8, min=1, max=256, display_name="Opening bars"),
         io.String.Input("opening_hint", default="intro", display_name="Opening hint (opening only)", dynamic_prompts=False),
         io.Int.Input("opening_candidates", default=4, min=1, max=16, display_name="Opening candidates", tooltip="Always generates and ranks four candidates. Retained for saved workflow compatibility."),
-        io.Boolean.Input("anchor_use", default=False, display_name="Reference use"),
+        io.Boolean.Input("anchor_use", default=False, display_name="Use reference"),
         io.String.Input("anchor_abc", default="", multiline=True, dynamic_prompts=False, display_name="Reference ABC"),
         io.Int.Input("anchor_start", default=1, min=1, max=1000000, display_name="Reference start"),
         io.Int.Input("anchor_end", default=0, min=0, max=1000000, display_name="Reference end"),
