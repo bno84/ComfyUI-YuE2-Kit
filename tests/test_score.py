@@ -71,26 +71,26 @@ class ScoreTests(unittest.TestCase):
 
     def test_public_header_rules_fail_before_model_work(self):
         anchored = dict(anchor_use=True, anchor_abc=ANCHOR)
-        for values, error in ((dict(header_mode="from anchor"), "require Use reference"),
+        for values, error in ((dict(header_mode="reference"), "require Use reference"),
                               (dict(anchored, header_mode="generated"), "needs an opening"),
-                              (dict(anchored, header_mode="from anchor", opening_generate=True, opening_tokens=0), "at least 256")):
+                              (dict(anchored, header_mode="reference", opening_generate=True, opening_tokens=0), "at least 256")):
             with self.subTest(values=values), self.assertRaisesRegex(ValueError, error):
                 score.widgets_to_plan(values)
         # Disabled groups are ignored, and without an anchor the whole song is generated.
         plan = score.widgets_to_plan(dict(opening_generate=True, opening_bars=-3, continue_generate=False))
         self.assertEqual((plan["opening"]["bars"], plan["continuation"]["enabled"]), (0, True))
         # A fixed header supplies every line, including the unit note length.
-        spec = score.header_spec(score.widgets_to_plan(dict(header_mode="fixed")))
+        spec = score.header_spec(score.widgets_to_plan(dict(header_mode="locked")))
         self.assertEqual([field for field, value in spec if value is None], [])
         self.assertIn(("L", "1/16"), spec)
         self.assertIn(("V", ' Vocal clef=treble name="Vocal Melody" snm="Vocal"'), spec)
         # A fixed tempo may differ from the anchor's: that retimes it.
-        plan = score.widgets_to_plan(dict(anchored, header_mode="fixed", header_tempo=90))
+        plan = score.widgets_to_plan(dict(anchored, header_mode="locked", header_tempo=90))
         self.assertEqual(plan["header"]["tempo"], dict(policy="set", value=90))
 
     def test_fixed_and_reference_units_do_not_generate_header_lines(self):
-        for values, unit in ((dict(header_mode="fixed", header_unit="1/32"), "1/32"),
-                             (dict(header_mode="from reference", anchor_use=True, anchor_abc=ANCHOR), "1/16")):
+        for values, unit in ((dict(header_mode="locked", header_unit="1/32"), "1/32"),
+                             (dict(header_mode="reference", anchor_use=True, anchor_abc=ANCHOR), "1/16")):
             with self.subTest(values=values):
                 plan = score.widgets_to_plan(values)
                 anchor = score.cut_anchor(ANCHOR, plan["anchor"])[0] if values.get("anchor_use") else None
@@ -105,11 +105,11 @@ class ScoreTests(unittest.TestCase):
                 self.assertIn("L:" + unit + "\n", abc)
                 self.assertTrue(all(line["given"] for line in detail["header"]))
         with self.assertRaises(ValueError):
-            score.widgets_to_plan(dict(header_mode="fixed", header_unit="invalid"))
+            score.widgets_to_plan(dict(header_mode="locked", header_unit="invalid"))
 
     def test_fixed_header_inherits_locked_reference_fields_and_keeps_tempo(self):
         # Stale or linked values in disabled controls do not affect the score.
-        values = dict(header_mode="fixed", anchor_use=True, anchor_abc=ANCHOR,
+        values = dict(header_mode="locked", anchor_use=True, anchor_abc=ANCHOR,
                       header_meter="3/4", header_key="D minor", header_unit="1/32", header_tempo=110)
         for ignored in ({}, dict(header_meter="invalid", header_key="invalid", header_unit="invalid")):
             with self.subTest(ignored=ignored):
@@ -123,15 +123,13 @@ class ScoreTests(unittest.TestCase):
         self.assertEqual(preview["errors"], [])
         self.assertEqual(preview["header"]["fixed"], dict(M="3/4", K="Dm", L="1/32", Q="1/4=110"))
 
-    def test_score_property_labels_and_legacy_modes(self):
+    def test_score_property_labels_and_modes(self):
         schema = nodes.YuE2AdvancedScore.define_schema()
         self.assertEqual(schema.node_id, "bno84.YuE2AdvancedScore")
         self.assertEqual(schema.display_name, "YuE2 Advanced Score")
-        self.assertEqual(score.widgets_to_plan(dict(header_mode="locked")),
-                         score.widgets_to_plan(dict(header_mode="fixed")))
-        values = dict(anchor_use=True, anchor_abc=ANCHOR)
-        self.assertEqual(score.widgets_to_plan(dict(values, header_mode="reference")),
-                         score.widgets_to_plan(dict(values, header_mode="from reference")))
+        for mode in ("fixed", "from reference", "from anchor"):
+            with self.subTest(mode=mode), self.assertRaisesRegex(ValueError, "generated, locked or reference"):
+                score.widgets_to_plan(dict(header_mode=mode))
         inputs = {item.id: item for item in nodes.score_inputs()}
         for name, label in (("header_mode", "Score properties"), ("header_tempo", "Tempo (BPM)"),
                             ("header_meter", "Meter"), ("header_key", "Key"),
@@ -175,21 +173,17 @@ class ScoreTests(unittest.TestCase):
             with self.subTest(count=count), self.assertRaises(ValueError):
                 score.widgets_to_plan(dict(opening_candidates=count))
 
-    def test_reference_labels_keep_legacy_workflows_compatible(self):
-        values = dict(anchor_use=True, anchor_abc=ANCHOR)
-        self.assertEqual(score.widgets_to_plan(dict(values, header_mode="from reference")),
-                         score.widgets_to_plan(dict(values, header_mode="from anchor")))
+    def test_reference_labels_and_mode_options(self):
         inputs = {item.id: item for item in nodes.score_inputs()}
         self.assertEqual(inputs["anchor_use"].display_name, "Use reference")
         self.assertEqual(inputs["anchor_abc"].display_name, "Reference ABC")
-        self.assertIn("from reference", inputs["header_mode"].options)
-        self.assertIn("from anchor", inputs["header_mode"].options)
+        self.assertEqual(inputs["header_mode"].options, ["generated", "locked", "reference"])
 
     def test_stage_routing(self):
         nodes.YuE2AdvancedScore.hidden = types.SimpleNamespace(
             unique_id="score", dynprompt=types.SimpleNamespace(get_node=lambda id: dict(inputs={})))
         for values, stages in ((dict(), {"fresh", "result"}),
-                               (dict(anchor_use=True, header_mode="from anchor", continue_generate=False),
+                               (dict(anchor_use=True, header_mode="reference", continue_generate=False),
                                 {"join", "context", "result"}),
                                (dict(anchor_use=True, opening_generate=True), {"opening", "join", "continue", "result"})):
             with self.subTest(values=values):
@@ -216,7 +210,7 @@ class ScoreTests(unittest.TestCase):
                 parsed = splice.parse(abc)
                 self.assertEqual(splice.check(parsed), [])
                 self.assertEqual(score.note_unit(parsed), splice.note_unit(parsed))
-                preview = score.preview(anchor_use=True, anchor_abc=abc, header_mode="from anchor")
+                preview = score.preview(anchor_use=True, anchor_abc=abc, header_mode="reference")
                 self.assertEqual(preview["errors"], [])
                 self.assertEqual(preview["anchor"]["bars"], 1)
         # An explicit unit takes precedence over the meter-derived default.

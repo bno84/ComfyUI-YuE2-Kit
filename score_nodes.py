@@ -370,7 +370,7 @@ def score_inputs():
         io.String.Input("lyrics", force_input=True),
         io.String.Input("style", force_input=True),
         io.Int.Input("seed", min=0, max=score.UINT64, force_input=True),
-        io.Combo.Input("header_mode", options=["generated", "locked", "reference", "fixed", "from reference", "from anchor"], default="generated", display_name="Score properties"),
+        io.Combo.Input("header_mode", options=["generated", "locked", "reference"], default="generated", display_name="Score properties"),
         io.Int.Input("header_tempo", default=120, min=1, max=1000, display_name="Tempo (BPM)"),
         io.Combo.Input("header_meter", options=["4/4", "3/4", "6/8", "2/4", "12/8", "2/2", "5/4", "7/8"], display_name="Meter"),
         io.Combo.Input("header_unit", options=["1/4", "1/8", "1/16", "1/32", "1/64"], default="1/16",

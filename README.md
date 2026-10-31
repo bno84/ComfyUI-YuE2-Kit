@@ -151,10 +151,7 @@ named values.
 `anchor_start` is one-based inclusive, `anchor_end` is inclusive and 0 means
 through the end. The range strip edits these two values instead of showing
 number fields. For an external ABC source, connect `anchor_abc`, enable `anchor_use`,
-and select a compatible `header_mode`. The stored `anchor_*` input names and
-legacy `from anchor` header value remain supported for existing workflows; the
-UI uses Score properties with `generated`, `locked` and `reference`. Legacy
-`fixed` and `from reference` values also remain supported.
+and select a compatible `header_mode`: `generated`, `locked` or `reference`.
 
 ```bash
 node --test tests/*.mjs

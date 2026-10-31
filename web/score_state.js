@@ -6,7 +6,6 @@ export const SCORE_DEFAULTS = {
   continue_generate: true, mode: "full", temperature: 0.7, top_p: 0.9,
   top_k: 30, repetition_penalty: 1.005, penalty_window: 100, opening_tokens: 768, continuation_tokens: 8192,
 };
-export const propertyMode = mode => ({fixed: "locked", "from reference": "reference", "from anchor": "reference"}[mode] ?? mode);
 
 // Older workflows stored 21 positional widgets, before Unit note length existed.
 export function restoreLegacyWidgets(node, config) {
@@ -49,7 +48,7 @@ export function setValues(node, values) {
 }
 // Internal representation for history descriptions, never a serialized widget.
 export function valuesPlan(v) {
-  const policy = propertyMode(v.header_mode) === "locked" ? "set" : propertyMode(v.header_mode) === "reference" ? "anchor" : "free";
+  const policy = v.header_mode === "locked" ? "set" : v.header_mode === "reference" ? "anchor" : "free";
   const key = v.header_key.replace(" major", "").replace(" minor", "m");
   return {version: 1, source: {kind: v.anchor_use ? "abc" : "none", abc: v.anchor_abc},
     anchor: {start: v.anchor_start - 1, end: v.anchor_end || null},
@@ -65,8 +64,8 @@ export function rangeSelection(total, start, end, side, from, to) {
 }
 export function applicable(v) {
   return {
-    header_tempo: propertyMode(v.header_mode) === "locked",
-    ...Object.fromEntries(["header_meter", "header_key", "header_unit"].map(n => [n, propertyMode(v.header_mode) === "locked" && !v.anchor_use])),
+    header_tempo: v.header_mode === "locked",
+    ...Object.fromEntries(["header_meter", "header_key", "header_unit"].map(n => [n, v.header_mode === "locked" && !v.anchor_use])),
     opening_generate: v.anchor_use,
     ...Object.fromEntries(["opening_bars", "opening_hint", "opening_tokens", "opening_candidates"].map(n => [n, v.anchor_use && v.opening_generate])),
     anchor_abc: v.anchor_use, anchor_start: v.anchor_use, anchor_end: v.anchor_use,

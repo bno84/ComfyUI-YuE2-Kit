@@ -8,7 +8,7 @@ const read = (name) => readFileSync(new URL(`../web/${name}`, import.meta.url), 
 const load = (sources, names, app = { registerExtension() {} }) =>
   new Function("app", "api", sources.map(read).join("\n") + `\nreturn {${names}};`)(app, {});
 
-const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,valuesPlan,applicable,restoreLegacyWidgets,propertyMode,migrateScoreWorkflow");
+const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,valuesPlan,applicable,restoreLegacyWidgets,migrateScoreWorkflow");
 const strip = load(["score_strip.js"], "shortLabel,sectionColor,sourceSummary");
 const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceTargets,scoreViews,showScore,SongHistoryPanel,planningText");
 const transcribe = load(["reference_transcribe.js"], "buildTranscriptionPrompt");
@@ -52,12 +52,12 @@ test("Song history follows sampler links and selects whole groups", () => {
 });
 
 test("Use as reference fills Score and keeps header and sampling", () => {
-  const n = node({ ...state.SCORE_DEFAULTS, header_mode: "fixed", temperature: 0.8 });
+  const n = node({ ...state.SCORE_DEFAULTS, header_mode: "locked", temperature: 0.8 });
   history.useInPlanner(n, "NEW");
   assert.equal(value(n, "anchor_abc"), "NEW");
-  assert.equal(value(n, "header_mode"), "fixed");
+  assert.equal(value(n, "header_mode"), "locked");
   history.useInPlanner(n, "FINAL", true);
-  assert.equal(value(n, "header_mode"), "fixed");
+  assert.equal(value(n, "header_mode"), "locked");
 });
 
 test("transcription runs as its own job from the reference settings", () => {
@@ -103,7 +103,7 @@ test("Restore all refuses saved Score features for Reference input before changi
   const panel = Object.create(mod.SongHistoryPanel.prototype);
   panel.open = "song";
   const prompt = { score: { class_type: "bno84.YuE2AdvancedScore", inputs: { ...state.SCORE_DEFAULTS,
-    header_mode: "from reference", anchor_use: true, anchor_abc: "SOURCE", opening_generate: true } } };
+    header_mode: "reference", anchor_use: true, anchor_abc: "SOURCE", opening_generate: true } } };
   panel.details = new Map([["song", { abc: "FINAL", settings: mod.runSettings(prompt) }]]);
   let message;
   panel.message = (text, error) => { message = { text, error }; };
@@ -121,8 +121,8 @@ test("Restore all refuses saved Score features for Reference input before changi
 });
 
 
-test("unit note length is fixed-only and older Score widgets retain their values", () => {
-  const values = { ...state.SCORE_DEFAULTS, header_mode: "fixed", header_key: "D minor", header_tempo: 88, opening_bars: 12 };
+test("unit note length is locked-only and older Score widgets retain their values", () => {
+  const values = { ...state.SCORE_DEFAULTS, header_mode: "locked", header_key: "D minor", header_tempo: 88, opening_bars: 12 };
   const names = Object.keys(state.SCORE_DEFAULTS).filter(name => name !== "header_unit");
   const n = node(state.SCORE_DEFAULTS);
   state.restoreLegacyWidgets(n, { widgets_values: names.map(name => values[name]) });
@@ -130,7 +130,7 @@ test("unit note length is fixed-only and older Score widgets retain their values
   assert.equal(value(n, "opening_bars"), 12);
   assert.equal(value(n, "header_unit"), "1/16");
   assert.equal(state.applicable(values).header_unit, true);
-  assert.equal(state.applicable({ ...values, header_mode: "from reference" }).header_unit, false);
+  assert.equal(state.applicable({ ...values, header_mode: "reference" }).header_unit, false);
   // Current workflows retain their chosen unit instead of being migrated again.
   state.setValues(n, { header_unit: "1/32" });
   state.restoreLegacyWidgets(n, { widgets_values: Array(22).fill(null) });
@@ -140,8 +140,8 @@ test("unit note length is fixed-only and older Score widgets retain their values
 });
 
 
-test("fixed headers with a reference disable meter, key and unit but retain tempo", () => {
-  const settings = { ...state.SCORE_DEFAULTS, header_mode: "fixed", anchor_use: true };
+test("locked headers with a reference disable meter, key and unit but retain tempo", () => {
+  const settings = { ...state.SCORE_DEFAULTS, header_mode: "locked", anchor_use: true };
   const enabled = state.applicable(settings);
   assert.equal(enabled.header_tempo, true);
   for (const name of ["header_meter", "header_key", "header_unit"]) {
@@ -151,12 +151,8 @@ test("fixed headers with a reference disable meter, key and unit but retain temp
 });
 
 
-test("Score properties use generated, locked and reference with legacy aliases", () => {
-  assert.equal(state.propertyMode("fixed"), "locked");
-  for (const mode of ["reference", "from reference", "from anchor"]) {
-    assert.equal(state.propertyMode(mode), "reference");
-    assert.equal(state.applicable({ ...state.SCORE_DEFAULTS, header_mode: mode }).header_tempo, false);
-  }
+test("Score properties are generated, locked or reference", () => {
+  assert.equal(state.applicable({ ...state.SCORE_DEFAULTS, header_mode: "reference" }).header_tempo, false);
   assert.equal(state.applicable({ ...state.SCORE_DEFAULTS, header_mode: "locked" }).header_tempo, true);
 });
 
@@ -173,7 +169,7 @@ test("opening defaults to 768 tokens and enables the configured candidate count"
 
 
 test("old Score node IDs migrate in root and nested workflows without changing custom titles", () => {
-  const old = (title) => ({ type: "bno84.YuE2Score", title, properties: { "Node name for S&R": "bno84.YuE2Score" }, widgets_values: ["fixed", 88] });
+  const old = (title) => ({ type: "bno84.YuE2Score", title, properties: { "Node name for S&R": "bno84.YuE2Score" }, widgets_values: ["locked", 88] });
   const root = old("YuE2 Score"), nested = old("My custom score");
   const workflow = { nodes: [root], definitions: { subgraphs: [{ nodes: [nested] }] } };
   state.migrateScoreWorkflow(workflow);
@@ -182,11 +178,11 @@ test("old Score node IDs migrate in root and nested workflows without changing c
   assert.equal(nested.type, "bno84.YuE2AdvancedScore");
   assert.equal(nested.title, "My custom score");
   assert.equal(nested.properties["Node name for S&R"], "bno84.YuE2AdvancedScore");
-  assert.deepEqual(root.widgets_values, ["fixed", 88]);
+  assert.deepEqual(root.widgets_values, ["locked", 88]);
   state.migrateScoreWorkflow(workflow);
-  const settings = history.runSettings({ score: { class_type: "bno84.YuE2Score", inputs: { ...state.SCORE_DEFAULTS, header_mode: "fixed" } } });
+  const settings = history.runSettings({ score: { class_type: "bno84.YuE2Score", inputs: { ...state.SCORE_DEFAULTS, header_mode: "locked" } } });
   assert.equal(settings.planners.length, 1);
-  assert.equal(settings.planners[0].values.header_mode, "fixed");
+  assert.equal(settings.planners[0].values.header_mode, "locked");
 });
 
 
@@ -239,7 +235,7 @@ test("history shows the same selection in both ABC views and reports failures", 
 });
 
 
-test("Planning describes generated stages and legacy reference modes", () => {
+test("Planning describes generated and reference stages", () => {
   const current = values => history.runSettings({ 1: { class_type: "bno84.YuE2AdvancedScore", inputs: { ...state.SCORE_DEFAULTS, ...values } } });
   for (const opening_generate of [false, true]) for (const continue_generate of [false, true]) {
     assert.equal(history.planningText(current({ anchor_use: false, opening_generate, continue_generate })), "Generated");
@@ -256,7 +252,7 @@ test("Planning describes generated stages and legacy reference modes", () => {
 
 
 test("history reference actions change score properties only when required", () => {
-  for (const saved of [false, true]) for (const mode of ["generated", "locked", "fixed", "reference", "from reference", "from anchor"]) {
+  for (const saved of [false, true]) for (const mode of ["generated", "locked", "reference"]) {
     for (const opening_generate of [false, true]) {
       const n = { ...node({ ...state.SCORE_DEFAULTS, header_mode: mode, opening_generate, temperature: 0.83 }), comfyClass: "bno84.YuE2AdvancedScore" };
       history.useReference(n, "NEW", saved);

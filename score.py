@@ -58,14 +58,14 @@ def widgets_to_plan(values):
         max_tokens=v["opening_tokens"] if enabled and v["opening_generate"] else 0)
     plan["continuation"].update(enabled=v["continue_generate"] if enabled else True,
         max_tokens=v["continuation_tokens"] if plan["continuation"]["enabled"] else 0)
-    mode = {"locked": "fixed", "reference": "from anchor", "from reference": "from anchor"}.get(v["header_mode"], v["header_mode"])
-    if mode not in ("generated", "fixed", "from anchor"):
-        raise ValueError("Unknown Score properties mode.")
-    if mode == "from anchor" and not enabled:
+    mode = v["header_mode"]
+    if mode not in ("generated", "locked", "reference"):
+        raise ValueError("Score properties must be generated, locked or reference.")
+    if mode == "reference" and not enabled:
         raise ValueError("Reference score properties require Use reference.")
     source = resolve_source(plan)
     anchor = cut_anchor(source, plan["anchor"])[0] if source is not None else None
-    if mode == "fixed":
+    if mode == "locked":
         plan["header"]["tempo"] = dict(policy="set", value=v["header_tempo"])
         if anchor is not None:
             state = anchor.bars[anchor.voices[0]][0].state

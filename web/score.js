@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { readValues, setValues, applicable, rangeSelection, previewValues, restoreLegacyWidgets, propertyMode, migrateScoreWorkflow } from "./score_state.js";
+import { readValues, setValues, applicable, rangeSelection, previewValues, restoreLegacyWidgets, migrateScoreWorkflow } from "./score_state.js";
 import { referenceExecutionId, buildTranscriptionPrompt, queueTranscription, transcriptionError } from "./reference_transcribe.js";
 import { referenceFileKind } from "./reference_input.js";
 
@@ -46,9 +46,6 @@ export function bindReferenceTextbox(input, panel) {
 }
 
 export function updateWidgets(node) {
-  const header = node.widgets?.find(w => w.name === "header_mode");
-  if (header) header.value = propertyMode(header.value);
-  if (Array.isArray(header?.options?.values)) header.options.values = header.options.values.filter(v => ["generated", "locked", "reference"].includes(v));
   const v = readValues(node);
   // Only native disabled support. Never install a custom disabled draw override.
   for (const [name, enabled] of Object.entries(applicable(v))) {
@@ -131,7 +128,7 @@ export class ScorePanel {
     header.style.cssText="flex:0 0 150px;min-width:0;font:11px/18px sans-serif;border-right:1px solid #78889a55;padding-right:8px;box-sizing:border-box";
     const fixed=data?.header?.fixed ?? {}, policies=data?.header?.policies ?? {};
     for (const [label,field,name] of [["Tempo","Q","tempo"],["Meter","M","meter"],["Key","K","key"]]) {
-      const policy=policies[name]?.policy ?? (propertyMode(v.header_mode)==="locked" ? "set" : propertyMode(v.header_mode)==="reference" ? "anchor" : "free");
+      const policy=policies[name]?.policy ?? (v.header_mode==="locked" ? "set" : v.header_mode==="reference" ? "anchor" : "free");
       const mode={set:"locked",anchor:"reference",free:"generated"}[policy];
       const raw=fixed[field] ?? (policy==="set" ? {Q:v.header_tempo,M:v.header_meter,L:v.header_unit,K:v.header_key}[field] : null);
       const value=label==="Key" ? (raw ? keyWords(String(raw)) : "model") : label==="Tempo" ? (data?.timing?.bpm ?? raw ?? "model") : (raw ?? "model");
