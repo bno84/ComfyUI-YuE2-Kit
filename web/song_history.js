@@ -255,13 +255,10 @@ export function useInPlanner(node, abc, saved = false) {
   showPlan(node); flashPlanner(node);
 }
 
-export function useReference(node, abc, saved = false) {
-  if ((node.comfyClass ?? node.type) === SCORE) return useInPlanner(node, abc, saved);
+function setReference(node, values) {
   node.graph?.beforeChange?.();
   try {
-    setWidget(node, "source", "ABC");
-    setWidget(node, "abc", abc);
-    if (saved) setWidget(node, "extend", false);
+    for (const [name, value] of Object.entries(values)) setWidget(node, name, value);
     node.yue2ReferencePanel?.render();
   } finally {
     node.graph?.afterChange?.();
@@ -269,7 +266,27 @@ export function useReference(node, abc, saved = false) {
   }
 }
 
-const referenceLabel = node => node.title || ((node.comfyClass ?? node.type) === SCORE ? "YuE2 Advanced Score" : "Reference input");
+export function useReference(node, abc, saved = false) {
+  if (isScore(node)) return useInPlanner(node, abc, saved);
+  setReference(node, {source: "ABC", abc, ...(saved ? {extend: false} : {})});
+}
+
+// What a saved Score plan uses that Reference input cannot hold; empty when it fits.
+export function referenceGaps(plan) {
+  const {anchor} = plan;
+  return [plan.opening.bars > 0 && "an opening",
+    plan.source.kind !== "none" && (anchor.start > 0 || anchor.end) && `bars ${anchor.start + 1}–${anchor.end ?? "end"} of the reference`,
+    plan.header.tempo.policy === "set" && "locked properties"].filter(Boolean);
+}
+
+export function restoreReference(node, plan) {
+  setReference(node, plan.source.kind === "none" ? {source: "None"}
+    : {source: "ABC", abc: plan.source.abc, extend: plan.continuation.enabled});
+}
+
+const isScore = node => (node.comfyClass ?? node.type) === SCORE;
+const RESTORE_HINT = "Restore to a YuE2 Advanced Score, or use saved score to load only the final ABC.";
+const referenceLabel = node => node.title || (isScore(node) ? "YuE2 Advanced Score" : "Reference input");
 
 const rootGraph = () => app.rootGraph ?? app.graph;
 
@@ -819,33 +836,54 @@ class SongHistoryPanel {
     this.renderSelection();
   }
 
-  referenceTarget() {
-    const targets = referenceTargets(rootGraph());
-    if (!targets.some(entry => entry.id === this.referenceId)) this.referenceId = targets[0]?.id;
-    return targets.find(entry => entry.id === this.referenceId);
-  }
-
-  targetSelect() {
-    const targets = referenceTargets(rootGraph());
-    this.referenceTarget();
-    const select = element("select"); select.setAttribute("aria-label", "Reference destination");
-    for (const { id, node } of targets) {
-      const option = element("option", "", `${referenceLabel(node)} · ${id}`);
-      option.value = id; select.append(option);
+  // The destination is chosen per action: a lone target is used directly,
+  // several open a menu. `reason(node)` names why a target cannot take it.
+  pickTarget(event, act, reason = () => "", hint = "") {
+    const targets = referenceTargets(rootGraph()).map(entry => ({...entry, reason: reason(entry.node)}));
+    const name = entry => `${referenceLabel(entry.node)} · ${entry.id}`;
+    if (!targets.length) return this.message("Add a YuE2 Advanced Score or Reference input node to the workflow.", true);
+    if (targets.length === 1) {
+      const [only] = targets;
+      return only.reason ? this.message(`${name(only)} ${only.reason}.${hint ? ` ${hint}` : ""}`, true) : act(only);
     }
-    select.value = this.referenceId;
-    select.onchange = () => { this.referenceId = select.value; this.renderOpen(); };
-    return select;
+    new globalThis.LiteGraph.ContextMenu(targets.map(entry => ({
+      content: entry.reason ? `${name(entry)} — ${entry.reason}` : name(entry),
+      disabled: !!entry.reason, callback: () => { act(entry); },
+    })), {event, title: "Send to"});
   }
 
-  useAsReference(abc, saved = false) {
-    try {
-      const target = this.referenceTarget();
-      if (!target) throw new Error("Add a YuE2 Advanced Score or Reference input node to use this score as a reference.");
-      useReference(target.node, abc, saved);
-      this.message(`Reference sent to ${referenceLabel(target.node)} · ${target.id}.`);
-      this.compare();
-    } catch (error) { this.message(error.message, true); }
+  useAsReference(event, abc, saved = false) {
+    return this.pickTarget(event, target => {
+      try {
+        useReference(target.node, abc, saved);
+        this.message(`Reference sent to ${referenceLabel(target.node)} · ${target.id}.`);
+        this.compare();
+      } catch (error) { this.message(error.message, true); }
+    });
+  }
+
+  // The recorded Score node whose settings Restore all applies.
+  recorded(detail) {
+    const planners = detail.settings.planners;
+    return planners.find(entry => entry.id === this.recordedId) ?? (planners.length === 1 ? planners[0] : null);
+  }
+
+  // Score holds any saved plan; Reference input only a whole-reference plan without an opening or locked properties.
+  planBlock(node, recorded) {
+    if (isScore(node) || !recorded || recorded.error) return "";
+    const gaps = referenceGaps(recorded.plan);
+    return gaps.length ? `can't hold ${gaps.join(", ")}` : "";
+  }
+
+  restoreAll(event) {
+    const detail = this.details.get(this.open);
+    if (!detail) return;
+    const planners = detail.settings.planners, recorded = this.recorded(detail);
+    if (planners.length && (!recorded || recorded.error)) {
+      return this.message(recorded?.error ?? "Choose a recorded Score node; multiple saved scores cannot be mapped automatically.", true);
+    }
+    return this.pickTarget(event, target => this.restore({ seed: true, lyricsStyle: true, plan: true, sampling: true }, target),
+      node => this.planBlock(node, recorded), RESTORE_HINT);
   }
 
   renderSelection() {
@@ -892,11 +930,10 @@ class SongHistoryPanel {
     copy.disabled = !ready;
     const targets = referenceTargets(rootGraph());
     const items = whole ? [preview, flac, copy] : [text, preview, flac, copy];
-    const use = button("Use as reference", () => this.useAsReference(this.slice.abc), "primary");
+    const use = button(targets.length > 1 ? "Use as reference…" : "Use as reference", (event) => this.useAsReference(event, this.slice.abc), "primary");
     use.disabled = !ready || !targets.length;
     use.title = targets.length ? "Load the selected ABC as the reference; keep generation settings."
       : "Add a YuE2 Advanced Score or Reference input node to the workflow.";
-    if (targets.length > 1) items.push(this.targetSelect());
     items.push(use);
     if (this.slice?.error) items.push(element("div", "h-warn", `⚠ ${this.slice.error}`));
     for (const warning of ready ? this.slice.warnings : []) items.push(element("div", "h-warn", `⚠ ${warning}`));
@@ -953,22 +990,22 @@ class SongHistoryPanel {
     const seed = button("Restore seed (fixed)", () => this.restore({ seed: true }), "primary");
     seed.disabled = !settings.values.seed.length;
     const planners = referenceTargets(rootGraph());
-    const saved = button("Use saved score", () => this.useAsReference(detail.abc, true));
+    const more = planners.length > 1 ? "…" : "";
+    const saved = button(`Use saved score${more}`, (event) => this.useAsReference(event, detail.abc, true));
     saved.disabled = !planners.length;
     saved.title = "Load final ABC as the reference, with opening and continuation off (Extend off for Reference input).";
     const lyrics = button("Restore lyrics + style", () => this.restore({ lyricsStyle: true }));
     lyrics.disabled = !settings.values.lyrics.length && !settings.values.style.length;
-    const all = button("Restore all", () => this.restore({ seed: true, lyricsStyle: true, plan: true, sampling: true }));
+    const all = button(`Restore all${more}`, (event) => this.restoreAll(event));
     all.title = settings.planners.length || !planners.length ? "Restore plan, mode, fixed seed, lyrics, style, instrumental and sampling."
       : "Older run without Score settings: restores the saved final ABC as-is, plus seed, lyrics, style, instrumental and sampling.";
     all.disabled = !detail.prompt || (settings.planners.length > 0 && settings.planners.every(entry => entry.error));
-    if (planners.length > 1) actions.append(this.targetSelect());
     if (settings.planners.length > 1) {
       const select = element("select"); select.setAttribute("aria-label", "Recorded Score node");
       for (const entry of settings.planners) {
         const option = element("option", "", `Saved Score · ${entry.id}`); option.value = entry.id; select.append(option);
       }
-      const match = settings.planners.find(entry => entry.id === this.referenceTarget()?.id);
+      const match = settings.planners.find(entry => planners.some(target => target.id === entry.id));
       if (!settings.planners.some(entry => entry.id === this.recordedId)) this.recordedId = match?.id ?? settings.planners[0].id;
       select.value = this.recordedId;
       select.onchange = () => { this.recordedId = select.value; };
@@ -980,7 +1017,8 @@ class SongHistoryPanel {
     return container;
   }
 
-  async restore(what) {
+  // `target` is the destination for the plan; seed, lyrics, style and sampling go to their own sources.
+  async restore(what, target = null) {
     const detail = this.details.get(this.open);
     if (!detail) return;
     let current;
@@ -990,13 +1028,11 @@ class SongHistoryPanel {
       return this.message(`Cannot read the current graph: ${error.message ?? error}`, true);
     }
     const root = rootGraph();
-    const target = this.referenceTarget();
     const planners = detail.settings.planners;
-    const recorded = planners.find(entry => entry.id === this.recordedId) ?? planners.find(entry => entry.id === target?.id) ?? (planners.length === 1 ? planners[0] : null);
+    const recorded = this.recorded(detail);
     if (what.plan && !target) return this.message("Add a YuE2 Advanced Score or Reference input node to restore the score.", true);
-    if (what.plan && planners.length && (target.node.comfyClass ?? target.node.type) !== SCORE) {
-      return this.message("Restore all requires a YuE2 Advanced Score destination to restore the saved Score settings. Use saved score loads only the final ABC into Reference input.", true);
-    }
+    const blocked = what.plan && this.planBlock(target.node, recorded);
+    if (blocked) return this.message(`${referenceLabel(target.node)} · ${target.id} ${blocked}. ${RESTORE_HINT}`, true);
     if (what.plan && planners.length && (!recorded || recorded.error)) {
       return this.message(recorded?.error ?? "Choose a matching recorded Score node; multiple saved scores cannot be mapped automatically.", true);
     }
@@ -1017,7 +1053,10 @@ class SongHistoryPanel {
         if (set) done.push(label(set));
         else missing.push(name);
       };
-      if (what.plan && recorded && !recorded.error) {
+      if (what.plan && recorded && !recorded.error && !isScore(target.node)) {
+        restoreReference(target.node, recorded.plan);
+        done.push("reference settings");
+      } else if (what.plan && recorded && !recorded.error) {
         const values = normalizeValues(recorded.values);
         for (const [name,value] of Object.entries(values)) {
           if (!setInput(root,target.id,name,value)) missing.push(name);

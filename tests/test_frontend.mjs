@@ -10,7 +10,7 @@ const load = (sources, names, app = { registerExtension() {} }) =>
 
 const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,valuesPlan,applicable,restoreLegacyWidgets,migrateScoreWorkflow");
 const strip = load(["score_strip.js"], "shortLabel,sectionColor,sourceSummary");
-const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceTargets,scoreViews,showScore,SongHistoryPanel,planningText");
+const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceGaps,restoreReference,referenceTargets,scoreViews,showScore,SongHistoryPanel,planningText");
 const transcribe = load(["reference_transcribe.js"], "buildTranscriptionPrompt");
 const textbox = load(["reference_input.js", "score.js"], "bindReferenceTextbox");
 const node = (values) => ({ widgets: Object.entries(values).map(([name, value]) => ({ name, value })), inputs: [], graph: { setDirtyCanvas() {} } });
@@ -108,14 +108,14 @@ test("Restore all refuses saved Score features for Reference input before changi
   let message;
   panel.message = (text, error) => { message = { text, error }; };
   panel.compare = () => {};
-  await panel.restore({ plan: true, seed: true, lyricsStyle: true, sampling: true });
+  await panel.restoreAll({});
   assert.equal(message.error, true);
-  assert.match(message.text, /requires a YuE2 Advanced Score destination/);
+  assert.match(message.text, /^Reference input · 1 can't hold an opening\. Restore to a YuE2 Advanced Score/);
   assert.equal(changes, 0);
   assert.equal(value(reference, "abc"), "OLD");
   // An older run can restore its final ABC into the same Reference input.
   panel.details.set("song", { abc: "FINAL", settings: mod.runSettings({}) });
-  await panel.restore({ plan: true });
+  await panel.restoreAll({});
   assert.equal(value(reference, "abc"), "FINAL");
   assert.equal(value(reference, "extend"), false);
 });
@@ -276,7 +276,7 @@ test("Restore all repairs invalid saved reference properties and preserves valid
   for (const header_mode of ["generated", "locked", "reference"]) for (const opening_generate of [false, true]) {
     const values = { ...state.SCORE_DEFAULTS, anchor_use: true, anchor_abc: "ORIGINAL", header_mode, opening_generate };
     panel.details = new Map([["song", { abc: "FINAL", settings: mod.runSettings({ 1: { class_type: "bno84.YuE2AdvancedScore", inputs: values } }) }]]);
-    await panel.restore({ plan: true });
+    await panel.restore({ plan: true }, { id: "1", node: n });
     assert.equal(value(n, "header_mode"), header_mode === "generated" && !opening_generate ? "reference" : header_mode);
     assert.equal(value(n, "anchor_abc"), "ORIGINAL");
     assert.equal(value(n, "opening_generate"), opening_generate);
@@ -301,4 +301,58 @@ test("Score state normalizes reference updates before widget callbacks", () => {
   assert.equal(value(n, "header_mode"), "locked");
   state.setValues(n, { anchor_use: false, header_mode: "generated" });
   assert.equal(value(n, "header_mode"), "generated");
+});
+
+
+test("Restore all maps plans Reference input can hold and names what it cannot", async () => {
+  const plan = (inputs) => history.runSettings({ 1: { class_type: "bno84.YuE2AdvancedScore",
+    inputs: { ...state.SCORE_DEFAULTS, header_mode: "reference", anchor_use: true, anchor_abc: "SOURCE", ...inputs } } }).planners[0].plan;
+  assert.deepEqual(history.referenceGaps(plan({})), []);
+  assert.deepEqual(history.referenceGaps(plan({ opening_generate: true, anchor_start: 3, anchor_end: 8, header_mode: "locked" })),
+    ["an opening", "bars 3–8 of the reference", "locked properties"]);
+  assert.deepEqual(history.referenceGaps(plan({ anchor_use: false, anchor_start: 3 })), []);
+
+  const reference = { ...node({ source: "None", abc: "OLD", extend: false }), id: 1, comfyClass: "bno84.ReferenceInput" };
+  history.restoreReference(reference, plan({ continue_generate: true }));
+  assert.deepEqual(["source", "abc", "extend"].map(name => value(reference, name)), ["ABC", "SOURCE", true]);
+  history.restoreReference(reference, plan({ anchor_use: false }));
+  assert.equal(value(reference, "source"), "None");
+  assert.equal(value(reference, "abc"), "SOURCE");
+});
+
+test("several destinations open a menu that disables those that cannot take the plan", async () => {
+  const score = { ...node(state.SCORE_DEFAULTS), id: 1, comfyClass: "bno84.YuE2AdvancedScore" };
+  const reference = { ...node({ source: "None", abc: "OLD", extend: false }), id: 2, comfyClass: "bno84.ReferenceInput", title: "Ref" };
+  const graph = { _nodes: [score, reference], beforeChange() {}, afterChange() {} };
+  const menus = [];
+  globalThis.LiteGraph = { ContextMenu: class { constructor(items, options) { menus.push({ items, options }); } } };
+  try {
+    const mod = load(["score_strip.js", "score_state.js", "song_history.js"], "SongHistoryPanel,runSettings",
+      { registerExtension() {}, rootGraph: graph, graphToPrompt: async () => ({ output: {} }) });
+    const panel = Object.create(mod.SongHistoryPanel.prototype);
+    let message;
+    panel.open = "song"; panel.message = (text, error) => { message = { text, error }; }; panel.compare = () => {};
+    const inputs = { ...state.SCORE_DEFAULTS, header_mode: "reference", anchor_use: true, anchor_abc: "SOURCE", opening_generate: true };
+    panel.details = new Map([["song", { abc: "FINAL", settings: mod.runSettings({ 9: { class_type: "bno84.YuE2AdvancedScore", inputs } }) }]]);
+    const event = { type: "click" };
+    panel.restoreAll(event);
+    assert.equal(menus.length, 1);
+    assert.equal(menus[0].options.event, event);
+    assert.deepEqual(menus[0].items.map(item => [item.content, item.disabled]),
+      [["YuE2 Advanced Score · 1", false], ["Ref · 2 — can't hold an opening", true]]);
+    assert.equal(value(reference, "abc"), "OLD");
+    menus[0].items[0].callback();
+    await new Promise(resolve => setTimeout(resolve));
+    assert.equal(value(score, "anchor_abc"), "SOURCE");
+    assert.equal(value(score, "opening_generate"), true);
+
+    // Reference actions accept either node type.
+    panel.useAsReference(event, "SLICE");
+    assert.deepEqual(menus[1].items.map(item => item.disabled), [false, false]);
+    menus[1].items[1].callback();
+    assert.equal(value(reference, "abc"), "SLICE");
+    assert.match(message.text, /^Reference sent to Ref · 2\./);
+  } finally {
+    delete globalThis.LiteGraph;
+  }
 });
