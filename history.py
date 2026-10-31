@@ -350,11 +350,11 @@ def planner_spans(prompt, total):
             result = inputs.get(name, inputs.get("value"))
         return result
     for node in (prompt or {}).values():
-        if node.get("class_type") not in ("bno84.YuE2AdvancedScore", "bno84.YuE2Score") or "header_mode" not in node.get("inputs", {}):
+        if node.get("class_type") != "bno84.YuE2AdvancedScore":
             continue
         if not value(node, "anchor_use", False):
             return [dict(stage="Song", start=0, end=total, color="#456185")]
-        source = value(node, "abc", value(node, "anchor_abc", ""))
+        source = value(node, "anchor_abc", "")
         if not isinstance(source, str) or not source.strip():
             return []
         try:

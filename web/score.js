@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { readValues, setValues, applicable, rangeSelection, previewValues, restoreLegacyWidgets, migrateScoreWorkflow } from "./score_state.js";
+import { readValues, setValues, applicable, rangeSelection, previewValues } from "./score_state.js";
 import { referenceExecutionId, buildTranscriptionPrompt, queueTranscription, transcriptionError } from "./reference_transcribe.js";
 import { referenceFileKind } from "./reference_input.js";
 
@@ -252,17 +252,12 @@ export class ScorePanel {
 }
 app.registerExtension({
   name: "bno84.AdvancedScore",
-  beforeConfigureGraph(workflow) { migrateScoreWorkflow(workflow); },
   nodeCreated(node) {
     if (node.comfyClass !== "bno84.YuE2AdvancedScore") return;
     const panel = node.yue2ScorePanel = new ScorePanel(node);
     for (const hook of ["onConfigure", "onGraphConfigured", "onWidgetChanged", "onConnectionsChange"]) {
       const previous = node[hook]; node[hook] = function (...args) {
         const value = previous?.apply(this,args);
-        if (hook === "onConfigure") {
-          restoreLegacyWidgets(this, args[0]);
-          if (this.title === "YuE2 Score") this.title = "YuE2 Advanced Score";
-        }
         if (!panel.dragging) panel.refresh(); return value;
       };
     }

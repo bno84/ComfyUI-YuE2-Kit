@@ -162,6 +162,4 @@ node --test tests/*.mjs
 python3 -m unittest discover -s tests
 ```
 
-The node's internal ID is `bno84.YuE2AdvancedScore`. Existing editor workflows
-using `bno84.YuE2Score` migrate when loaded, including nodes in subgraphs.
-API clients must use the new ID. Song history continues reading older saved runs.
+The node's internal ID is `bno84.YuE2AdvancedScore`.

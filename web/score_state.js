@@ -7,19 +7,6 @@ export const SCORE_DEFAULTS = {
   top_k: 30, repetition_penalty: 1.005, penalty_window: 100, opening_tokens: 768, continuation_tokens: 8192,
 };
 
-// Older workflows stored 21 positional widgets, before Unit note length existed.
-export function restoreLegacyWidgets(node, config) {
-  const names = Object.keys(SCORE_DEFAULTS).filter(name => name !== "header_unit");
-  const values = config?.widgets_values;
-  if (!Array.isArray(values) || values.length !== names.length) return;
-  for (const [index, name] of names.entries()) {
-    const widget = node.widgets?.find(w => w.name === name);
-    if (widget) widget.value = values[index];
-  }
-  const unit = node.widgets?.find(w => w.name === "header_unit");
-  if (unit) unit.value = SCORE_DEFAULTS.header_unit;
-}
-
 export function readValues(node) {
   return Object.fromEntries(Object.keys(SCORE_DEFAULTS).map(name =>
     [name, node.widgets?.find(w => w.name === name)?.value ?? SCORE_DEFAULTS[name]]));
@@ -86,26 +73,4 @@ export function previewValues(node, output, id) {
     values[input.name] = value;
   }
   return values;
-}
-
-
-// Migrate editor workflows before node types are resolved; API prompts use the new ID.
-export function migrateScoreWorkflow(workflow) {
-  const seen = new Set();
-  function visit(graph) {
-    if (!graph || typeof graph !== "object" || seen.has(graph)) return;
-    seen.add(graph);
-    for (const node of graph.nodes ?? []) {
-      if (node.type === "bno84.YuE2Score") {
-        node.type = "bno84.YuE2AdvancedScore";
-        if (node.title === "YuE2 Score") node.title = "YuE2 Advanced Score";
-        if (node.properties?.["Node name for S&R"] === "bno84.YuE2Score") {
-          node.properties["Node name for S&R"] = "bno84.YuE2AdvancedScore";
-        }
-      }
-      visit(node.subgraph);
-    }
-    for (const subgraph of graph.definitions?.subgraphs ?? []) visit(subgraph);
-  }
-  visit(workflow);
 }

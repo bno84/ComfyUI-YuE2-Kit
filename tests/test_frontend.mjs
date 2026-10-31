@@ -8,7 +8,7 @@ const read = (name) => readFileSync(new URL(`../web/${name}`, import.meta.url), 
 const load = (sources, names, app = { registerExtension() {} }) =>
   new Function("app", "api", sources.map(read).join("\n") + `\nreturn {${names}};`)(app, {});
 
-const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,normalizeValues,applicable,restoreLegacyWidgets,migrateScoreWorkflow");
+const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,normalizeValues,applicable");
 const strip = load(["score_strip.js"], "shortLabel,sectionColor,sourceSummary");
 const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,resolvePlans,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceGaps,restoreReference,referenceTargets,scoreViews,showScore,SongHistoryPanel,planningText");
 const transcribe = load(["reference_transcribe.js"], "buildTranscriptionPrompt");
@@ -20,7 +20,7 @@ const value = (n, name) => n.widgets.find((w) => w.name === name).value;
 const plan = ({ source = "abc", opening = 0, continuation = true, start = 0, end = null, tempo = "reference" } = {}) => ({
   source: { kind: source, abc: source === "none" ? "" : "SOURCE" }, anchor: { start, end }, opening: { bars: opening },
   continuation: { enabled: continuation }, header: { tempo: { policy: tempo } } });
-const planned = (entry) => ({ planners: [{ id: "1", error: "", planError: "", ...entry }], reference: null });
+const planned = (entry) => ({ planners: [{ id: "1", planError: "", ...entry }], reference: null });
 
 // What resolvePlans attaches to a recorded Score node once the planner answers.
 const withPlan = (settings, value) => { settings.planners[0].plan = value; return settings; };
@@ -130,20 +130,10 @@ test("Restore all refuses saved Score features for Reference input before changi
 });
 
 
-test("unit note length is locked-only and older Score widgets retain their values", () => {
+test("unit note length is locked-only and history reads it", () => {
   const values = { ...state.SCORE_DEFAULTS, header_mode: "locked", header_key: "D minor", header_tempo: 88, opening_bars: 12 };
-  const names = Object.keys(state.SCORE_DEFAULTS).filter(name => name !== "header_unit");
-  const n = node(state.SCORE_DEFAULTS);
-  state.restoreLegacyWidgets(n, { widgets_values: names.map(name => values[name]) });
-  assert.equal(value(n, "header_key"), "D minor");
-  assert.equal(value(n, "opening_bars"), 12);
-  assert.equal(value(n, "header_unit"), "1/16");
   assert.equal(state.applicable(values).header_unit, true);
   assert.equal(state.applicable({ ...values, header_mode: "reference" }).header_unit, false);
-  // Current workflows retain their chosen unit instead of being migrated again.
-  state.setValues(n, { header_unit: "1/32" });
-  state.restoreLegacyWidgets(n, { widgets_values: Array(22).fill(null) });
-  assert.equal(value(n, "header_unit"), "1/32");
   const settings = history.runSettings({ score: { class_type: "bno84.YuE2AdvancedScore", inputs: { ...values, header_unit: "1/32" } } });
   assert.equal(settings.planners[0].values.header_unit, "1/32");
 });
@@ -173,24 +163,6 @@ test("opening defaults to 768 tokens and enables the configured candidate count"
   assert.equal(state.applicable({ ...v, opening_generate: false }).opening_candidates, false);
   assert.equal(state.SCORE_DEFAULTS.opening_candidates, 4);
   assert.equal(state.applicable(v).opening_tokens, true);
-});
-
-
-test("old Score node IDs migrate in root and nested workflows without changing custom titles", () => {
-  const old = (title) => ({ type: "bno84.YuE2Score", title, properties: { "Node name for S&R": "bno84.YuE2Score" }, widgets_values: ["locked", 88] });
-  const root = old("YuE2 Score"), nested = old("My custom score");
-  const workflow = { nodes: [root], definitions: { subgraphs: [{ nodes: [nested] }] } };
-  state.migrateScoreWorkflow(workflow);
-  assert.equal(root.type, "bno84.YuE2AdvancedScore");
-  assert.equal(root.title, "YuE2 Advanced Score");
-  assert.equal(nested.type, "bno84.YuE2AdvancedScore");
-  assert.equal(nested.title, "My custom score");
-  assert.equal(nested.properties["Node name for S&R"], "bno84.YuE2AdvancedScore");
-  assert.deepEqual(root.widgets_values, ["locked", 88]);
-  state.migrateScoreWorkflow(workflow);
-  const settings = history.runSettings({ score: { class_type: "bno84.YuE2Score", inputs: { ...state.SCORE_DEFAULTS, header_mode: "locked" } } });
-  assert.equal(settings.planners.length, 1);
-  assert.equal(settings.planners[0].values.header_mode, "locked");
 });
 
 
@@ -255,7 +227,6 @@ test("Planning describes generated and reference stages", () => {
       source === "None" ? "Generated" : source + (extend ? " + continuation" : ""));
   }
   assert.equal(history.planningText({ planners: [], reference: null }), "-");
-  assert.equal(history.planningText({ planners: [{ error: "Missing settings" }], reference: { source: "ABC" } }), "-");
 });
 
 
@@ -380,7 +351,6 @@ test("saved plans come from the Python planner, with the UI action's mode repair
   assert.deepEqual(settings.planners[0].plan, plan());
   assert.equal(settings.planners[1].plan, null);
   assert.equal(settings.planners[1].planError, "Bad settings.");
-  assert.equal(settings.planners[1].error, "");
   await history.resolvePlans(settings, async () => { throw Error("offline"); });
   assert.match(settings.planners[0].planError, /offline/);
 });

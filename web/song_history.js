@@ -13,9 +13,8 @@ const NODE = "bno84.SongHistory";
 const PAGE = 20;
 const PREROLL = 2;
 const SCORE = "bno84.YuE2AdvancedScore";
-const LEGACY_SCORE = "bno84.YuE2Score";
 const SCORE_SAMPLING = { temperature: 0.7, top_p: 0.9, top_k: 30, repetition_penalty: 1.005, penalty_window: 100 };
-const SAMPLERS = [SCORE, LEGACY_SCORE, "YuE2GenerateMusic", "YuE2GenerateABC", "bno84.YuE2ExtendABC"];
+const SAMPLERS = [SCORE, "YuE2GenerateMusic", "YuE2GenerateABC", "bno84.YuE2ExtendABC"];
 
 export function clock(seconds) {
   const whole = Math.max(0, Math.round(seconds));
@@ -89,13 +88,11 @@ export function runSettings(prompt) {
       settings.values.instrumental.push({ sampler: "", id, input: "instrumental", value: inputs.instrumental, title: node._meta?.title ?? "" });
     } else if (node.class_type === "bno84.ReferenceInput" && !settings.reference) {
       settings.reference = { id, source: inputs.source, extend: !!inputs.extend };
-    } else if ([SCORE, LEGACY_SCORE].includes(node.class_type)) {
+    } else if (node.class_type === SCORE) {
       const values = Object.fromEntries(Object.entries(SCORE_DEFAULTS).map(([name, fallback]) => [name, resolveInput(prompt,id,name)?.value ?? fallback]));
-      let error = "";
-      if (!("header_mode" in inputs)) error = "Original standard-widget Score settings are unavailable.";
       // The plan comes from the Python planner: see resolvePlans.
-      settings.planners.push({id, plan: null, planError: "", values, mode: values.mode, error});
-      if (!error) settings.sampling.push({id, class_type:SCORE, values:Object.fromEntries(Object.keys(SCORE_SAMPLING).map(name => [name, values[name]]))});
+      settings.planners.push({id, plan: null, planError: "", values, mode: values.mode});
+      settings.sampling.push({id, class_type:SCORE, values:Object.fromEntries(Object.keys(SCORE_SAMPLING).map(name => [name, values[name]]))});
     } else if (SAMPLERS.includes(node.class_type)) {
       const values = Object.fromEntries(Object.entries(inputs).filter(([name, value]) => !RESTORED.includes(name) && scalar(value)));
       settings.sampling.push({ id, class_type: node.class_type, values });
@@ -108,7 +105,7 @@ export function runSettings(prompt) {
 // The plan each recorded Score node resolves to, from the Python planner,
 // which owns these rules. Restore applies normalizeValues, so resolve those values.
 export async function resolvePlans(settings, fetchApi = (...args) => api.fetchApi(...args)) {
-  await Promise.all(settings.planners.filter(entry => !entry.error).map(async entry => {
+  await Promise.all(settings.planners.map(async entry => {
     try {
       const response = await fetchApi("/yue2-kit/score/preview", {method: "POST", headers: {"Content-Type": "application/json"},
         body: JSON.stringify(normalizeValues(entry.values))});
@@ -167,7 +164,7 @@ export function samplingText(sampling) {
 
 export function planningText(settings) {
   if (settings.planners.length) return settings.planners.map(entry => {
-    if (entry.error || !entry.plan) return "-";
+    if (!entry.plan) return "-";
     const plan = entry.plan;
     if (plan.source.kind === "none") return "Generated";
     return [plan.opening.bars > 0 && "Opening", "reference", plan.continuation.enabled && "continuation"]
@@ -902,7 +899,7 @@ class SongHistoryPanel {
 
   // Score holds any saved plan; Reference input only a whole-reference plan without an opening or locked properties.
   planBlock(node, recorded) {
-    if (isScore(node) || !recorded || recorded.error) return "";
+    if (isScore(node) || !recorded) return "";
     if (!recorded.plan) return `can't hold a plan the planner cannot read (${recorded.planError})`;
     const gaps = referenceGaps(recorded.plan);
     return gaps.length ? `can't hold ${gaps.join(", ")}` : "";
@@ -912,8 +909,8 @@ class SongHistoryPanel {
     const detail = this.details.get(this.open);
     if (!detail) return;
     const planners = detail.settings.planners, recorded = this.recorded(detail);
-    if (planners.length && (!recorded || recorded.error)) {
-      return this.message(recorded?.error ?? "Choose a recorded Score node; multiple saved scores cannot be mapped automatically.", true);
+    if (planners.length && !recorded) {
+      return this.message("Choose a recorded Score node; multiple saved scores cannot be mapped automatically.", true);
     }
     return this.pickTarget(event, target => this.restore({ seed: true, lyricsStyle: true, plan: true, sampling: true }, target),
       node => this.planBlock(node, recorded), RESTORE_HINT);
@@ -1032,7 +1029,7 @@ class SongHistoryPanel {
     const all = button(`Restore all${more}`, (event) => this.restoreAll(event));
     all.title = settings.planners.length || !planners.length ? "Restore plan, mode, fixed seed, lyrics, style, instrumental and sampling."
       : "Older run without Score settings: restores the saved final ABC as-is, plus seed, lyrics, style, instrumental and sampling.";
-    all.disabled = !detail.prompt || (settings.planners.length > 0 && settings.planners.every(entry => entry.error));
+    all.disabled = !detail.prompt;
     if (settings.planners.length > 1) {
       const select = element("select"); select.setAttribute("aria-label", "Recorded Score node");
       for (const entry of settings.planners) {
@@ -1045,7 +1042,7 @@ class SongHistoryPanel {
       actions.append(select);
     }
     actions.append(seed, saved, lyrics, element("span", "spacer"), all);
-    for (const entry of settings.planners.filter(entry => entry.error)) container.append(element("div", "h-warn", entry.error));
+    for (const entry of settings.planners.filter(entry => entry.planError)) container.append(element("div", "h-warn", entry.planError));
     container.append(columns, actions);
     return container;
   }
@@ -1066,8 +1063,8 @@ class SongHistoryPanel {
     if (what.plan && !target) return this.message("Add a YuE2 Advanced Score or Reference input node to restore the score.", true);
     const blocked = what.plan && this.planBlock(target.node, recorded);
     if (blocked) return this.message(`${referenceLabel(target.node)} · ${target.id} ${blocked}. ${RESTORE_HINT}`, true);
-    if (what.plan && planners.length && (!recorded || recorded.error)) {
-      return this.message(recorded?.error ?? "Choose a matching recorded Score node; multiple saved scores cannot be mapped automatically.", true);
+    if (what.plan && planners.length && !recorded) {
+      return this.message("Choose a matching recorded Score node; multiple saved scores cannot be mapped automatically.", true);
     }
     const done = [], missing = [];
     changeGraph(() => {
@@ -1088,10 +1085,10 @@ class SongHistoryPanel {
         if (set) done.push(label(set));
         else missing.push(name);
       };
-      if (what.plan && recorded && !recorded.error && !isScore(target.node)) {
+      if (what.plan && recorded && !isScore(target.node)) {
         restoreReference(target.node, recorded.plan);
         done.push("reference settings");
-      } else if (what.plan && recorded && !recorded.error) {
+      } else if (what.plan && recorded) {
         const values = normalizeValues(recorded.values);
         for (const [name,value] of Object.entries(values)) {
           if (!setInput(root,target.id,name,value)) missing.push(name);
