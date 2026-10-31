@@ -46,15 +46,9 @@ properties. When using a reference, locked mode keeps its meter, key, and unit
 note length while allowing tempo changes. Generated properties with a reference
 require an opening.
 
-The final bar may be shorter or longer than the meter and is kept as written.
-Earlier bars must match the meter.
-
 **Song history:** browse saved songs and **Use as reference** to reuse selected
 bars. **Use saved score** reuses the finished score as-is. Restore lyrics and
 style, the seed, or **Restore all** to recover the saved Score settings too.
-For older generator/extender runs, Restore all loads the finished ABC and maps
-shared score sampling, mode and token limits to Advanced Score. Conflicting
-legacy values are reported and left unchanged.
 Older songs may lack those settings.
 
 **Base / Instrumental:** each tab keeps its own lyrics and style. Instrumental
