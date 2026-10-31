@@ -18,9 +18,9 @@ env:
   # Oldest ComfyUI this pack declares in requires-comfyui.
   COMFYUI_REF: v0.38.0
   # The template's Audio Visualizer release.
-  AUDIOVISUALIZER_REF: v0.4.0
-  # The template's ABC Preview release, with direct timeline loading for Song history.
-  ABCPREVIEW_REF: v0.3.3
+  AUDIOVISUALIZER_REF: v0.4.1
+  # The template's ABC Preview release, with Nodes 2.0 support.
+  ABCPREVIEW_REF: v0.3.5
 
 jobs:
   checks:
