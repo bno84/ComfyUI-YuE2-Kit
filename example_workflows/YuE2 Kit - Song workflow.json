@@ -70,7 +70,7 @@
       "properties": {
         "Node name for S&R": "bno84.LyricsStyle",
         "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.7.1"
+        "ver": "0.7.2"
       },
       "widgets_values": [
         false,
@@ -522,7 +522,7 @@
       "properties": {
         "Node name for S&R": "bno84.SaveYuE2Bundle",
         "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.7.1"
+        "ver": "0.7.2"
       },
       "widgets_values": [
         "audio/yue2/song"
@@ -593,7 +593,7 @@
       "properties": {
         "Node name for S&R": "bno84.ModelStatus",
         "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.7.1"
+        "ver": "0.7.2"
       },
       "widgets_values": [],
       "widgets_values_named": {},
@@ -794,7 +794,7 @@
       "properties": {
         "Node name for S&R": "bno84.SongHistory",
         "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.7.1"
+        "ver": "0.7.2"
       },
       "widgets_values": [],
       "widgets_values_named": {},
@@ -899,7 +899,7 @@
       "properties": {
         "Node name for S&R": "bno84.YuE2AdvancedScore",
         "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.7.1"
+        "ver": "0.7.2"
       },
       "widgets_values": [
         "generated",
@@ -1048,7 +1048,7 @@
       "properties": {
         "Node name for S&R": "bno84.OptionalModelLora",
         "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.7.1"
+        "ver": "0.7.2"
       },
       "widgets_values": [
         "(none)",
@@ -1620,7 +1620,7 @@
             "properties": {
               "Node name for S&R": "bno84.CheckpointFile",
               "cnr_id": "comfyui-yue2-kit",
-              "ver": "0.7.1",
+              "ver": "0.7.2",
               "models": [
                 {
                   "name": "yue2_3b_bf16.safetensors",
@@ -1734,7 +1734,7 @@
             "properties": {
               "Node name for S&R": "bno84.OptionalAudioEncoderFile",
               "cnr_id": "comfyui-yue2-kit",
-              "ver": "0.7.1",
+              "ver": "0.7.2",
               "models": [
                 {
                   "name": "sheetsage2_bf16.safetensors",
@@ -1789,7 +1789,7 @@
             "properties": {
               "Node name for S&R": "bno84.OptionalLoraFile",
               "cnr_id": "comfyui-yue2-kit",
-              "ver": "0.7.1",
+              "ver": "0.7.2",
               "models": [
                 {
                   "name": "ar_lora_inst_v3abc_comfyui.safetensors",
