@@ -102,7 +102,7 @@
       "properties": {
         "Node name for S&R": "bno84.EmbedYuE2KitSong",
         "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.7.2"
+        "ver": "0.8.0"
       },
       "widgets_values": [
         "",
@@ -248,7 +248,7 @@
           "crf"
         ],
         "cnr_id": "comfyui-audiovisualizer",
-        "ver": "0.4.1"
+        "ver": "0.5.0"
       },
       "widgets_values": [
         true,

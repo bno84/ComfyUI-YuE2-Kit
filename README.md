@@ -16,7 +16,7 @@ comfy-cli, then restart ComfyUI:
 - [ABC Preview](https://registry.comfy.org/publishers/bno84/nodes/comfyui-abcpreview)
   **0.3.5+** for notation, playback, and the score timeline.
 - [Audio Visualizer](https://registry.comfy.org/publishers/bno84/nodes/comfyui-audiovisualizer)
-  **0.4.1+** for optional video export.
+  **0.5.0+** for optional video export.
 
 ## Getting started
 
@@ -50,6 +50,11 @@ require an opening.
 bars. **Use saved score** reuses the finished score as-is. Restore lyrics and
 style, the seed, or **Restore all** to recover the saved Score settings too.
 Older songs may lack those settings.
+
+**Embedded songs:** each saved FLAC embeds its final score with its workflow.
+Drop the FLAC into ComfyUI to see the score again, or use **Embed YuE2 Kit song**
+to carry the song's settings into other workflows. The **YuE2 Kit - Embedded
+song demo** template uses it to add a visualizer to a saved song.
 
 **Base / Instrumental:** each tab keeps its own lyrics and style. Instrumental
 also selects the instrumental AR LoRA. Use **full** score mode and
