@@ -547,16 +547,20 @@ test("unmatched legacy sampling is reported when restoring to Reference input", 
 
 // Save YuE2 FLAC + ABC, loaded with stand-ins for the Song history helpers it imports.
 const loadSaved = (imports, app = { registerExtension() {} }) =>
-  new Function("app", ...Object.keys(imports), read("saved_score.js") + "\nreturn {scoreFacts,executedScore,SavedScorePanel,SAVED_ABC};")(
-    app, ...Object.values(imports));
+  new Function("app", "api", ...Object.keys(imports), read("saved_score.js") + "\nreturn {scoreLabel,executedScore,SavedScorePanel,SAVED_ABC};")(
+    app, {}, ...Object.values(imports));
 
-test("the save node summarizes its saved score and takes the latest executed one", () => {
+test("the save node takes the latest executed score and asks the server once per score for its label", async () => {
   const saved = loadSaved({});
-  assert.equal(saved.scoreFacts("X:1\nM:4/4\nL:1/16\nQ:1/4=120\nV: Vocal clef=treble\nK:Em\nV: Vocal\nK:D\nz4|\n"), "M 4/4 · Q 1/4=120 · K Em");
-  assert.equal(saved.scoreFacts("X:1\nK:C\nM:3/4\n"), "K C");
-  assert.equal(saved.scoreFacts(""), "");
   assert.equal(saved.executedScore({ audio: [], yue2_abc: ["FIRST", "LAST"] }), "LAST");
   assert.equal(saved.executedScore({ audio: [] }), null);
+  const asked = [];
+  const fetchApi = async (url, options) => { asked.push(JSON.parse(options.body).abc); return { ok: true, json: async () => ({ labels: ["12 bars · 158 BPM · 4/4 · Bm"] }) }; };
+  assert.equal(await saved.scoreLabel("X:1", fetchApi), "12 bars · 158 BPM · 4/4 · Bm");
+  assert.equal(await saved.scoreLabel("X:1", fetchApi), "12 bars · 158 BPM · 4/4 · Bm");
+  assert.deepEqual(asked, [["X:1"]]);
+  assert.equal(await saved.scoreLabel("", fetchApi), "");
+  assert.equal(await saved.scoreLabel("X:2", async () => { throw new Error("offline"); }), "");
 });
 
 test("the save node sends its saved score as-is to the reference target", () => {
@@ -582,4 +586,19 @@ test("Song history names the score source only when it is not the embedded score
   assert.equal(history.scoreSource({ score_source: "embedded", score_differs: false }), null);
   assert.deepEqual(history.scoreSource({ score_source: "file", score_differs: false }), { text: ".abc file", warning: "" });
   assert.match(history.scoreSource({ score_source: "embedded", score_differs: true }).warning, /was changed/);
+});
+
+// Embed YuE2 Kit song, with stand-ins for the score helpers it imports.
+const loadSong = new Function("app", "api", "scoreLabel", "scoreViews", "showScore",
+  read("embed_song.js") + "\nreturn {songName,songSummary};")(
+  { registerExtension() {} }, {}, async () => "", () => [], async () => {});
+
+test("the song node names its stored song and warns when another FLAC is chosen", () => {
+  assert.equal(loadSong.songName("audio/yue2/song_00624.flac [output]"), "song_00624");
+  assert.equal(loadSong.songName("night folding.flac"), "night folding");
+  assert.deepEqual(loadSong.songSummary({ song: "a.flac", source: "a.flac", abc: "X:1", label: "12 bars · 158 BPM · 4/4 · Bm" }),
+    { text: "a · 12 bars · 158 BPM · 4/4 · Bm", warning: "" });
+  assert.equal(loadSong.songSummary({ song: "a.flac", source: "a.flac", abc: "X:1" }).text, "a");
+  assert.match(loadSong.songSummary({ song: "b.flac", source: "a.flac", abc: "X:1" }).warning, /from a, not b. Choose the FLAC again/);
+  assert.match(loadSong.songSummary({ song: "a.flac", source: undefined, abc: "" }).text, /No song data stored/);
 });

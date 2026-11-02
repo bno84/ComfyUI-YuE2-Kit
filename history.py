@@ -145,6 +145,54 @@ def lyrics_style(prompt):
     return {"lyrics": "", "style": "", "instrumental": None}
 
 
+SEED_INPUTS = ("seed", "noise_seed")
+# Score planning runs first, so its seed is where a song starts.
+SEED_ORDER = ("bno84.YuE2AdvancedScore", "YuE2GenerateABC", "bno84.YuE2ExtendABC", "YuE2GenerateMusic")
+
+
+def first_seed(prompt):
+    """The seed a song started from: the value typed in at the root of the first sampler's seed link.
+
+    Links are followed through primitives and through nodes that pass a seed
+    on, such as YuE2 Advanced Score. A seed computed by any other node is not
+    a value someone typed in, so it is not used. None when there is none.
+    """
+    prompt = prompt or {}
+
+    def root(value, depth=0):
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        if not (isinstance(value, list) and len(value) == 2) or depth > 32:
+            return None
+        inputs = (prompt.get(str(value[0])) or {}).get("inputs", {})
+        for name in ("value", *SEED_INPUTS):
+            if name in inputs:
+                return root(inputs[name], depth + 1)
+        return None
+
+    def order(item):
+        kind = item[1].get("class_type")
+        return SEED_ORDER.index(kind) if kind in SEED_ORDER else len(SEED_ORDER)
+
+    for _, node in sorted(prompt.items(), key=order):
+        for name in SEED_INPUTS:
+            if name in node.get("inputs", {}):
+                seed = root(node["inputs"][name])
+                if seed is not None:
+                    return seed
+    return None
+
+
+def player_info(prompt):
+    """FLAC title and artist typed into Save YuE2 FLAC + ABC; empty when not set or linked."""
+    for node in (prompt or {}).values():
+        if node.get("class_type") == "bno84.SaveYuE2Bundle":
+            inputs = node.get("inputs", {})
+            text = lambda name: inputs[name].strip() if isinstance(inputs.get(name), str) else ""
+            return {"title": text("flac_title"), "artist": text("flac_artist")}
+    return {"title": "", "artist": ""}
+
+
 def meter(value, current):
     value = value.strip()
     if value in ("C", "C|"):
@@ -312,6 +360,19 @@ def summary(score, audio_seconds=None):
     }
 
 
+def score_label(abc):
+    """A one-line summary in ABC Timeline's style, such as "12 bars · 158 BPM · 4/4 · Bm"."""
+    found = summary(parse_score(abc))
+    fields, bars = found["fields"], found["bars"]
+    bpm = tempo(fields.get("Q", ""))
+    key = fields.get("K", "").split()
+    return " · ".join(part for part in (
+        f"{bars} bar{'' if bars == 1 else 's'}",
+        f"{bpm:g} BPM" if bpm else f"{DEFAULT_TEMPO} BPM (assumed)",
+        fields.get("M", ""), key[0] if key else "",
+    ) if part)
+
+
 def slice_score(abc, start, end):
     """The score's groups ``start`` up to ``end`` (exclusive) as a complete ABC.
 
@@ -469,6 +530,22 @@ def resolve_song(root, relative):
     if not flac.is_file():
         raise ValueError("This song's FLAC file is missing.")
     return flac, read_song(flac)
+
+
+def embedded_song(path):
+    """A FLAC's comments and the score its workflow embeds; ValueError without one.
+
+    Only what the file carries counts, wherever it came from: no .abc file beside it is read.
+    """
+    name = Path(path).name
+    try:
+        _, tags = flac_info(path)
+    except ValueError:
+        raise ValueError(f"{name} is not a FLAC file.") from None
+    abc = workflow_abc(embedded_workflow(tags))
+    if abc is None:
+        raise ValueError(f"{name} has no embedded YuE2-Kit score.")
+    return tags, abc
 
 
 def song_detail(root, relative):

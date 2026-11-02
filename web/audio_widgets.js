@@ -3,7 +3,7 @@
 // built-in node names. Its AUDIOUPLOAD widget requires audioUI to exist first.
 import { app } from "../../scripts/app.js";
 
-const audioNodes = new Set(["bno84.OptionalLoadAudio", "bno84.SaveYuE2Bundle"]);
+const audioNodes = new Set(["bno84.OptionalLoadAudio", "bno84.SaveYuE2Bundle", "bno84.EmbedYuE2KitSong"]);
 
 function clearEmptyPreview(node) {
   const source = node.widgets?.find((widget) => widget.name === "audio");
@@ -33,6 +33,15 @@ app.registerExtension({
     }
     required.audioUI = ["AUDIO_UI", {}];
     if (upload) required.upload = upload;
+    // Embed YuE2 Kit song keeps its player and upload with the audio choice, above its stored song data.
+    // The frontend follows input_order when the definition has one.
+    if (nodeData.name === "bno84.EmbedYuE2KitSong") {
+      const first = ["audio", "audioUI", "upload"].filter((name) => name in required);
+      const order = [...first, ...Object.keys(required).filter((name) => !first.includes(name))];
+      nodeData.input.required = Object.fromEntries(order.map((name) => [name, required[name]]));
+      if (nodeData.input_order) nodeData.input_order = { ...nodeData.input_order, required: order };
+      return;
+    }
     nodeData.input.required = required;
   },
   nodeCreated(node) {

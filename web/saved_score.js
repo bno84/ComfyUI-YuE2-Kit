@@ -2,21 +2,26 @@
 // properties, so it is part of the workflow embedded in the FLAC; opening that
 // workflow shows it again. Preview it, or reuse it as-is as the reference.
 import { app } from "../../scripts/app.js";
+import { api } from "../../scripts/api.js";
 import { pickTarget, scoreViews, showScore, useReference } from "./song_history.js";
 
 const NODE = "bno84.SaveYuE2Bundle";
 export const SAVED_ABC = "yue2_abc";
 
-// Meter, tempo and key from the header; K: ends an ABC header.
-export function scoreFacts(abc) {
-  const fields = {};
-  for (const line of (abc ?? "").split(/\r?\n/)) {
-    const field = /^([A-Za-z]):(.*)$/.exec(line.trim());
-    if (!field) continue;
-    if ("MQK".includes(field[1]) && !(field[1] in fields)) fields[field[1]] = field[2].trim();
-    if (field[1] === "K") break;
+// A one-line summary such as "12 bars · 158 BPM · 4/4 · Bm", from the kit's
+// score parser on the server. Cached per score; "" when it cannot be read.
+const labels = new Map();
+export function scoreLabel(abc, fetchApi = (...args) => api.fetchApi(...args)) {
+  if (!abc) return Promise.resolve("");
+  if (!labels.has(abc)) {
+    const request = fetchApi("/yue2-kit/score/label", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ abc: [abc] }),
+    }).then((response) => response.ok ? response.json() : null)
+      .then((data) => data?.labels?.[0] ?? "")
+      .catch(() => { labels.delete(abc); return ""; });
+    labels.set(abc, request);
   }
-  return [fields.M && `M ${fields.M}`, fields.Q && `Q ${fields.Q}`, fields.K && `K ${fields.K}`].filter(Boolean).join(" · ");
+  return labels.get(abc);
 }
 
 // The last score in an executed output; a list run reports one per item.
@@ -129,9 +134,9 @@ export class SavedScorePanel {
   render() {
     const abc = this.abc;
     if (abc) {
-      const facts = scoreFacts(abc);
-      this.summary.replaceChildren(element("b", "", "Saved score"), facts ? ` · ${facts}` : "");
+      this.summary.replaceChildren(element("b", "", "Saved score"));
       this.summary.title = "The score this node last saved. It is embedded in the saved FLAC's workflow.";
+      scoreLabel(abc).then((label) => { if (label && this.abc === abc) this.summary.append(` · ${label}`); });
     } else {
       this.summary.replaceChildren(element("span", "muted", "No saved score. Run the workflow, or open a FLAC this node saved."));
       this.summary.title = "";

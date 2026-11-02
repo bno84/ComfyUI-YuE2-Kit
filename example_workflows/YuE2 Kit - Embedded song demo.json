@@ -1,0 +1,498 @@
+{
+  "id": "045ac2db-2e9e-4ee8-941e-89b655ea145b",
+  "revision": 0,
+  "last_node_id": 7,
+  "last_link_id": 8,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "bno84.EmbedYuE2KitSong",
+      "pos": [
+        -7.956724837067002,
+        409.04056738223943
+      ],
+      "size": [
+        400,
+        510
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "abc",
+          "type": "STRING",
+          "links": [
+            7,
+            8
+          ]
+        },
+        {
+          "name": "abc_seconds",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "bars",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "tempo",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "meter",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "key",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "lyrics",
+          "type": "STRING",
+          "links": [
+            6
+          ]
+        },
+        {
+          "name": "style",
+          "type": "STRING",
+          "links": [
+            5
+          ]
+        },
+        {
+          "name": "instrumental",
+          "type": "BOOLEAN",
+          "links": null
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "title",
+          "type": "STRING",
+          "links": [
+            3
+          ]
+        },
+        {
+          "name": "artist",
+          "type": "STRING",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "bno84.EmbedYuE2KitSong",
+        "cnr_id": "comfyui-yue2-kit",
+        "ver": "0.7.2"
+      },
+      "widgets_values": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "widgets_values_named": {
+        "audio": "",
+        "upload": "",
+        "song_prompt": "",
+        "song_workflow": "",
+        "song_abc": ""
+      }
+    },
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        101.16039426718166,
+        4.406488821622244
+      ],
+      "size": [
+        282.798828125,
+        314.00000000000006
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "title": "Still image",
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.38.0"
+      },
+      "widgets_values": [
+        "yue2-kit-still.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "yue2-kit-still.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 3,
+      "type": "AudioVisualizer",
+      "pos": [
+        569.1305023629359,
+        407.946532324322
+      ],
+      "size": [
+        382.2994140625,
+        1117.4623560855264
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 1
+        },
+        {
+          "name": "title",
+          "shape": 7,
+          "type": "STRING",
+          "link": 3
+        },
+        {
+          "name": "artist",
+          "shape": 7,
+          "type": "STRING",
+          "link": 4
+        },
+        {
+          "name": "comment",
+          "shape": 7,
+          "type": "STRING",
+          "link": 5
+        },
+        {
+          "name": "lyrics",
+          "shape": 7,
+          "type": "STRING",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "title": "Visualizer video",
+      "properties": {
+        "Node name for S&R": "AudioVisualizer",
+        "sdcpp_audio_visualizer_widget_order": [
+          "enabled",
+          "filename_prefix",
+          "style",
+          "dot_spacing",
+          "color",
+          "band_height",
+          "gain",
+          "glow",
+          "trail",
+          "vignette",
+          "fade_in",
+          "fade_out",
+          "fps",
+          "start",
+          "duration",
+          "video_codec",
+          "h265_crf",
+          "h264_crf",
+          "audio_codec",
+          "aac_bitrate",
+          "opus_bitrate",
+          "crf"
+        ],
+        "cnr_id": "comfyui-audiovisualizer",
+        "ver": "0.4.1"
+      },
+      "widgets_values": [
+        true,
+        "audio/yue2/song_viz",
+        "bars",
+        17,
+        "#9750c4",
+        0.35,
+        1.3,
+        0,
+        0,
+        0,
+        1.5,
+        2.5,
+        60,
+        0,
+        0,
+        "h265",
+        18,
+        22,
+        "flac",
+        192,
+        128,
+        -1
+      ],
+      "widgets_values_named": {
+        "enabled": true,
+        "filename_prefix": "audio/yue2/song_viz",
+        "style": "bars",
+        "dot_spacing": 17,
+        "color": "#9750c4",
+        "band_height": 0.35,
+        "gain": 1.3,
+        "glow": 0,
+        "trail": 0,
+        "vignette": 0,
+        "fade_in": 1.5,
+        "fade_out": 2.5,
+        "fps": 60,
+        "start": 0,
+        "duration": 0,
+        "video_codec": "h265",
+        "h265_crf": 18,
+        "h264_crf": 22,
+        "audio_codec": "flac",
+        "aac_bitrate": 192,
+        "opus_bitrate": 128,
+        "crf": -1
+      }
+    },
+    {
+      "id": 4,
+      "type": "MarkdownNote",
+      "pos": [
+        -4.985068806181756,
+        1002.9201295999969
+      ],
+      "size": [
+        400,
+        230
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Embedded song demo \u00b7 usage",
+      "properties": {},
+      "widgets_values": [
+        "Embed a YuE2-Kit FLAC's settings in this workflow, here to add a visualizer video afterwards.\n\n1. Choose or upload the **FLAC**. The node stores the prompt, workflow and score it embeds, so the video's embedded workflow carries them too.\n2. Pick a **still image**, then run.\n\nThe FLAC needs an embedded score, which Final outputs \u00b7 ABC + FLAC writes. The example group shows the stored score; title and artist come from the song's FLAC player info settings."
+      ],
+      "widgets_values_named": {
+        "text": "Embed a YuE2-Kit FLAC's settings in this workflow, here to add a visualizer video afterwards.\n\n1. Choose or upload the **FLAC**. The node stores the prompt, workflow and score it embeds, so the video's embedded workflow carries them too.\n2. Pick a **still image**, then run.\n\nThe FLAC needs an embedded score, which Final outputs \u00b7 ABC + FLAC writes. The example group shows the stored score; title and artist come from the song's FLAC player info settings."
+      },
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 5,
+      "type": "bno84.ABCPreview",
+      "pos": [
+        1241.2916059729075,
+        689.1710211633573
+      ],
+      "size": [
+        785.9107088803087,
+        640
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "abc",
+          "type": "STRING",
+          "link": 7
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "bno84.ABCPreview",
+        "cnr_id": "comfyui-abcpreview",
+        "ver": "0.3.5"
+      },
+      "widgets_values": [
+        "GeneralUser-GS.sf2"
+      ],
+      "widgets_values_named": {
+        "soundfont": "GeneralUser-GS.sf2"
+      }
+    },
+    {
+      "id": 6,
+      "type": "bno84.ABCTimeline",
+      "pos": [
+        1239.8037515358512,
+        408.5754020622029
+      ],
+      "size": [
+        780.2219058162021,
+        210.5375691119691
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "abc",
+          "type": "STRING",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "seconds",
+          "type": "FLOAT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "bno84.ABCTimeline",
+        "cnr_id": "comfyui-abcpreview",
+        "ver": "0.3.5"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      3,
+      1,
+      "AUDIO"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      1,
+      11,
+      3,
+      2,
+      "STRING"
+    ],
+    [
+      4,
+      1,
+      12,
+      3,
+      3,
+      "STRING"
+    ],
+    [
+      5,
+      1,
+      8,
+      3,
+      4,
+      "STRING"
+    ],
+    [
+      6,
+      1,
+      7,
+      3,
+      5,
+      "STRING"
+    ],
+    [
+      7,
+      1,
+      1,
+      5,
+      0,
+      "STRING"
+    ],
+    [
+      8,
+      1,
+      1,
+      6,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Example, using embedded ABC",
+      "bounding": [
+        1167.6302475970747,
+        292.732808735133,
+        912.597090656369,
+        1066.9304770965239
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.6018661028155745,
+      "offset": [
+        1097.1903780943487,
+        308.4344844002319
+      ]
+    },
+    "workflowRendererVersion": "LG",
+    "frontendVersion": "1.53.6",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4,
+  "seed_widgets": {}
+}

@@ -215,6 +215,17 @@ class SongTests(unittest.TestCase):
         lonely.with_suffix(".abc").write_text(SCORE, encoding="utf-8")
         self.assertEqual(index.list(self.root)["total"], 3)
 
+    def test_an_embedded_song_needs_its_own_score(self):
+        flac = self.embed("song_00001", SCORE)
+        tags, abc = history.embedded_song(flac)
+        self.assertEqual(abc, SCORE)
+        self.assertIn("workflow", tags)
+        # Only the file's own score counts; song_00002 has just an .abc beside it.
+        with self.assertRaisesRegex(ValueError, "no embedded"):
+            history.embedded_song(self.root / "audio/yue2/song_00002.flac")
+        with self.assertRaises(ValueError):
+            history.embedded_song(self.root / "notes.abc")
+
     def test_refuses_paths_outside_the_output_folder_or_without_a_score(self):
         for path in ["../secret.flac", "/etc/passwd", "audio/yue2/song_00001.abc", "audio/yue2/lonely.flac"]:
             with self.assertRaises(ValueError):
@@ -242,3 +253,41 @@ class LyricsStyleTests(unittest.TestCase):
         old = history.lyrics_style({"32": {"class_type": "bno84.LyricsStyle", "inputs": {"instrumental": True, "lyrics": "[intro]", "style": "rave"}}})
         self.assertEqual((old["lyrics"], old["style"]), ("[intro]", "rave"))
 
+
+
+class FirstSeedTests(unittest.TestCase):
+    def test_follows_the_score_seed_back_to_the_value_typed_in(self):
+        prompt = {
+            "3": {"class_type": "PrimitiveInt", "inputs": {"value": -859950131}},
+            "65": {"class_type": "bno84.YuE2AdvancedScore", "inputs": {"seed": ["3", 0]}},
+            "31:6": {"class_type": "YuE2GenerateMusic", "inputs": {"seed": ["65", 5]}},
+            "31:9": {"class_type": "KSampler", "inputs": {"seed": 7}},
+        }
+        self.assertEqual(history.first_seed(prompt), -859950131)
+
+    def test_the_score_seed_comes_before_the_music_seed(self):
+        prompt = {"6": {"class_type": "YuE2GenerateMusic", "inputs": {"seed": 2}},
+                  "5": {"class_type": "YuE2GenerateABC", "inputs": {"seed": 1}}}
+        self.assertEqual(history.first_seed(prompt), 1)
+
+    def test_a_computed_seed_is_not_used(self):
+        prompt = {"4": {"class_type": "IntMath", "inputs": {"a": 5, "b": 1}},
+                  "5": {"class_type": "YuE2GenerateABC", "inputs": {"seed": ["4", 0]}},
+                  "6": {"class_type": "YuE2GenerateMusic", "inputs": {"seed": 9}}}
+        self.assertEqual(history.first_seed(prompt), 9)
+        self.assertIsNone(history.first_seed({"5": {"class_type": "YuE2GenerateABC", "inputs": {"seed": ["4", 0]}}}))
+        self.assertIsNone(history.first_seed(None))
+
+
+class PlayerInfoTests(unittest.TestCase):
+    def test_reads_typed_flac_title_and_artist(self):
+        prompt = {"11": {"class_type": "bno84.SaveYuE2Bundle", "inputs": {"flac_title": " Neon ", "flac_artist": ["5", 0]}}}
+        self.assertEqual(history.player_info(prompt), {"title": "Neon", "artist": ""})
+        self.assertEqual(history.player_info({}), {"title": "", "artist": ""})
+
+
+class ScoreLabelTests(unittest.TestCase):
+    def test_reads_like_abc_timeline(self):
+        self.assertEqual(history.score_label(SCORE), "14 bars · 120 BPM · 4/4 · Em")
+        abc = "X:1\nM:3/4\nL:1/8\nK:Dmix clef=treble\nV: Vocal\nC6|\n"
+        self.assertEqual(history.score_label(abc), "1 bar · 120 BPM (assumed) · 3/4 · Dmix")

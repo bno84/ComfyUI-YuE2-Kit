@@ -15,7 +15,8 @@ from comfy_extras.nodes_yue2 import YuE2GenerateABC
 from server import PromptServer
 
 from .flac_tags import music_tags, write_tags
-from .history import SongIndex, parse_score, resolve_song, slice_score, song_detail, summary
+from .history import (SongIndex, embedded_prompt, embedded_song, first_seed, lyrics_style, parse_score, player_info, resolve_song,
+                      score_label, slice_score, song_detail, summary, tempo)
 from .model_files import file_choices, missing_message, resolve, workflow_models
 from .planning import check_music_context, extend_abc
 from .optional_lora import load_optional_lora
@@ -191,6 +192,21 @@ if getattr(PromptServer, "instance", None) is not None:
         except (ValueError, TypeError, KeyError, ZeroDivisionError) as error:
             return _bad_request(error)
 
+    @PromptServer.instance.routes.post("/yue2-kit/score/label")
+    async def label_score(request):
+        """Summaries such as "12 bars · 158 BPM · 4/4 · Bm" for {"abc": [...]}; null for a score that cannot be read."""
+        try:
+            scores = (await request.json())["abc"]
+        except (ValueError, TypeError, KeyError) as error:
+            return _bad_request(error)
+        labels = []
+        for abc in scores if isinstance(scores, list) else []:
+            try:
+                labels.append(score_label(abc))
+            except (ValueError, TypeError, KeyError, ZeroDivisionError):
+                labels.append(None)
+        return web.json_response({"labels": labels})
+
     @PromptServer.instance.routes.get("/yue2-kit/history")
     async def list_songs(request):
         try:
@@ -219,6 +235,16 @@ if getattr(PromptServer, "instance", None) is not None:
         except (OSError, ValueError, KeyError, TypeError) as error:
             return _bad_request(error)
         return web.json_response({"abc": abc, "warnings": warnings})
+
+    @PromptServer.instance.routes.get("/yue2-kit/song-data")
+    async def song_data(request):
+        """A YuE2-Kit FLAC's embedded prompt, workflow and score, as stored. Named like Load Audio's choice."""
+        try:
+            path = folder_paths.get_annotated_filepath(request.query.get("audio", ""))
+            tags, abc = await asyncio.to_thread(embedded_song, path)
+        except (OSError, ValueError) as error:
+            return _bad_request(error)
+        return web.json_response({"prompt": tags.get("prompt", ""), "workflow": tags.get("workflow", ""), "abc": abc})
 
 
 # Defaults from the instrumental LoRA's model card: its untimed caption form and example style.
@@ -451,12 +477,82 @@ if getattr(PromptServer, "instance", None) is not None:
     PromptServer.instance.add_on_prompt_handler(strip_queued)
 
 
+class EmbedYuE2KitSong(io.ComfyNode):
+    """A YuE2-Kit FLAC, with the prompt, workflow and score it embeds stored in this node.
+
+    Choosing the FLAC copies them into the node, so a workflow that embeds
+    itself, such as a video's, carries the song's settings too. The outputs
+    are read from the stored copies; only the audio is read from the file.
+    """
+
+    @classmethod
+    def define_schema(cls):
+        stored = dict(multiline=True, default="", dynamic_prompts=False)
+        return io.Schema(
+            node_id="bno84.EmbedYuE2KitSong",
+            display_name="Embed YuE2 Kit song",
+            category="audio/YuE2",
+            description="Embeds a YuE2-Kit FLAC's settings in this workflow: choosing the FLAC stores the prompt, "
+                        "workflow and score it embeds in this node. Outputs its audio and the settings it was made with.",
+            inputs=[
+                # Load Audio's own choice and upload: the FLAC can come from anywhere.
+                LoadAudio.define_schema().inputs[0],
+                io.String.Input("song_prompt", **stored, tooltip="The FLAC's embedded prompt, stored when the FLAC is chosen."),
+                io.String.Input("song_workflow", **stored, tooltip="The FLAC's embedded workflow, stored when the FLAC is chosen."),
+                io.String.Input("song_abc", **stored, tooltip="The FLAC's embedded score, stored when the FLAC is chosen."),
+            ],
+            outputs=[
+                io.Audio.Output("audio"),
+                io.String.Output("abc"),
+                io.Float.Output("abc_seconds", tooltip="Nominal score duration from its tempo and meter."),
+                io.Int.Output("bars"),
+                io.Float.Output("tempo", tooltip="Quarter notes per minute, from the score's Q: field; 0 when absent."),
+                io.String.Output("meter"),
+                io.String.Output("key"),
+                io.String.Output("lyrics", tooltip="The lyrics the song used: the Instrumental pair for an instrumental song."),
+                io.String.Output("style"),
+                io.Boolean.Output("instrumental"),
+                io.Int.Output("seed", tooltip="The seed typed in where the song started, not a derived one; 0 when absent."),
+                io.String.Output("title", tooltip="FLAC title typed into the song's save node."),
+                io.String.Output("artist", tooltip="FLAC artist typed into the song's save node."),
+            ],
+        )
+
+    @classmethod
+    def validate_inputs(cls, audio, song_prompt, song_abc, **kwargs):
+        if not song_prompt.strip() or not song_abc.strip():
+            return "No song data stored. Choose a YuE2-Kit FLAC to store its settings and score in this node."
+        return LoadAudio.validate_inputs(audio)
+
+    @classmethod
+    def fingerprint_inputs(cls, audio, **kwargs):
+        return LoadAudio.fingerprint_inputs(audio)
+
+    @classmethod
+    def execute(cls, audio, song_prompt, song_workflow, song_abc):
+        tags, _ = embedded_song(folder_paths.get_annotated_filepath(audio))
+        if tags.get("prompt", "") != song_prompt:
+            raise ValueError(f"The stored song data is not from {audio}. Choose the FLAC again to store its data.")
+        audio = LoadAudio.execute(audio=audio)[0]
+        prompt = embedded_prompt({"prompt": song_prompt}) or {}
+        score = summary(parse_score(song_abc))
+        fields = score["fields"]
+        found = lyrics_style(prompt)
+        key = fields.get("K", "").split()
+        info = player_info(prompt)
+        return io.NodeOutput(
+            audio, song_abc, score["seconds"], score["bars"], tempo(fields.get("Q", "")) or 0.0,
+            fields.get("M", ""), key[0] if key else "", found["lyrics"], found["style"], bool(found["instrumental"]),
+            first_seed(prompt) or 0, info["title"], info["artist"],
+        )
+
+
 class YuE2KitExtension(ComfyExtension):
     async def get_node_list(self):
         return [
             SaveYuE2Bundle, OptionalLoadAudio, ReferenceInput, YuE2ExtendABC, LyricsStyle,
             CheckpointFile, OptionalAudioEncoderFile, OptionalLoraFile, OptionalModelLora, ModelStatus,
-            SongHistory, *SCORE_NODES,
+            SongHistory, EmbedYuE2KitSong, *SCORE_NODES,
         ]
 
 
