@@ -544,3 +544,36 @@ test("unmatched legacy sampling is reported when restoring to Reference input", 
   assert.match(panel.lastMessage.text, /sampling for YuE2GenerateABC/);
   assert.equal(panel.lastMessage.error, true);
 });
+
+// Save YuE2 FLAC + ABC, loaded with stand-ins for the Song history helpers it imports.
+const loadSaved = (imports, app = { registerExtension() {} }) =>
+  new Function("app", ...Object.keys(imports), read("saved_score.js") + "\nreturn {scoreFacts,executedScore,SavedScorePanel,SAVED_ABC};")(
+    app, ...Object.values(imports));
+
+test("the save node summarizes its saved score and takes the latest executed one", () => {
+  const saved = loadSaved({});
+  assert.equal(saved.scoreFacts("X:1\nM:4/4\nL:1/16\nQ:1/4=120\nV: Vocal clef=treble\nK:Em\nV: Vocal\nK:D\nz4|\n"), "M 4/4 · Q 1/4=120 · K Em");
+  assert.equal(saved.scoreFacts("X:1\nK:C\nM:3/4\n"), "K C");
+  assert.equal(saved.scoreFacts(""), "");
+  assert.equal(saved.executedScore({ audio: [], yue2_abc: ["FIRST", "LAST"] }), "LAST");
+  assert.equal(saved.executedScore({ audio: [] }), null);
+});
+
+test("the save node sends its saved score as-is to the reference target", () => {
+  const sent = [];
+  const target = { id: "4", node: { title: "Planner" } };
+  const saved = loadSaved({
+    pickTarget: (event, act) => act(target),
+    useReference: (n, abc, whole) => sent.push([n, abc, whole]),
+    scoreViews: () => [], showScore: async () => {},
+  });
+  const panel = Object.create(saved.SavedScorePanel.prototype);
+  panel.node = { properties: { [saved.SAVED_ABC]: "SAVED ABC" } };
+  panel.message = (text, error = false) => { panel.lastMessage = { text, error }; };
+  panel.message("Earlier error", true);
+  panel.useAsReference({});
+  assert.deepEqual(sent, [[target.node, "SAVED ABC", true]]);
+  assert.deepEqual(panel.lastMessage, { text: "", error: false });
+  panel.show();
+  assert.deepEqual(panel.lastMessage, { text: "Add an ABC Preview or ABC Timeline node to the workflow.", error: true });
+});

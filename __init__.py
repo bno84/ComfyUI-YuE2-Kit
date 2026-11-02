@@ -17,6 +17,7 @@ from .history import SongIndex, parse_score, resolve_song, slice_score, song_det
 from .model_files import file_choices, missing_message, resolve, workflow_models
 from .planning import check_music_context, extend_abc
 from .optional_lora import load_optional_lora
+from .saved_score import PROPERTY as SAVED_ABC, embed_abc, strip_queued
 from .score import preview as score_preview
 from .score_nodes import SCORE_NODES
 
@@ -380,7 +381,7 @@ class SaveYuE2Bundle(io.ComfyNode):
                 io.String.Input("abc", force_input=True),
                 io.String.Input("filename_prefix", default="audio/yue2/song"),
             ],
-            hidden=[io.Hidden.prompt, io.Hidden.extra_pnginfo],
+            hidden=[io.Hidden.prompt, io.Hidden.extra_pnginfo, io.Hidden.unique_id],
             outputs=[
                 io.String.Output("files"),
                 io.Audio.Output("audio"),
@@ -398,6 +399,8 @@ class SaveYuE2Bundle(io.ComfyNode):
     def execute(cls, audio, abc, filename_prefix):
         if not abc.strip():
             raise ValueError("An ABC score is required; connect YuE2 Generate ABC.")
+        # The embedded workflow is the source of truth for the score; the .abc file is a working copy.
+        embed_abc(cls.hidden.extra_pnginfo, cls.hidden.unique_id, abc)
         saved = ui.AudioSaveHelper.save_audio(
             audio, filename_prefix, io.FolderType.output, cls, format="flac"
         )
@@ -409,7 +412,11 @@ class SaveYuE2Bundle(io.ComfyNode):
             with score.open("x", encoding="utf-8") as handle:
                 handle.write(abc)
             files.extend([str(path), str(score)])
-        return io.NodeOutput("\n".join(files), audio, abc, ui=ui.SavedAudios(saved))
+        return io.NodeOutput("\n".join(files), audio, abc, ui={**ui.SavedAudios(saved).as_dict(), SAVED_ABC: [abc]})
+
+
+if getattr(PromptServer, "instance", None) is not None:
+    PromptServer.instance.add_on_prompt_handler(strip_queued)
 
 
 class YuE2KitExtension(ComfyExtension):

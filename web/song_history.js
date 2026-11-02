@@ -345,9 +345,25 @@ export function restoreReference(node, plan) {
 
 const isScore = node => (node.comfyClass ?? node.type) === SCORE;
 const RESTORE_HINT = "Restore to a YuE2 Advanced Score, or use saved score to load only the final ABC.";
-const referenceLabel = node => node.title || (isScore(node) ? "YuE2 Advanced Score" : "Reference input");
+export const referenceLabel = node => node.title || (isScore(node) ? "YuE2 Advanced Score" : "Reference input");
 
 const rootGraph = () => app.rootGraph ?? app.graph;
+
+// The destination is chosen per action: a lone target is used directly,
+// several open a menu. `reason(node)` names why a target cannot take it.
+export function pickTarget(event, act, message, reason = () => "", hint = "") {
+  const targets = referenceTargets(rootGraph()).map(entry => ({...entry, reason: reason(entry.node)}));
+  const name = entry => `${referenceLabel(entry.node)} · ${entry.id}`;
+  if (!targets.length) return message("Add a YuE2 Advanced Score or Reference input node to the workflow.", true);
+  if (targets.length === 1) {
+    const [only] = targets;
+    return only.reason ? message(`${name(only)} ${only.reason}.${hint ? ` ${hint}` : ""}`, true) : act(only);
+  }
+  new globalThis.LiteGraph.ContextMenu(targets.map(entry => ({
+    content: entry.reason ? `${name(entry)} — ${entry.reason}` : name(entry),
+    disabled: !!entry.reason, callback: () => { act(entry); },
+  })), {event, title: "Send to"});
+}
 
 function setWidget(node, name, value) {
   const widget = node?.widgets?.find((candidate) => candidate.name === name);
@@ -914,20 +930,8 @@ class SongHistoryPanel {
     this.renderSelection();
   }
 
-  // The destination is chosen per action: a lone target is used directly,
-  // several open a menu. `reason(node)` names why a target cannot take it.
-  pickTarget(event, act, reason = () => "", hint = "") {
-    const targets = referenceTargets(rootGraph()).map(entry => ({...entry, reason: reason(entry.node)}));
-    const name = entry => `${referenceLabel(entry.node)} · ${entry.id}`;
-    if (!targets.length) return this.message("Add a YuE2 Advanced Score or Reference input node to the workflow.", true);
-    if (targets.length === 1) {
-      const [only] = targets;
-      return only.reason ? this.message(`${name(only)} ${only.reason}.${hint ? ` ${hint}` : ""}`, true) : act(only);
-    }
-    new globalThis.LiteGraph.ContextMenu(targets.map(entry => ({
-      content: entry.reason ? `${name(entry)} — ${entry.reason}` : name(entry),
-      disabled: !!entry.reason, callback: () => { act(entry); },
-    })), {event, title: "Send to"});
+  pickTarget(event, act, reason, hint) {
+    return pickTarget(event, act, (text, error) => this.message(text, error), reason, hint);
   }
 
   useAsReference(event, abc, saved = false) {
