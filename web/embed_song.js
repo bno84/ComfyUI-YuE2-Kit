@@ -27,6 +27,16 @@ export function songSummary({ song, source, abc, label = "" }) {
 
 const rootGraph = () => app.rootGraph ?? app.graph;
 
+// The stored workflow as a graph to open, or an error message.
+export function storedWorkflow(text) {
+  if (!text) return { error: "No song workflow stored." };
+  try {
+    const workflow = JSON.parse(text);
+    if (workflow && typeof workflow === "object" && Array.isArray(workflow.nodes)) return { workflow };
+  } catch { /* reported below */ }
+  return { error: "The stored song workflow cannot be read." };
+}
+
 function styles() {
   if (document.getElementById("yue2-embed-song-style")) return;
   const style = document.createElement("style");
@@ -34,6 +44,7 @@ function styles() {
   style.textContent = `
 .yue2-embed-song {box-sizing:border-box;display:flex;flex-direction:column;gap:6px;width:100%;color:var(--input-text,#ddd);font:12px/1.45 sans-serif;padding:4px;}
 .yue2-embed-song button {font:inherit;color:inherit;cursor:pointer;}
+.yue2-embed-song button.e-open {align-self:flex-start;background:var(--comfy-input-bg,#252525);border:1px solid var(--border-color,#555);border-radius:4px;padding:4px 8px;white-space:nowrap;}
 .yue2-embed-song button:disabled {opacity:.45;cursor:default;}
 .yue2-embed-song .e-summary {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .yue2-embed-song .e-warning {color:#ffcf7a;}
@@ -75,16 +86,20 @@ export class EmbedSongPanel {
     this.root = element("div", "yue2-embed-song");
     this.summary = element("div", "e-summary");
     this.warning = element("div", "e-warning");
+    this.open = element("button", "e-open", "Open song workflow");
+    this.open.type = "button";
+    this.open.title = "Open the song's own workflow in a new tab, as dropping its FLAC would.";
+    this.open.onclick = (event) => { event.stopPropagation(); this.openWorkflow(); };
     this.toggle = element("button", "e-disclosure");
     this.toggle.type = "button";
     this.toggle.append(chevron(), "Stored song data");
     this.toggle.title = "Show the stored prompt, workflow and score.";
     this.toggle.onclick = (event) => { event.stopPropagation(); this.setExpanded(!this.expanded); };
     this.status = element("div", "e-status");
-    this.root.append(this.summary, this.warning, this.toggle, this.status);
+    this.root.append(this.summary, this.warning, this.open, this.toggle, this.status);
     for (const event of ["pointerdown", "mousedown", "keydown"]) this.root.addEventListener(event, (e) => e.stopPropagation());
     this.widget = node.addDOMWidget("song_panel", "song_panel", this.root, {
-      serialize: false, hideInPanel: true, hideOnZoom: false, getMinHeight: () => 76,
+      serialize: false, hideInPanel: true, hideOnZoom: false, getMinHeight: () => 110,
     });
     this.widget.serialize = false;
     this.widget.options.serialize = false;
@@ -111,6 +126,7 @@ export class EmbedSongPanel {
     scoreLabel(abc).then((label) => { if (label && this.value("song_abc") === abc) show(label); });
     this.toggle.setAttribute("aria-expanded", String(this.expanded));
     this.toggle.disabled = !this.value("song_abc");
+    this.open.disabled = !this.value("song_workflow");
     this.node.graph?.setDirtyCanvas?.(true, true);
   }
 
@@ -130,6 +146,18 @@ export class EmbedSongPanel {
   message(text, error = false) {
     this.status.textContent = text;
     this.status.dataset.error = String(error);
+  }
+
+  // Opens in its own tab, so this workflow stays as it is.
+  async openWorkflow() {
+    const { workflow, error } = storedWorkflow(this.value("song_workflow"));
+    if (error) return this.message(error, true);
+    try {
+      this.message("");
+      await app.loadGraphData(workflow, true, true, songName(this.node.properties?.[SOURCE]) || "Embedded song");
+    } catch (failure) {
+      this.message(failure.message ?? String(failure), true);
+    }
   }
 
   // Show the stored score in the workflow's ABC Preview and ABC Timeline nodes.
@@ -188,6 +216,8 @@ app.registerExtension({
     const configure = node.onConfigure;
     node.onConfigure = function (...args) {
       const result = configure?.apply(this, args);
+      // Show the stored data now; the size waits for the frame, once the widgets have laid out.
+      panel.render();
       requestAnimationFrame(() => panel.setExpanded(panel.expanded));
       return result;
     };

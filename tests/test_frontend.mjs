@@ -590,7 +590,7 @@ test("Song history names the score source only when it is not the embedded score
 
 // Embed YuE2 Kit song, with stand-ins for the score helpers it imports.
 const loadSong = new Function("app", "api", "scoreLabel", "scoreViews", "showScore",
-  read("embed_song.js") + "\nreturn {songName,songSummary};")(
+  read("embed_song.js") + "\nreturn {songName,songSummary,storedWorkflow};")(
   { registerExtension() {} }, {}, async () => "", () => [], async () => {});
 
 test("the song node names its stored song and warns when another FLAC is chosen", () => {
@@ -601,4 +601,10 @@ test("the song node names its stored song and warns when another FLAC is chosen"
   assert.equal(loadSong.songSummary({ song: "a.flac", source: "a.flac", abc: "X:1" }).text, "a");
   assert.match(loadSong.songSummary({ song: "b.flac", source: "a.flac", abc: "X:1" }).warning, /from a, not b. Choose the FLAC again/);
   assert.match(loadSong.songSummary({ song: "a.flac", source: undefined, abc: "" }).text, /No song data stored/);
+});
+
+test("the song node opens only a stored workflow it can read", () => {
+  assert.deepEqual(loadSong.storedWorkflow('{"nodes": [], "links": []}'), { workflow: { nodes: [], links: [] } });
+  assert.match(loadSong.storedWorkflow("").error, /No song workflow/);
+  for (const bad of ["{", '{"prompt": 1}', "null"]) assert.match(loadSong.storedWorkflow(bad).error, /cannot be read/);
 });
