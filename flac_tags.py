@@ -12,7 +12,7 @@ import struct
 import tempfile
 from pathlib import Path
 
-from .history import FIELD, lyrics_style, tempo
+from .history import FIELD, tempo
 
 MAX_BLOCK = (1 << 24) - 1
 VORBIS_COMMENT = 4
@@ -32,23 +32,24 @@ def score_fields(abc):
     return fields
 
 
-def music_tags(prompt, abc, artist="", title="", instrumental_lyrics=True):
-    """TITLE, ARTIST, COMMENT (the style), LYRICS, BPM and KEY that this run can state; others are left out.
+def _text(value):
+    return value.strip() if isinstance(value, str) else ""
+
+
+def music_tags(abc, title="", artist="", style="", lyrics="", instrumental=False, instrumental_lyrics=True):
+    """TITLE, ARTIST, COMMENT (the style), LYRICS, BPM and KEY; empty or unconnected values are left out.
 
     COMMENT rather than DESCRIPTION: KDE's file metadata, and so Elisa, reads
     only COMMENT, while VLC and TagLib read either. An instrumental's lyrics
     are its section tags; ``instrumental_lyrics`` writes them too.
     BPM counts quarter notes, as YuE2 styles do.
     """
-    found = lyrics_style(prompt)
     tags = {}
-    for name, value in (("TITLE", title), ("ARTIST", artist)):
-        if value.strip():
-            tags[name] = value.strip()
-    if found["style"].strip():
-        tags["COMMENT"] = found["style"].strip()
-    if found["lyrics"].strip() and (instrumental_lyrics or not found["instrumental"]):
-        tags["LYRICS"] = found["lyrics"].strip()
+    for name, value in (("TITLE", title), ("ARTIST", artist), ("COMMENT", style)):
+        if _text(value):
+            tags[name] = _text(value)
+    if _text(lyrics) and (instrumental_lyrics or not instrumental):
+        tags["LYRICS"] = _text(lyrics)
     fields = score_fields(abc)
     bpm = tempo(fields.get("Q", ""))
     if bpm:

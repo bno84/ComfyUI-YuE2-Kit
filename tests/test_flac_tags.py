@@ -40,28 +40,22 @@ def flac(comments=None, padding=8):
     return bytes(out + AUDIO)
 
 
-def prompt(instrumental=False, lyrics="[verse]\nNeon fades", style="warm piano pop, 158 BPM"):
-    return {"32": {"class_type": "bno84.LyricsStyle", "inputs": {
-        "instrumental": instrumental, "lyrics": lyrics, "style": style,
-        "instrumental_lyrics": "[intro]\n[outro]", "instrumental_style": "dark ambient"}}}
-
-
 class MusicTagsTest(unittest.TestCase):
     def test_states_title_artist_style_lyrics_tempo_and_key(self):
-        self.assertEqual(flac_tags.music_tags(prompt(), ABC, artist=" bno84 ", title="Neon"), {
+        self.assertEqual(flac_tags.music_tags(ABC, title="Neon", artist=" bno84 ", style="warm piano pop, 158 BPM",
+                                              lyrics="[verse]\nNeon fades"), {
             "TITLE": "Neon", "ARTIST": "bno84", "COMMENT": "warm piano pop, 158 BPM",
             "LYRICS": "[verse]\nNeon fades", "BPM": "158", "KEY": "Bm"})
 
     def test_an_instrumental_writes_its_section_tags_unless_turned_off(self):
-        self.assertEqual(flac_tags.music_tags(prompt(instrumental=True), ABC),
-                         {"COMMENT": "dark ambient", "LYRICS": "[intro]\n[outro]", "BPM": "158", "KEY": "Bm"})
-        self.assertNotIn("LYRICS", flac_tags.music_tags(prompt(instrumental=True), ABC, instrumental_lyrics=False))
-        self.assertIn("LYRICS", flac_tags.music_tags(prompt(), ABC, instrumental_lyrics=False))
+        tags = dict(style="dark ambient", lyrics="[intro]\n[outro]", instrumental=True)
+        self.assertEqual(flac_tags.music_tags(ABC, **tags)["LYRICS"], "[intro]\n[outro]")
+        self.assertNotIn("LYRICS", flac_tags.music_tags(ABC, **tags, instrumental_lyrics=False))
+        self.assertIn("LYRICS", flac_tags.music_tags(ABC, lyrics="[verse]\nsung", instrumental_lyrics=False))
 
-    def test_leaves_out_what_the_run_cannot_state(self):
-        linked = {"32": {"class_type": "bno84.LyricsStyle", "inputs": {"lyrics": ["4", 0], "style": ["5", 0]}}}
-        self.assertEqual(flac_tags.music_tags(linked, "X:1\nQ:3/8=60\nK:none\n"), {"BPM": "90"})
-        self.assertEqual(flac_tags.music_tags(None, "X:1\nK:C\nQ:1/4=99\n"), {"KEY": "C"})
+    def test_unconnected_or_empty_inputs_are_left_out(self):
+        self.assertEqual(flac_tags.music_tags("X:1\nQ:3/8=60\nK:none\n", title=" ", style=None, lyrics=""), {"BPM": "90"})
+        self.assertEqual(flac_tags.music_tags("X:1\nK:C\nQ:1/4=99\n"), {"KEY": "C"})
 
 
 class WriteTagsTest(unittest.TestCase):

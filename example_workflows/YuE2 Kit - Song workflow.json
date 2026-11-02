@@ -2,7 +2,7 @@
   "id": "75140c3e-0999-5e9e-8139-ff1a6450053b",
   "revision": 1,
   "last_node_id": 91,
-  "last_link_id": 85,
+  "last_link_id": 92,
   "nodes": [
     {
       "id": 32,
@@ -49,21 +49,26 @@
           "name": "Lyrics",
           "type": "STRING",
           "links": [
-            1
+            1,
+            86,
+            92
           ]
         },
         {
           "name": "Style",
           "type": "STRING",
           "links": [
-            2
+            2,
+            87,
+            91
           ]
         },
         {
           "name": "Instrumental",
           "type": "BOOLEAN",
           "links": [
-            83
+            83,
+            88
           ]
         }
       ],
@@ -491,11 +496,68 @@
           "link": 17
         },
         {
+          "link": 86,
+          "localized_name": "lyrics",
+          "name": "lyrics",
+          "shape": 7,
+          "type": "STRING"
+        },
+        {
+          "link": 87,
+          "localized_name": "style",
+          "name": "style",
+          "shape": 7,
+          "type": "STRING"
+        },
+        {
+          "link": 88,
+          "localized_name": "instrumental",
+          "name": "instrumental",
+          "shape": 7,
+          "type": "BOOLEAN"
+        },
+        {
           "name": "filename_prefix",
           "type": "STRING",
           "link": null,
           "widget": {
             "name": "filename_prefix"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "FLAC player info",
+          "name": "flac_player_info",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "flac_player_info"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "FLAC artist",
+          "name": "flac_artist",
+          "type": "STRING",
+          "widget": {
+            "name": "flac_artist"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "FLAC title",
+          "name": "flac_title",
+          "type": "STRING",
+          "widget": {
+            "name": "flac_title"
+          }
+        },
+        {
+          "link": null,
+          "localized_name": "FLAC lyrics for instrumental",
+          "name": "flac_instrumental_lyrics",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "flac_instrumental_lyrics"
           }
         }
       ],
@@ -516,6 +578,22 @@
           "name": "abc",
           "type": "STRING",
           "links": []
+        },
+        {
+          "links": [
+            89
+          ],
+          "localized_name": "title",
+          "name": "title",
+          "type": "STRING"
+        },
+        {
+          "links": [
+            90
+          ],
+          "localized_name": "artist",
+          "name": "artist",
+          "type": "STRING"
         }
       ],
       "title": "Final outputs \u00b7 ABC + FLAC",
@@ -525,7 +603,11 @@
         "ver": "0.7.2"
       },
       "widgets_values": [
-        "audio/yue2/song"
+        "audio/yue2/song",
+        false,
+        "",
+        "",
+        true
       ],
       "widgets_values_named": {
         "filename_prefix": "audio/yue2/song"
@@ -687,6 +769,34 @@
           "name": "audio",
           "type": "AUDIO",
           "link": 18
+        },
+        {
+          "link": 89,
+          "localized_name": "title",
+          "name": "title",
+          "shape": 7,
+          "type": "STRING"
+        },
+        {
+          "link": 90,
+          "localized_name": "artist",
+          "name": "artist",
+          "shape": 7,
+          "type": "STRING"
+        },
+        {
+          "link": 91,
+          "localized_name": "comment",
+          "name": "comment",
+          "shape": 7,
+          "type": "STRING"
+        },
+        {
+          "link": 92,
+          "localized_name": "lyrics",
+          "name": "lyrics",
+          "shape": 7,
+          "type": "STRING"
         }
       ],
       "outputs": [
@@ -1441,6 +1551,62 @@
       0,
       87,
       0,
+      "STRING"
+    ],
+    [
+      86,
+      32,
+      0,
+      11,
+      2,
+      "STRING"
+    ],
+    [
+      87,
+      32,
+      1,
+      11,
+      3,
+      "STRING"
+    ],
+    [
+      88,
+      32,
+      2,
+      11,
+      4,
+      "BOOLEAN"
+    ],
+    [
+      89,
+      11,
+      3,
+      55,
+      2,
+      "STRING"
+    ],
+    [
+      90,
+      11,
+      4,
+      55,
+      3,
+      "STRING"
+    ],
+    [
+      91,
+      32,
+      1,
+      55,
+      4,
+      "STRING"
+    ],
+    [
+      92,
+      32,
+      0,
+      55,
+      5,
       "STRING"
     ]
   ],
