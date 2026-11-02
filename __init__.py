@@ -7,12 +7,14 @@ import shutil
 from pathlib import Path
 
 import folder_paths
+from comfy.cli_args import args
 from aiohttp import web
 from comfy_api.latest import ComfyExtension, io, ui
 from comfy_extras.nodes_audio import LoadAudio
 from comfy_extras.nodes_yue2 import YuE2GenerateABC
 from server import PromptServer
 
+from .flac_tags import music_tags, write_tags
 from .history import SongIndex, parse_score, resolve_song, slice_score, song_detail, summary
 from .model_files import file_choices, missing_message, resolve, workflow_models
 from .planning import check_music_context, extend_abc
@@ -380,6 +382,17 @@ class SaveYuE2Bundle(io.ComfyNode):
                 io.Audio.Input("audio"),
                 io.String.Input("abc", force_input=True),
                 io.String.Input("filename_prefix", default="audio/yue2/song"),
+                # Optional: older API prompts lack it. The frontend shows it under filename_prefix.
+                io.Boolean.Input("flac_player_info", display_name="FLAC player info", default=False, optional=True,
+                                 tooltip="Also write the title, artist, style (as the comment), lyrics, BPM and key into the FLAC, "
+                                         "where music players show them. This rewrites the saved FLAC's metadata, not its audio. "
+                                         "Skipped with --disable-metadata."),
+                io.String.Input("flac_artist", display_name="FLAC artist", default="", optional=True,
+                                tooltip="Artist for FLAC player info. Left empty, none is written."),
+                io.String.Input("flac_title", display_name="FLAC title", default="", optional=True,
+                                tooltip="Title for FLAC player info. Left empty, none is written and players show the file name."),
+                io.Boolean.Input("flac_instrumental_lyrics", display_name="FLAC lyrics for instrumental", default=True, optional=True,
+                                 tooltip="Also write lyrics for instrumental mode, its section tags such as [intro], into FLAC player info."),
             ],
             hidden=[io.Hidden.prompt, io.Hidden.extra_pnginfo, io.Hidden.unique_id],
             outputs=[
@@ -396,7 +409,8 @@ class SaveYuE2Bundle(io.ComfyNode):
         return float("nan")
 
     @classmethod
-    def execute(cls, audio, abc, filename_prefix):
+    def execute(cls, audio, abc, filename_prefix, flac_player_info=False, flac_artist="", flac_title="",
+                flac_instrumental_lyrics=True):
         if not abc.strip():
             raise ValueError("An ABC score is required; connect YuE2 Generate ABC.")
         # The embedded workflow is the source of truth for the score; the .abc file is a working copy.
@@ -404,9 +418,13 @@ class SaveYuE2Bundle(io.ComfyNode):
         saved = ui.AudioSaveHelper.save_audio(
             audio, filename_prefix, io.FolderType.output, cls, format="flac"
         )
+        player_info = music_tags(cls.hidden.prompt, abc, flac_artist, flac_title, flac_instrumental_lyrics) \
+            if flac_player_info and not args.disable_metadata else {}
         files = []
         for result in saved:
             path = Path(folder_paths.get_output_directory()) / result.subfolder / result.filename
+            if player_info:
+                write_tags(path, player_info)
             score = path.with_suffix(".abc")
             # Never infer the filename by scanning for the newest audio file.
             with score.open("x", encoding="utf-8") as handle:

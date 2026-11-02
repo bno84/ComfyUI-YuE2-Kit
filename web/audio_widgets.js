@@ -24,6 +24,13 @@ app.registerExtension({
     // after audioUI so widget creation follows its required dependency order.
     const upload = required.upload;
     delete required.upload;
+    // Show the save node's optional FLAC player info with its other settings, above the player.
+    for (const name of ["flac_player_info", "flac_artist", "flac_title", "flac_instrumental_lyrics"]) {
+      const input = nodeData.input.optional?.[name];
+      if (!input) continue;
+      delete nodeData.input.optional[name];
+      required[name] = input;
+    }
     required.audioUI = ["AUDIO_UI", {}];
     if (upload) required.upload = upload;
     nodeData.input.required = required;
