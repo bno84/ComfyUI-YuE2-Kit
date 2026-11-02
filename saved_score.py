@@ -63,6 +63,21 @@ def _bundles(workflow):
                 yield node
 
 
+def workflow_abc(workflow):
+    """The score a save node recorded in a saved workflow, or None.
+
+    Queuing strips earlier scores, so one found here is from the run that saved the file.
+    """
+    if not isinstance(workflow, dict):
+        return None
+    for node in _bundles(workflow):
+        properties = node.get("properties")
+        abc = properties.get(PROPERTY) if isinstance(properties, dict) else None
+        if isinstance(abc, str) and abc.strip():
+            return abc
+    return None
+
+
 def strip_abc(workflow):
     """Remove scores from earlier runs from every save node. Returns how many were removed."""
     if not isinstance(workflow, dict):

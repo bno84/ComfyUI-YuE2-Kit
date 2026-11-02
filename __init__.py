@@ -212,8 +212,8 @@ if getattr(PromptServer, "instance", None) is not None:
     async def slice_song(request):
         try:
             body = await request.json()
-            _, score = resolve_song(folder_paths.get_output_directory(), str(body.get("path", "")))
-            abc, warnings = slice_score(score.read_text(encoding="utf-8"), int(body["start"]), int(body["end"]))
+            _, song = resolve_song(folder_paths.get_output_directory(), str(body.get("path", "")))
+            abc, warnings = slice_score(song["abc"], int(body["start"]), int(body["end"]))
         except (OSError, ValueError, KeyError, TypeError) as error:
             return _bad_request(error)
         return web.json_response({"abc": abc, "warnings": warnings})

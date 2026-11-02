@@ -564,6 +564,15 @@ export function cutText(score, seconds) {
   return `The score runs ≈${clock(score.seconds)}, but the render stopped at ${clock(seconds)}, about bar ${Math.floor(score.audio_end_bar) + 1} of ${score.bars}.`;
 }
 
+// Shown only when the score is not simply the one embedded in the FLAC.
+export function scoreSource(detail) {
+  if (detail.score_source === "file") return { text: ".abc file", warning: "" };
+  if (detail.score_differs) {
+    return { text: "Embedded · .abc differs", warning: "The .abc file beside this FLAC was changed. The score embedded in the FLAC is used." };
+  }
+  return null;
+}
+
 // Preserve bar spacing within the score, leaving a proportional gap for extra audio.
 export function scoreShare(score) {
   return score.audio_extra_seconds != null
@@ -1066,6 +1075,8 @@ class SongHistoryPanel {
       cutText(detail.score, detail.seconds));
     fact("Meter", fields.M || "–");
     fact("Key", fields.K || "–");
+    const source = scoreSource(detail);
+    if (source) fact("Source", source.text, false, source.warning);
     scoreBox.append(scoreKv);
     columns.append(runBox, scoreBox);
 

@@ -10,7 +10,7 @@ const load = (sources, names, app = { registerExtension() {} }) =>
 
 const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,normalizeValues,applicable");
 const strip = load(["score_strip.js"], "shortLabel,sectionColor,sourceSummary");
-const history = load(["score_strip.js", "score_state.js", "song_history.js"], "runSettings,resolvePlans,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceGaps,restoreReference,referenceTargets,scoreViews,showScore,SongHistoryPanel,planningText,setInput");
+const history = load(["score_strip.js", "score_state.js", "song_history.js"], "scoreSource,runSettings,resolvePlans,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceGaps,restoreReference,referenceTargets,scoreViews,showScore,SongHistoryPanel,planningText,setInput");
 const transcribe = load(["reference_transcribe.js"], "buildTranscriptionPrompt");
 const lyricsStyle = load(["lyrics_style.js"], "variantInput,instrumentalPromptWarning,migrateSavedPair");
 const textbox = load(["reference_input.js", "score.js"], "bindReferenceTextbox");
@@ -576,4 +576,10 @@ test("the save node sends its saved score as-is to the reference target", () => 
   assert.deepEqual(panel.lastMessage, { text: "", error: false });
   panel.show();
   assert.deepEqual(panel.lastMessage, { text: "Add an ABC Preview or ABC Timeline node to the workflow.", error: true });
+});
+
+test("Song history names the score source only when it is not the embedded score alone", () => {
+  assert.equal(history.scoreSource({ score_source: "embedded", score_differs: false }), null);
+  assert.deepEqual(history.scoreSource({ score_source: "file", score_differs: false }), { text: ".abc file", warning: "" });
+  assert.match(history.scoreSource({ score_source: "embedded", score_differs: true }).warning, /was changed/);
 });

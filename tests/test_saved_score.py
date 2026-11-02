@@ -51,6 +51,17 @@ class EmbedTest(unittest.TestCase):
         self.assertFalse(saved_score.embed_abc({"workflow": workflow()}, "11:6", "X:1\n"))
 
 
+class ReadTest(unittest.TestCase):
+    def test_reads_the_first_recorded_score(self):
+        graph = workflow()
+        self.assertEqual(saved_score.workflow_abc(graph), "old root")
+        graph["nodes"][0]["properties"][PROPERTY] = "  "
+        graph["definitions"]["subgraphs"][0]["nodes"][0]["properties"] = {PROPERTY: "inner"}
+        self.assertEqual(saved_score.workflow_abc(graph), "inner")
+        for empty in (None, [], {"nodes": [{"id": 1, "type": BUNDLE, "properties": None}]}):
+            self.assertIsNone(saved_score.workflow_abc(empty))
+
+
 class StripTest(unittest.TestCase):
     def test_strips_only_bundle_scores(self):
         graph = workflow()

@@ -21,7 +21,11 @@ def load(name):
     return module
 
 
-planning, history, model_files = load("planning"), load("history"), load("model_files")
+# history imports saved_score as a sibling, so load it as part of a package.
+package = types.ModuleType("kit_test_pack")
+package.__path__ = [str(ROOT)]
+sys.modules[package.__name__] = package
+planning, history, model_files = load("planning"), importlib.import_module(package.__name__ + ".history"), load("model_files")
 HEADER = 'X:1\nT:\nM:4/4\nL:1/16\nQ:1/4=120\nV: Vocal clef=treble\nV: Ins clef=treble\nK:Em\n'
 SCORE = HEADER + """% intro
 V: Vocal

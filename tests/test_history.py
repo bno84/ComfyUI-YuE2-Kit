@@ -1,18 +1,20 @@
 """Check saved-song listing, FLAC metadata and score slicing without ComfyUI."""
 
-import importlib.util
+import importlib
 import json
 import os
 import struct
+import sys
 import tempfile
+import types
 import unittest
 from pathlib import Path
 
-spec = importlib.util.spec_from_file_location(
-    "yue2_history", Path(__file__).resolve().parents[1] / "history.py"
-)
-history = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(history)
+# history imports saved_score as a sibling, so load both as one package.
+package = types.ModuleType("history_test_pack")
+package.__path__ = [str(Path(__file__).resolve().parents[1])]
+sys.modules[package.__name__] = package
+history = importlib.import_module(package.__name__ + ".history")
 
 HEADER = 'X:1\nT:\nM:4/4\nL:1/16\nQ:1/4=120\nV: Vocal clef=treble\nV: Ins clef=treble\nK:Em\n'
 SCORE = HEADER + """% intro
@@ -177,6 +179,41 @@ class SongTests(unittest.TestCase):
         self.assertEqual(detail["prompt"]["9"]["is_changed"], [None])
         json.loads(json.dumps(detail, allow_nan=False))
         self.assertEqual(detail["abc"], SCORE)
+
+    def embed(self, name, abc):
+        workflow = {"nodes": [{"id": 11, "type": "bno84.SaveYuE2Bundle", "properties": {"yue2_abc": abc}}]}
+        flac = self.root / "audio/yue2" / f"{name}.flac"
+        flac.write_bytes(flac_bytes(tags={"workflow": json.dumps(workflow)}))
+        return flac
+
+    def test_the_embedded_score_comes_first_and_an_edited_file_is_flagged(self):
+        flac = self.embed("song_00001", SCORE)
+        detail = history.song_detail(self.root, "audio/yue2/song_00001.flac")
+        self.assertEqual((detail["abc"], detail["score_source"], detail["score_differs"]), (SCORE, "embedded", False))
+        flac.with_suffix(".abc").write_text(HEADER + "V: Vocal\nz16|\n", encoding="utf-8")
+        detail = history.song_detail(self.root, "audio/yue2/song_00001.flac")
+        self.assertEqual((detail["abc"], detail["score_source"], detail["score_differs"]), (SCORE, "embedded", True))
+        self.assertTrue(history.SongIndex().entry(self.root, flac)["score_differs"])
+
+    def test_older_songs_fall_back_to_the_file(self):
+        detail = history.song_detail(self.root, "audio/yue2/song_00002.flac")
+        self.assertEqual((detail["abc"], detail["score_source"], detail["score_differs"]), (SCORE, "file", False))
+
+    def test_lists_a_song_whose_only_score_is_embedded(self):
+        self.embed("embedded_only", SCORE)
+        found = history.SongIndex().list(self.root)
+        self.assertEqual(found["total"], 3)
+        entry = next(s for s in found["songs"] if s["name"] == "embedded_only")
+        self.assertEqual((entry["score_source"], entry["score"]["bars"]), ("embedded", 14))
+        abc, _ = history.slice_score(history.resolve_song(self.root, "audio/yue2/embedded_only.flac")[1]["abc"], 0, 1)
+        self.assertIn("% intro", abc)
+
+    def test_audio_without_a_score_is_read_once(self):
+        index, lonely = history.SongIndex(), self.root / "audio/yue2/lonely.flac"
+        index.list(self.root)
+        self.assertIsNone(index.cache[lonely][1])
+        lonely.with_suffix(".abc").write_text(SCORE, encoding="utf-8")
+        self.assertEqual(index.list(self.root)["total"], 3)
 
     def test_refuses_paths_outside_the_output_folder_or_without_a_score(self):
         for path in ["../secret.flac", "/etc/passwd", "audio/yue2/song_00001.abc", "audio/yue2/lonely.flac"]:

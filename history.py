@@ -1,8 +1,10 @@
-"""Saved songs: FLAC + ABC pairs, their embedded run settings, and score slices.
+"""Saved songs: FLAC files, their embedded run settings and scores, and score slices.
 
-Save YuE2 FLAC + ABC writes each score next to its audio under the same name.
-ComfyUI embeds the executed prompt in the FLAC's Vorbis comments, so a song
-can restore the seed, lyrics and style that made it.
+ComfyUI embeds the executed prompt and the workflow in the FLAC's Vorbis
+comments, so a song can restore the seed, lyrics and style that made it.
+Save YuE2 FLAC + ABC records the score in that workflow and also writes it
+next to the audio under the same name. The embedded score comes first; the
+.abc file is the fallback for songs saved before scores were embedded.
 
 The score is split into groups, the blocks YuE2 writes: each starts at the
 first voice's ``V:`` line and holds up to four bars of every voice. A slice
@@ -18,6 +20,8 @@ import re
 import struct
 from fractions import Fraction
 from pathlib import Path
+
+from .saved_score import workflow_abc
 
 FIELD = re.compile(r"^([A-Za-z]):(.*)$")
 INLINE_FIELD = re.compile(r"\[([A-Za-z]):([^\]]*)\]")
@@ -91,6 +95,34 @@ def embedded_prompt(tags):
     except json.JSONDecodeError:
         return None
     return finite(prompt) if isinstance(prompt, dict) else None
+
+
+def embedded_workflow(tags):
+    try:
+        workflow = json.loads(tags.get("workflow") or "null")
+    except json.JSONDecodeError:
+        return None
+    return workflow if isinstance(workflow, dict) else None
+
+
+def read_song(flac):
+    """Duration, comments and score of a saved song; ValueError when it has no score.
+
+    ``score_source`` is "embedded" or "file". ``score_differs`` flags a .abc
+    file that no longer matches the embedded score, such as after an edit.
+    """
+    seconds, tags = flac_info(flac)
+    sidecar = flac.with_suffix(".abc")
+    file_abc = sidecar.read_text(encoding="utf-8", errors="replace") if sidecar.is_file() else None
+    embedded = workflow_abc(embedded_workflow(tags))
+    if embedded is not None:
+        abc, source = embedded, "embedded"
+    elif file_abc is not None:
+        abc, source = file_abc, "file"
+    else:
+        raise ValueError(f"{flac.name} has no saved score.")
+    return {"seconds": seconds, "tags": tags, "abc": abc, "score_source": source,
+            "score_differs": embedded is not None and file_abc is not None and file_abc != embedded}
 
 
 def lyrics_style(prompt):
@@ -325,14 +357,8 @@ def slice_score(abc, start, end):
 
 
 def find_songs(root):
-    """FLAC files with a same-named ABC beside them, under the output folder."""
-    found = []
-    for folder, _, files in os.walk(root):
-        names = set(files)
-        for name in files:
-            if name.endswith(".flac") and name[:-5] + ".abc" in names:
-                found.append(Path(folder) / name)
-    return found
+    """FLAC files under the output folder; SongIndex skips those without a score."""
+    return [Path(folder) / name for folder, _, files in os.walk(root) for name in files if name.endswith(".flac")]
 
 
 def planner_spans(prompt, total):
@@ -373,27 +399,41 @@ def planner_spans(prompt, total):
     return []
 
 
+def _stat_key(path):
+    try:
+        stat = path.stat()
+    except FileNotFoundError:
+        return None
+    return stat.st_mtime_ns, stat.st_size
+
+
 class SongIndex:
-    """Song summaries, cached until the FLAC or ABC file changes."""
+    """Song summaries, cached until the FLAC or ABC file changes.
+
+    A FLAC without a score is cached as None, so other audio is read only once.
+    """
 
     def __init__(self):
         self.cache = {}
 
     def entry(self, root, flac):
-        score_path = flac.with_suffix(".abc")
-        stats = flac.stat(), score_path.stat()
-        key = tuple((s.st_mtime_ns, s.st_size) for s in stats)
+        key = _stat_key(flac), _stat_key(flac.with_suffix(".abc"))
         cached = self.cache.get(flac)
         if cached and cached[0] == key:
             return cached[1]
-        seconds, tags = flac_info(flac)
-        prompt = embedded_prompt(tags)
-        score = summary(parse_score(score_path.read_text(encoding="utf-8", errors="replace")), seconds)
+        try:
+            song = read_song(flac)
+        except ValueError:
+            self.cache[flac] = (key, None)
+            return None
+        prompt = embedded_prompt(song["tags"])
+        score = summary(parse_score(song["abc"]), song["seconds"])
         score["planner_spans"] = planner_spans(prompt, score["bars"])
         relative = flac.relative_to(root).as_posix()
         entry = {
-            "path": relative, "name": flac.stem, "mtime": stats[0].st_mtime, "seconds": seconds,
+            "path": relative, "name": flac.stem, "mtime": flac.stat().st_mtime, "seconds": song["seconds"],
             "has_prompt": prompt is not None, **lyrics_style(prompt),
+            "score_source": song["score_source"], "score_differs": song["score_differs"],
             "score": {k: score[k] for k in ("bars", "seconds", "sections", "fields", "audio_end_bar", "audio_extra_seconds", "planner_spans")},
         }
         self.cache[flac] = (key, entry)
@@ -405,9 +445,11 @@ class SongIndex:
         entries = []
         for flac in songs:
             try:
-                entries.append(self.entry(root, flac))
+                entry = self.entry(root, flac)
             except (OSError, ValueError):
                 continue
+            if entry is not None:
+                entries.append(entry)
         live = set(songs)
         for stale in [path for path in self.cache if path not in live]:
             del self.cache[stale]
@@ -419,25 +461,23 @@ class SongIndex:
 
 
 def resolve_song(root, relative):
-    """The FLAC and ABC paths for a song path relative to the output folder."""
+    """The FLAC and its read song for a path relative to the output folder."""
     root = Path(root).resolve()
     flac = (root / relative).resolve()
     if root not in flac.parents or flac.suffix != ".flac":
         raise ValueError("Unknown song.")
-    score = flac.with_suffix(".abc")
-    if not flac.is_file() or not score.is_file():
-        raise ValueError("This song's FLAC or ABC file is missing.")
-    return flac, score
+    if not flac.is_file():
+        raise ValueError("This song's FLAC file is missing.")
+    return flac, read_song(flac)
 
 
 def song_detail(root, relative):
-    flac, score_path = resolve_song(root, relative)
-    seconds, tags = flac_info(flac)
-    abc = score_path.read_text(encoding="utf-8", errors="replace")
-    facts = summary(parse_score(abc), seconds)
-    prompt = embedded_prompt(tags)
+    flac, song = resolve_song(root, relative)
+    facts = summary(parse_score(song["abc"]), song["seconds"])
+    prompt = embedded_prompt(song["tags"])
     facts["planner_spans"] = planner_spans(prompt, facts["bars"])
     return {
-        "path": flac.relative_to(Path(root).resolve()).as_posix(), "name": flac.stem, "seconds": seconds,
-        "abc": abc, "score": facts, "prompt": prompt,
+        "path": flac.relative_to(Path(root).resolve()).as_posix(), "name": flac.stem, "seconds": song["seconds"],
+        "abc": song["abc"], "score_source": song["score_source"], "score_differs": song["score_differs"],
+        "score": facts, "prompt": prompt,
     }
