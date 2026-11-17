@@ -1245,10 +1245,10 @@
       "title": "Acoustic tips",
       "properties": {},
       "widgets_values": [
-        "### Stronger style adherence\n\n- Set **Music guidance** above `1.0`, for example between 1.3-3.0\n<br>(This will generate slower.)\n\n### More detail and layered instruments\n\nTry **Music temperature** first.\nFine tune with `top_p` (lower for more variance).\n\n- Increased temperature, for example `1.10`\n  <br>More variance and layered instruments but deviates from ABC and style prompt more.\n- Decreased temperature, for example `0.80`\n  <br>Stronger ABC and style adherence but can sound clinical and flat.\n"
+        "### Stronger style adherence\n\n- Set **Music guidance** above `1.0`, for example between 1.3-3.0\n<br>(This will generate slower.)\n\n### More detail and layered instruments\n\nTry **Music temperature** first.\nFine tune with `top_p` and `top_k`.\n\n- Increased temperature, for example `1.10`\n  <br>More variance and layered instruments but deviates from ABC and style prompt more.\n- Decreased temperature, for example `0.80`\n  <br>Stronger ABC and style adherence but can sound clinical and flat.\n"
       ],
       "widgets_values_named": {
-        "text": "### Stronger style adherence\n\n- Set **Music guidance** above `1.0`, for example between 1.3-3.0\n<br>(This will generate slower.)\n\n### More detail and layered instruments\n\nTry **Music temperature** first.\nFine tune with `top_p` (lower for more variance).\n\n- Increased temperature, for example `1.10`\n  <br>More variance and layered instruments but deviates from ABC and style prompt more.\n- Decreased temperature, for example `0.80`\n  <br>Stronger ABC and style adherence but can sound clinical and flat.\n"
+        "text": "### Stronger style adherence\n\n- Set **Music guidance** above `1.0`, for example between 1.3-3.0\n<br>(This will generate slower.)\n\n### More detail and layered instruments\n\nTry **Music temperature** first.\nFine tune with `top_p` and `top_k`.\n\n- Increased temperature, for example `1.10`\n  <br>More variance and layered instruments but deviates from ABC and style prompt more.\n- Decreased temperature, for example `0.80`\n  <br>Stronger ABC and style adherence but can sound clinical and flat.\n"
       },
       "color": "#2a363b",
       "bgcolor": "#3f5159"
