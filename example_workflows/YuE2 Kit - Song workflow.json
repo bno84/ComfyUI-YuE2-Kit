@@ -647,7 +647,7 @@
       "properties": {
         "Node name for S&R": "bno84.ABCPreview",
         "cnr_id": "comfyui-abcpreview",
-        "ver": "0.3.5"
+        "ver": "0.4.0"
       },
       "widgets_values": [
         "GeneralUser-GS.sf2"
@@ -834,7 +834,7 @@
           "crf"
         ],
         "cnr_id": "comfyui-audiovisualizer",
-        "ver": "0.5.0"
+        "ver": "0.7.0"
       },
       "widgets_values": [
         false,
@@ -1281,7 +1281,7 @@
       "properties": {
         "Node name for S&R": "bno84.ABCTimeline",
         "cnr_id": "comfyui-abcpreview",
-        "ver": "0.3.5"
+        "ver": "0.4.0"
       },
       "widgets_values": [],
       "widgets_values_named": {}
