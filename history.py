@@ -521,12 +521,21 @@ class SongIndex:
         return {"total": len(entries), "songs": entries[offset:offset + limit]}
 
 
-def resolve_song(root, relative):
-    """The FLAC and its read song for a path relative to the output folder."""
+def flac_within(root, relative):
+    """The resolved FLAC path for relative under root; ValueError for any other file or one outside root.
+
+    Resolving follows symlinks and '..', so neither leads out of root.
+    """
     root = Path(root).resolve()
     flac = (root / relative).resolve()
-    if root not in flac.parents or flac.suffix != ".flac":
+    if root not in flac.parents or flac.suffix.lower() != ".flac":
         raise ValueError("Unknown song.")
+    return flac
+
+
+def resolve_song(root, relative):
+    """The FLAC and its read song for a path relative to the output folder."""
+    flac = flac_within(root, relative)
     if not flac.is_file():
         raise ValueError("This song's FLAC file is missing.")
     return flac, read_song(flac)

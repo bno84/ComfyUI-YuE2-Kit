@@ -231,6 +231,18 @@ class SongTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 history.resolve_song(self.root, path)
 
+    def test_flac_within_stays_inside_its_folder(self):
+        inner = self.root / "audio"
+        self.assertEqual(history.flac_within(inner, "yue2/lonely.flac"), (inner / "yue2/lonely.flac").resolve())
+        (inner / "inside.flac").symlink_to(self.root / "audio/yue2/song_00001.flac")
+        (self.root / "outside.flac").write_bytes(flac_bytes())
+        (inner / "link.flac").symlink_to(self.root / "outside.flac")
+        for path in ["../outside.flac", str(self.root / "outside.flac"), "link.flac", "yue2/song_00001.abc", ""]:
+            with self.assertRaises(ValueError, msg=path):
+                history.flac_within(inner, path)
+        # A symlink that stays inside the folder is fine.
+        self.assertEqual(history.flac_within(inner, "inside.flac"), (inner / "yue2/song_00001.flac").resolve())
+
 
 if __name__ == "__main__":
     unittest.main()

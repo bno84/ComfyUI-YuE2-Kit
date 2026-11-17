@@ -15,8 +15,8 @@ from comfy_extras.nodes_yue2 import YuE2GenerateABC
 from server import PromptServer
 
 from .flac_tags import music_tags, write_tags
-from .history import (SongIndex, embedded_prompt, embedded_song, first_seed, lyrics_style, parse_score, player_info, resolve_song,
-                      score_label, slice_score, song_detail, summary, tempo)
+from .history import (SongIndex, embedded_prompt, embedded_song, first_seed, flac_within, lyrics_style, parse_score, player_info,
+                      resolve_song, score_label, slice_score, song_detail, summary, tempo)
 from .model_files import file_choices, missing_message, resolve, workflow_models
 from .planning import check_music_context, extend_abc
 from .optional_lora import load_optional_lora
@@ -240,7 +240,9 @@ if getattr(PromptServer, "instance", None) is not None:
     async def song_data(request):
         """A YuE2-Kit FLAC's embedded prompt, workflow and score, as stored. Named like Load Audio's choice."""
         try:
-            path = folder_paths.get_annotated_filepath(request.query.get("audio", ""))
+            # Our own containment check: older ComfyUI's get_annotated_filepath has none.
+            name, base = folder_paths.annotated_filepath(request.query.get("audio", ""))
+            path = flac_within(base or folder_paths.get_input_directory(), name)
             tags, abc = await asyncio.to_thread(embedded_song, path)
         except (OSError, ValueError) as error:
             return _bad_request(error)
