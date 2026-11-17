@@ -30,29 +30,14 @@ def kind(name):
 
 
 io = types.SimpleNamespace(ComfyNode=object, Schema=schema, Custom=kind,
-                           NodeOutput=lambda *values, **kwargs: types.SimpleNamespace(result=values, **kwargs),
-                           Hidden=types.SimpleNamespace(dynprompt="dynprompt", unique_id="unique_id"))
+                           NodeOutput=lambda *values, **kwargs: types.SimpleNamespace(result=values, **kwargs))
 for name in ("String", "Int", "Combo", "Float", "Boolean", "Clip", "Audio", "AudioEncoder", "AnyType"):
     setattr(io, name, kind(name))
-
-
-class Graph:
-    def __init__(self):
-        self.nodes = {}
-
-    def node(self, kind, id, **inputs):
-        self.nodes[id] = dict(class_type=kind, inputs=inputs)
-        return types.SimpleNamespace(out=lambda index: [id, index], set_override_display_id=lambda parent: None)
-
-    def finalize(self):
-        return self.nodes
 
 
 package = types.ModuleType("score_test_pack")
 package.__path__ = [str(ROOT)]
 sys.modules.update({"comfy_api": types.ModuleType("comfy_api"), "comfy_api.latest": types.SimpleNamespace(io=io),
-                    "comfy_execution": types.ModuleType("comfy_execution"),
-                    "comfy_execution.graph_utils": types.SimpleNamespace(GraphBuilder=Graph),
                     package.__name__: package})
 nodes = importlib.import_module(package.__name__ + ".score_nodes")
 score, splice = nodes.score, nodes.splice
@@ -201,26 +186,51 @@ class ScoreTests(unittest.TestCase):
         self.assertEqual(inputs["anchor_abc"].display_name, "Reference ABC")
         self.assertEqual(inputs["header_mode"].options, ["generated", "locked", "reference"])
 
+    def run_stages(self, values, seed=1):
+        """Run the Score node with each stage stubbed; return the stages' arguments by name."""
+        calls = {}
+        data = dict(opening_bars=0, anchor_bars=0, diagnostics=[])
+
+        def stage(name, result):
+            def run(*args, **kwargs):
+                calls[name] = dict(args=args, **kwargs)
+                return result
+            return run
+        stubs = dict(fresh_stage=stage("fresh", (ANCHOR, data)), opening_candidates=stage("opening", ("", data)),
+                     join_stage=stage("join", (ANCHOR, data)), continue_stage=stage("continue", (ANCHOR, data)),
+                     result_stage=stage("result", ("abc", "full", 1.0, "l", "s", seed, "report")))
+        with patch.multiple(nodes, **stubs):
+            out = nodes.YuE2AdvancedScore.execute(lyrics="l", style="s", seed=seed, clip="clip", **values)
+        self.assertEqual(out.result, ("abc", "full", 1.0, "l", "s", seed, "report"))
+        self.assertFalse(hasattr(out, "expand"))
+        return calls
+
     def test_stage_routing(self):
-        nodes.YuE2AdvancedScore.hidden = types.SimpleNamespace(
-            unique_id="score", dynprompt=types.SimpleNamespace(get_node=lambda id: dict(inputs={})))
         for values, stages in ((dict(), {"fresh", "result"}),
                                (dict(anchor_use=True, header_mode="reference", continue_generate=False),
                                 {"join", "result"}),
                                (dict(anchor_use=True, opening_generate=True), {"opening", "join", "continue", "result"})):
             with self.subTest(values=values):
-                plan = score.widgets_to_plan(dict(values, anchor_abc=ANCHOR))
-                out = nodes.YuE2AdvancedScore.expand_plan(lyrics="l", style="s", seed=1, mode="full", plan=plan)
-                self.assertEqual(set(out.expand), stages)
-        settings = json.loads(out.expand["opening"]["inputs"]["settings"])
-        self.assertEqual(settings["opening"]["bars"], 8)
+                calls = self.run_stages(dict(values, anchor_abc=ANCHOR))
+                self.assertEqual(set(calls), stages)
+        self.assertEqual(calls["opening"]["args"][2]["opening"]["bars"], 8)
+        self.assertEqual(calls["continue"]["clip"], "clip")
 
-    def test_negative_shared_seed_expands_with_unsigned_stage_seeds(self):
-        nodes.YuE2AdvancedScore.hidden = types.SimpleNamespace(
-            unique_id="score", dynprompt=types.SimpleNamespace(get_node=lambda id: dict(inputs={})))
-        out = nodes.YuE2AdvancedScore.execute(lyrics="l", style="s", seed=-944726594670549)
-        self.assertTrue(0 <= out.expand["fresh"]["inputs"]["seed"] <= score.UINT64)
-        self.assertEqual(out.expand["result"]["inputs"]["seed"], -944726594670549)
+    def test_score_registers_no_stage_nodes(self):
+        self.assertEqual([node.define_schema().node_id for node in nodes.SCORE_NODES], ["bno84.YuE2AdvancedScore"])
+
+    def test_model_is_requested_only_when_a_stage_generates(self):
+        status = nodes.YuE2AdvancedScore.check_lazy_status
+        reuse = dict(anchor_use=True, anchor_abc=ANCHOR, header_mode="reference", continue_generate=False)
+        self.assertEqual(status(lyrics="l", style="s", seed=1), ["clip"])
+        self.assertEqual(status(clip="clip", lyrics="l", style="s", seed=1), [])
+        self.assertEqual(status(lyrics="l", style="s", seed=1, **reuse), [])
+        self.assertEqual(status(**dict(reuse, continue_generate=True)), ["clip"])
+
+    def test_negative_shared_seed_runs_with_unsigned_stage_seeds(self):
+        calls = self.run_stages({}, seed=-944726594670549)
+        self.assertTrue(0 <= calls["fresh"]["seed"] <= score.UINT64)
+        self.assertEqual(calls["result"]["args"][-1], -944726594670549)
         inputs = {item.id: item for item in nodes.score_inputs()}
         self.assertEqual(inputs["seed"].min, score.SEED_MIN)
 

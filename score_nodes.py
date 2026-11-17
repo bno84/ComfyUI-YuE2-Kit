@@ -1,27 +1,11 @@
-"""Public Score planner and independently cached execution stages."""
+"""Public Score planner. Its stages run inside the node, cached as one result."""
 
-import json
 import time
 
 from comfy_api.latest import io
-from comfy_execution.graph_utils import GraphBuilder
 
 from . import planning, score, splice
 from .history import parse_score, summary
-
-Data = io.Custom("YUE2_SCORE_DATA")
-def canonical(value):
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
-
-
-def model_inputs():
-    return [io.Clip.Input("clip"), io.String.Input("style"), io.String.Input("lyrics"),
-            io.Combo.Input("mode", options=["full", "melody"]), io.Int.Input("seed", min=score.SEED_MIN, max=score.UINT64)]
-
-
-def generated_outputs():
-    return [io.String.Output("abc"), Data.Output("data")]
-
 
 def generate(clip, settings, style, lyrics, mode, seed):
     prefix, lines = planning.complete_header(clip, style, lyrics, seed, mode,
@@ -191,97 +175,61 @@ def opening_candidates(clip, anchor_abc, settings, style, lyrics, mode, seed):
 
 
 
-class ScoreGenerate(io.ComfyNode):
-    @classmethod
-    def define_schema(cls):
-        return io.Schema(node_id="bno84.ScoreGenerate", is_dev_only=True,
-                         inputs=[*model_inputs(), io.String.Input("settings")], outputs=generated_outputs())
+# Stages run in order inside the Score node and pass (abc, data) along.
+# They were once expanded into separate nodes, but hosts such as Comfy on
+# Civitai fail on node IDs that appear at run time.
 
-    @classmethod
-    def execute(cls, clip, style, lyrics, mode, seed, settings):
-        settings = json.loads(settings)
-        abc, detail = generate(clip, settings, style, lyrics, mode, seed)
-        abc, trimmed = finish_tail(abc, detail["ended"])
-        detail.update(trimmed)
-        diagnostics = score.validate_header_changes(splice.parse(abc), settings["fixed"], stage="fresh")
-        return io.NodeOutput(abc, dict(fresh=detail, opening_bars=0, anchor_bars=0,
-                                     diagnostics=trimmed["diagnostics"] + diagnostics))
+def fresh_stage(clip, style, lyrics, mode, seed, settings):
+    abc, detail = generate(clip, settings, style, lyrics, mode, seed)
+    abc, trimmed = finish_tail(abc, detail["ended"])
+    detail.update(trimmed)
+    diagnostics = score.validate_header_changes(splice.parse(abc), settings["fixed"], stage="fresh")
+    return abc, dict(fresh=detail, opening_bars=0, anchor_bars=0,
+                     diagnostics=trimmed["diagnostics"] + diagnostics)
 
 
-class ScoreOpening(io.ComfyNode):
-    @classmethod
-    def define_schema(cls):
-        return io.Schema(node_id="bno84.ScoreOpening", is_dev_only=True,
-                         inputs=[*model_inputs(), io.String.Input("anchor"), io.String.Input("settings")],
-                         outputs=generated_outputs())
-
-    @classmethod
-    def execute(cls, clip, style, lyrics, mode, seed, anchor, settings):
-        abc, data = opening_candidates(clip, anchor, json.loads(settings), style, lyrics, mode, seed)
-        return io.NodeOutput(abc, data)
-
-
-class ScoreJoin(io.ComfyNode):
-    @classmethod
-    def define_schema(cls):
-        return io.Schema(node_id="bno84.ScoreJoin", is_dev_only=True,
-                         inputs=[io.String.Input("anchor"), io.String.Input("opening"), Data.Input("data"),
-                                 io.String.Input("tempo")],
-                         outputs=[io.String.Output("abc"), Data.Output("data")])
-
-    @classmethod
-    def execute(cls, anchor, opening, data, tempo=""):
-        part = score.validate_score(splice.parse(anchor))
-        original_bpm = score.normalize_field("Q", part.bars[part.voices[0]][0].state["Q"])
-        retiming = []
-        if not opening and tempo:
-            anchor, retiming = score.normalize_tempo(anchor, tempo)
-            part = splice.parse(anchor)
-        lead = splice.parse(opening) if opening else None
-        adapted, diagnostics = score.adapt_anchor_tempo(part, lead)
-        if not opening and tempo and original_bpm != score.normalize_field("Q", tempo):
-            diagnostics = [{**score.diagnostic("join", "tempo_set", f"No opening; set tempo retimes the whole reference to Q:{tempo}.", severity="info"),
-                            "from_bpm": original_bpm, "to_bpm": score.normalize_field("Q", tempo), "bars": part.length}]
-        diagnostics += retiming
-        if lead is not None:
-            joined, warnings = splice.join(lead, adapted)
-            abc = splice.write(joined)
-            diagnostics += [score.diagnostic("join", "join_warning", text) for text in warnings]
-        else:
-            abc = anchor
-        data = {**data, "anchor_bars": part.length, "prefix_bars": part.length + data["opening_bars"],
-                "diagnostics": data["diagnostics"] + diagnostics}
-        return io.NodeOutput(abc, data)
+def join_stage(anchor, opening, data, tempo=""):
+    part = score.validate_score(splice.parse(anchor))
+    original_bpm = score.normalize_field("Q", part.bars[part.voices[0]][0].state["Q"])
+    retiming = []
+    if not opening and tempo:
+        anchor, retiming = score.normalize_tempo(anchor, tempo)
+        part = splice.parse(anchor)
+    lead = splice.parse(opening) if opening else None
+    adapted, diagnostics = score.adapt_anchor_tempo(part, lead)
+    if not opening and tempo and original_bpm != score.normalize_field("Q", tempo):
+        diagnostics = [{**score.diagnostic("join", "tempo_set", f"No opening; set tempo retimes the whole reference to Q:{tempo}.", severity="info"),
+                        "from_bpm": original_bpm, "to_bpm": score.normalize_field("Q", tempo), "bars": part.length}]
+    diagnostics += retiming
+    if lead is not None:
+        joined, warnings = splice.join(lead, adapted)
+        abc = splice.write(joined)
+        diagnostics += [score.diagnostic("join", "join_warning", text) for text in warnings]
+    else:
+        abc = anchor
+    data = {**data, "anchor_bars": part.length, "prefix_bars": part.length + data["opening_bars"],
+            "diagnostics": data["diagnostics"] + diagnostics}
+    return abc, data
 
 
-class ScoreContinue(io.ComfyNode):
-    @classmethod
-    def define_schema(cls):
-        return io.Schema(node_id="bno84.ScoreContinue", is_dev_only=True,
-                         inputs=[*model_inputs(), io.String.Input("abc"), Data.Input("data"), io.String.Input("settings")],
-                         outputs=generated_outputs())
-
-    @classmethod
-    def execute(cls, clip, style, lyrics, mode, seed, abc, data, settings):
-        settings = json.loads(settings)
-        prefix = abc.rstrip() + "\n"
-        final, ended, metadata = planning.generate_abc(clip, style, lyrics, seed, mode, settings["budget"],
-                                                      prefix=prefix, **settings["sampling"])
-        if not final.startswith(prefix):
-            raise ValueError("Continuation did not preserve the supplied score prefix.")
-        source = splice.parse(abc)
-        final, trimmed = finish_tail(final, ended, source.length)
-        parsed = splice.parse(final)
-        if parsed.voices != source.voices or parsed.field("L") != source.field("L"):
-            raise ValueError("Continuation changed voices or L: declarations.")
-        diagnostics = score.validate_header_changes(parsed, settings["fixed"], "continuation", source.length)
-        data = {**data, "continuation": dict(seed=str(seed), ended=ended, generation=metadata, **trimmed),
-                "diagnostics": data["diagnostics"] + diagnostics + trimmed["diagnostics"]}
-        return io.NodeOutput(final, data)
+def continue_stage(clip, style, lyrics, mode, seed, abc, data, settings):
+    prefix = abc.rstrip() + "\n"
+    final, ended, metadata = planning.generate_abc(clip, style, lyrics, seed, mode, settings["budget"],
+                                                  prefix=prefix, **settings["sampling"])
+    if not final.startswith(prefix):
+        raise ValueError("Continuation did not preserve the supplied score prefix.")
+    source = splice.parse(abc)
+    final, trimmed = finish_tail(final, ended, source.length)
+    parsed = splice.parse(final)
+    if parsed.voices != source.voices or parsed.field("L") != source.field("L"):
+        raise ValueError("Continuation changed voices or L: declarations.")
+    diagnostics = score.validate_header_changes(parsed, settings["fixed"], "continuation", source.length)
+    data = {**data, "continuation": dict(seed=str(seed), ended=ended, generation=metadata, **trimmed),
+            "diagnostics": data["diagnostics"] + diagnostics + trimmed["diagnostics"]}
+    return final, data
 
 
 def result_payload(abc, data, facts, lyrics, style, mode, seed):
-    facts = json.loads(facts)
     analysis = score.analyze(abc, style)
     analysis.pop("written_seconds")
     diagnostics = facts["diagnostics"] + data["diagnostics"] + analysis.pop("diagnostics")
@@ -335,20 +283,11 @@ def result_payload(abc, data, facts, lyrics, style, mode, seed):
                 report=report)
 
 
-class ScoreResult(io.ComfyNode):
-    @classmethod
-    def define_schema(cls):
-        return io.Schema(node_id="bno84.ScoreResult", is_dev_only=True,
-                         inputs=[io.String.Input("abc"), Data.Input("data"),
-                                 io.String.Input("facts"), io.String.Input("lyrics"), io.String.Input("style"),
-                                 io.Combo.Input("mode", options=["full", "melody"]), io.Int.Input("seed", min=score.SEED_MIN, max=score.UINT64)], outputs=score_outputs())
-
-    @classmethod
-    def execute(cls, abc, data, facts, lyrics, style, mode, seed):
-        abc, normalized = score.normalize_tempo(abc)
-        data = {**data, "diagnostics": data["diagnostics"] + normalized}
-        payload = result_payload(abc, data, facts, lyrics, style, mode, seed)
-        return io.NodeOutput(abc, mode, payload["seconds"], lyrics, style, seed, payload["report"])
+def result_stage(abc, data, facts, lyrics, style, mode, seed):
+    abc, normalized = score.normalize_tempo(abc)
+    data = {**data, "diagnostics": data["diagnostics"] + normalized}
+    payload = result_payload(abc, data, facts, lyrics, style, mode, seed)
+    return abc, mode, payload["seconds"], lyrics, style, seed, payload["report"]
 
 
 def score_outputs():
@@ -390,18 +329,21 @@ def score_inputs():
                          tooltip="SheetSage2 file from Models. Used when audio is dropped on the node.")]
 
 
+def needs_model(plan):
+    return bool(plan["opening"]["bars"]) or plan["continuation"]["enabled"]
+
+
 class YuE2AdvancedScore(io.ComfyNode):
     @classmethod
     def define_schema(cls):
         return io.Schema(node_id="bno84.YuE2AdvancedScore", display_name="YuE2 Advanced Score", category="audio/YuE2",
                          description="Plan a fresh score or reuse a reference with an opening and continuation. Opening must match; continuation is checked and reported.",
-                         enable_expand=True,
-                         inputs=score_inputs(), outputs=score_outputs(),
-                         hidden=[io.Hidden.dynprompt, io.Hidden.unique_id])
+                         inputs=score_inputs(), outputs=score_outputs())
 
     @classmethod
-    def check_lazy_status(cls, **kwargs):
-        return []
+    def check_lazy_status(cls, clip=None, sheetsage2=None, lyrics=None, style=None, seed=None, **widgets):
+        # Only load the model when a stage generates; a reused reference needs none.
+        return ["clip"] if clip is None and needs_model(score.widgets_to_plan(widgets)) else []
 
     @classmethod
     def execute(cls, lyrics, style, seed, clip=None, sheetsage2=None, **widgets):
@@ -410,11 +352,11 @@ class YuE2AdvancedScore(io.ComfyNode):
             raise ValueError("Score mode must be full or melody.")
         score.integer(seed, score.SEED_MIN, score.UINT64, "Seed")
         plan = score.widgets_to_plan(widgets)
-        return cls.expand_plan(lyrics, style, seed, mode, plan, clip)
+        return io.NodeOutput(*cls.run_plan(lyrics, style, seed, mode, plan, clip))
 
     @classmethod
-    def expand_plan(cls, lyrics, style, seed, mode, plan, clip=None):
-        """Private expansion boundary. Public inputs are validated before here."""
+    def run_plan(cls, lyrics, style, seed, mode, plan, clip=None):
+        """Private stage boundary. Public inputs are validated before here."""
         plan = score.plan_from(plan)
         source = score.resolve_source(plan)
         anchor = None
@@ -425,10 +367,7 @@ class YuE2AdvancedScore(io.ComfyNode):
             unchanged = plan["anchor"]["start"] == 0 and plan["anchor"]["end"] in (None, splice.parse(source).length)
             anchor_abc = source if unchanged else splice.write(anchor)
         diagnostics += score.header_diagnostics(plan, anchor)
-        hidden = cls.hidden
-        raw = hidden.dynprompt.get_node(hidden.unique_id)["inputs"]
-        graph = GraphBuilder()
-        shared = dict(clip=raw.get("clip", clip), style=raw.get("style", style), lyrics=raw.get("lyrics", lyrics), mode=mode)
+        shared = dict(clip=clip, style=style, lyrics=lyrics, mode=mode)
         sampling = score.sampling_from(plan.get("sampling", {}))
         fixed = score.resolve_header(plan, anchor)
         settings = dict(spec=score.header_spec(plan, anchor), fixed=fixed, sampling=sampling,
@@ -436,32 +375,26 @@ class YuE2AdvancedScore(io.ComfyNode):
         if anchor is None:
             if settings["spec"]:
                 settings["label"] = plan["opening"]["label"]
-            node = graph.node("bno84.ScoreGenerate", "fresh", **shared, seed=score.derive_seed(seed, "fresh"), settings=canonical(settings))
-            final, data = node.out(0), node.out(1)
+            abc, data = fresh_stage(**shared, seed=score.derive_seed(seed, "fresh"), settings=settings)
         else:
             if plan["opening"]["bars"]:
                 if not anchor.field("L"):
                     raise ValueError("Opening requires an explicit reference L: declaration; units must be identical.")
                 settings.update(opening=plan["opening"], label=plan["opening"]["label"],
                                 budget=plan["opening"]["max_tokens"])
-                node = graph.node("bno84.ScoreOpening", "opening", **shared, seed=seed, anchor=anchor_abc, settings=canonical(settings))
-                opening, data = node.out(0), node.out(1)
+                opening, data = opening_candidates(shared["clip"], anchor_abc, settings, style, lyrics, mode, seed)
             else:
                 opening, data = "", dict(opening_bars=0, diagnostics=[])
-            joined = graph.node("bno84.ScoreJoin", "join", anchor=anchor_abc, opening=opening, data=data,
-                                tempo=fixed["Q"] if not plan["opening"]["bars"] and plan["header"]["tempo"]["policy"] == "locked" else "")
-            final, data = joined.out(0), joined.out(1)
+            abc, data = join_stage(anchor_abc, opening, data,
+                                   tempo=fixed["Q"] if not plan["opening"]["bars"] and plan["header"]["tempo"]["policy"] == "locked" else "")
             if plan["continuation"]["enabled"]:
                 settings = dict(budget=plan["continuation"]["max_tokens"] or 8192, sampling=sampling, fixed=fixed)
-                node = graph.node("bno84.ScoreContinue", "continue", **shared, seed=score.derive_seed(seed, "continuation"),
-                                  abc=final, data=data, settings=canonical(settings))
-                final, data = node.out(0), node.out(1)
+                abc, data = continue_stage(**shared, seed=score.derive_seed(seed, "continuation"),
+                                           abc=abc, data=data, settings=settings)
         facts = dict(source=plan["source"]["kind"],
                      cut=None if anchor is None else dict(start=plan["anchor"]["start"], end=plan["anchor"]["start"] + anchor.length),
                      header=plan["header"], diagnostics=diagnostics)
-        result = graph.node("bno84.ScoreResult", "result", abc=final, data=data, facts=canonical(facts),
-                            lyrics=shared["lyrics"], style=shared["style"], mode=mode, seed=seed)
-        return io.NodeOutput(*(result.out(index) for index in range(7)), expand=graph.finalize())
+        return result_stage(abc, data, facts, lyrics, style, mode, seed)
 
 
-SCORE_NODES = [YuE2AdvancedScore, ScoreGenerate, ScoreOpening, ScoreJoin, ScoreContinue, ScoreResult]
+SCORE_NODES = [YuE2AdvancedScore]
