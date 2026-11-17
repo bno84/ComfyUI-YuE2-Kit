@@ -37,6 +37,22 @@ def workflow_types(path):
                 yield node["type"], (node.get("properties") or {}).get("cnr_id")
 
 
+def api_input_errors(prompt, info, node_types):
+    """Check required inputs for selected API node classes without queueing work."""
+    errors = []
+    for node_id, node in prompt.items():
+        kind = node["class_type"]
+        if kind not in node_types:
+            continue
+        if kind not in info:
+            errors.append(f"API node {node_id}: type not registered: {kind}")
+            continue
+        missing = set(info[kind]["input"].get("required", {})) - node.get("inputs", {}).keys()
+        if missing:
+            errors.append(f"API node {node_id} ({kind}): missing required inputs: {', '.join(sorted(missing))}")
+    return errors
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("comfyui", type=Path, help="ComfyUI checkout with the pack in custom_nodes/")
@@ -45,6 +61,8 @@ def main():
     parser.add_argument("--node", action="append", default=[], help="Node type that must be registered")
     parser.add_argument("--route", action="append", default=[], help="GET path that must answer 200")
     parser.add_argument("--workflow", action="append", default=[], help="Editor workflow to check")
+    parser.add_argument("--api-prompt", action="append", default=[], help="API prompt to check without queueing")
+    parser.add_argument("--api-node", action="append", default=[], help="API node class to check for required inputs")
     parser.add_argument("--timeout", type=int, default=600)
     parser.add_argument("--port", type=int, default=8188)
     args = parser.parse_args()
@@ -94,6 +112,9 @@ def main():
                         failures.append(f"{path}: node without a pack entry (cnr_id): {node_type}")
                 for item in sorted(skipped):
                     print(f"{path}: skipped other pack's node {item}")
+            for path in args.api_prompt:
+                prompt = json.loads(Path(path).read_text())
+                failures.extend(f"{path}: {error}" for error in api_input_errors(prompt, info, args.api_node))
             print(f"Registered: {sorted(n for n in info if n in args.node)}")
     finally:
         server.terminate()

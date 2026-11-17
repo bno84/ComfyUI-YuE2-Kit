@@ -97,6 +97,7 @@ jobs:
           --route /extensions/ComfyUI-YuE2-Kit/reference_transcribe.js
           --workflow "pack/example_workflows/YuE2 Kit - Song workflow.json"
           --workflow "pack/example_workflows/YuE2 Kit - Embedded song demo.json"
+          --api-prompt pack/api/yue2-kit-song.api.json --api-node AudioVisualizer
 
   publish:
     name: Publish to the Comfy Registry

@@ -106,7 +106,12 @@
         "32",
         0
       ],
-      "container": "mp4"
+      "container": "mp4",
+      "bar_count": 64,
+      "line_thickness": 2.0,
+      "stereo_mirror": false,
+      "stereo_gap": 0,
+      "vp9_crf": 20
     }
   },
   "63": {
