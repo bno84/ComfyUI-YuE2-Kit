@@ -5,8 +5,9 @@ import test from "node:test";
 
 const read = (name) => readFileSync(new URL(`../web/${name}`, import.meta.url), "utf8")
   .replace(/^import .*;$/gm, "").replace(/^export /gm, "");
-const load = (sources, names, app = { registerExtension() {} }) =>
-  new Function("app", "api", sources.map(read).join("\n") + `\nreturn {${names}};`)(app, {});
+// pack_routes.js has no imports, so every extension gets it.
+const load = (sources, names, app = { registerExtension() {} }, api = {}) =>
+  new Function("app", "api", ["pack_routes.js", ...sources].map(read).join("\n") + `\nreturn {${names}};`)(app, api);
 
 const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,normalizeValues,applicable");
 const strip = load(["score_strip.js"], "shortLabel,sectionColor,sourceSummary");
@@ -607,4 +608,40 @@ test("the song node opens only a stored workflow it can read", () => {
   assert.deepEqual(loadSong.storedWorkflow('{"nodes": [], "links": []}'), { workflow: { nodes: [], links: [] } });
   assert.match(loadSong.storedWorkflow("").error, /No song workflow/);
   for (const bad of ["{", '{"prompt": 1}', "null"]) assert.match(loadSong.storedWorkflow(bad).error, /cannot be read/);
+});
+
+// What Comfy on Civitai answers for a route a pack registers itself.
+const CIVITAI_501 = () => new Response(JSON.stringify({
+  error: { type: "backend_route_unavailable", message: "This action isn't available in Comfy on Civitai" }, node_errors: {},
+}), { status: 501, headers: { "Content-Type": "application/json" } });
+const UNAVAILABLE = "Not available on this host: it needs the YuE2-Kit server routes.";
+
+test("pack routes count as unavailable on a host's 501 or a plain 404", async () => {
+  const { routeUnavailable } = load([], "routeUnavailable");
+  const json = (body, status) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  assert.equal(await routeUnavailable(CIVITAI_501()), true);
+  assert.equal(await routeUnavailable(new Response("404: Not Found", { status: 404 })), true);
+  // The kit's own errors, and other failures, keep their own messages.
+  assert.equal(await routeUnavailable(json({ error: "Not found" }, 404)), false);
+  assert.equal(await routeUnavailable(json({ error: { type: "other" } }, 501)), false);
+  assert.equal(await routeUnavailable(json({ error: "Bad ABC" }, 400)), false);
+});
+
+test("without the kit's routes, Song history and model status say so", async () => {
+  const fetchApi = async () => CIVITAI_501();
+  const { SongHistoryPanel } = load(["score_strip.js", "score_state.js", "song_history.js"], "SongHistoryPanel",
+    undefined, { fetchApi });
+  const songs = Object.assign(Object.create(SongHistoryPanel.prototype),
+    { songs: [], filter: { value: "" }, request: 0, render() {} });
+  await songs.load();
+  assert.equal(songs.error, UNAVAILABLE);
+
+  const { ModelStatusPanel } = load(["model_status.js"], "ModelStatusPanel",
+    { registerExtension() {}, graphToPrompt: async () => ({ output: {} }) }, { fetchApi });
+  const status = Object.assign(Object.create(ModelStatusPanel.prototype),
+    { node: { graph: {} }, list: { replaceChildren() {} }, note: {} });
+  await status.refresh(false);
+  assert.equal(status.note.textContent, `Cannot show model status. ${UNAVAILABLE}`);
+  // Graph changes do not ask again; the Check again button forces a request.
+  assert.notEqual(status.key, undefined);
 });

@@ -3,6 +3,7 @@
 // describes its default file; other selections get only name and folder.
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
+import { RouteUnavailable, requireRoute } from "./pack_routes.js";
 
 const NODE = "bno84.ModelStatus";
 const DETAILS = "bno84.model";
@@ -146,10 +147,10 @@ class ModelStatusPanel {
     this.key = key;
     this.note.textContent = "Checking…";
     try {
-      const response = await api.fetchApi("/yue2-kit/resolve", {
+      const response = await requireRoute(await api.fetchApi("/yue2-kit/resolve", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(files.map(({ type, selected }) => ({ type, name: selected }))),
-      });
+      }));
       if (!response.ok) throw new Error(String(response.status));
       const lookups = await response.json();
       if (this.destroyed) return;
@@ -157,10 +158,16 @@ class ModelStatusPanel {
       this.list.replaceChildren(...entries.map(item));
       this.note.textContent = entries.length ? "" : "No model file nodes in this workflow.";
       requestAnimationFrame(() => this.fit());
-    } catch {
+    } catch (error) {
       if (this.destroyed) return;
-      this.key = undefined;
-      this.note.textContent = "Cannot read model status. Restart ComfyUI after updating YuE2-Kit.";
+      // The host will not gain the route on a graph change, so keep the key and stop asking.
+      if (error instanceof RouteUnavailable) {
+        this.list.replaceChildren();
+        this.note.textContent = `Cannot show model status. ${error.message}`;
+      } else {
+        this.key = undefined;
+        this.note.textContent = "Cannot read model status. Restart ComfyUI after updating YuE2-Kit.";
+      }
     }
     this.node.graph?.setDirtyCanvas?.(true, true);
   }

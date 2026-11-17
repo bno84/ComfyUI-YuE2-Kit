@@ -71,6 +71,11 @@ soundfont.
 **Visualizer video:** enable it and choose a still, or use the supplied artwork.
 The image sets the video resolution.
 
+**Hosts without the kit's server routes:** some hosts run workflows and serve
+the kit's web files, but not the routes it registers on the server; Comfy on
+Civitai is one. Workflows still run there. Model status, the Score preview,
+Song history, and Embed YuE2 Kit song need those routes, and say so instead.
+
 ## API and tests
 
 Use [the Song API prompt](api/yue2-kit-song.api.json).

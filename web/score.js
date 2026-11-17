@@ -1,5 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
+import { requireRoute } from "./pack_routes.js";
 import { readValues, setValues, applicable, rangeSelection, previewValues } from "./score_state.js";
 import { referenceExecutionId, buildTranscriptionPrompt, queueTranscription, transcriptionError } from "./reference_transcribe.js";
 import { referenceFileKind } from "./reference_input.js";
@@ -111,8 +112,8 @@ export class ScorePanel {
           values = previewValues(this.node,compiled.output,id);
           if (!values) { this.data = null; this.render(); this.message("Linked settings resolve when run; stored widget values are kept for disconnect."); return; }
         }
-        const response = await api.fetchApi("/yue2-kit/score/preview", {method: "POST", headers: {"Content-Type": "application/json"},
-          body: JSON.stringify(values)});
+        const response = await requireRoute(await api.fetchApi("/yue2-kit/score/preview", {method: "POST", headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(values)}));
         if (!response.ok) throw Error(`Score preview failed (${response.status}).`);
         const data = await response.json();
         if (this.destroyed || serial !== this.request) return;

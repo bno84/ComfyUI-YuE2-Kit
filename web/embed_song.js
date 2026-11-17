@@ -4,6 +4,7 @@
 // workflow keeps the stored copy, even when the FLAC is not on this machine.
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
+import { requireRoute } from "./pack_routes.js";
 import { scoreLabel } from "./saved_score.js";
 import { scoreViews, showScore } from "./song_history.js";
 
@@ -173,7 +174,7 @@ export class EmbedSongPanel {
     const request = ++this.request;
     this.message("");
     try {
-      const response = await api.fetchApi(`/yue2-kit/song-data?${new URLSearchParams({ audio: song })}`);
+      const response = await requireRoute(await api.fetchApi(`/yue2-kit/song-data?${new URLSearchParams({ audio: song })}`));
       const data = await response.json();
       if (request !== this.request) return;
       if (!response.ok) throw new Error(data.error ?? `Cannot read ${song} (${response.status}).`);
