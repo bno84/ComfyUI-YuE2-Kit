@@ -825,6 +825,7 @@
           "fps",
           "start",
           "duration",
+          "container",
           "video_codec",
           "h265_crf",
           "h264_crf",
@@ -852,11 +853,12 @@
         60,
         0,
         0,
-        "h265",
+        "mp4",
+        "h264",
         18,
         22,
-        "flac",
-        192,
+        "aac",
+        256,
         128,
         -1
       ],
@@ -876,13 +878,14 @@
         "fps": 60,
         "start": 0,
         "duration": 0,
-        "video_codec": "h265",
+        "video_codec": "h264",
         "h265_crf": 18,
         "h264_crf": 22,
-        "audio_codec": "flac",
-        "aac_bitrate": 192,
+        "audio_codec": "aac",
+        "aac_bitrate": 256,
         "opus_bitrate": 128,
-        "crf": -1
+        "crf": -1,
+        "container": "mp4"
       }
     },
     {

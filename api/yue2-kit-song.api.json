@@ -75,11 +75,11 @@
       "fps": 60,
       "start": 0,
       "duration": 0,
-      "video_codec": "h265",
+      "video_codec": "h264",
       "h265_crf": 18,
       "h264_crf": 22,
-      "audio_codec": "flac",
-      "aac_bitrate": 192,
+      "audio_codec": "aac",
+      "aac_bitrate": 256,
       "opus_bitrate": 128,
       "crf": -1,
       "image": [
@@ -105,7 +105,8 @@
       "lyrics": [
         "32",
         0
-      ]
+      ],
+      "container": "mp4"
     }
   },
   "63": {
