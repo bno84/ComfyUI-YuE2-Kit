@@ -461,7 +461,7 @@ class SaveYuE2Bundle(io.ComfyNode):
         player_info = info if flac_player_info and not args.disable_metadata else {}
         # The score is in the workflow and also in its own comment, for hosts that drop the workflow.
         tags = saved_tags(abc, player_info, metadata=not args.disable_metadata)
-        files = []
+        files, scores = [], []
         for result in saved:
             path = Path(folder_paths.get_output_directory()) / result.subfolder / result.filename
             if tags:
@@ -471,10 +471,13 @@ class SaveYuE2Bundle(io.ComfyNode):
             with score.open("x", encoding="utf-8") as handle:
                 handle.write(abc)
             files.extend([str(path), str(score)])
+            scores.append(ui.SavedResult(score.name, result.subfolder, io.FolderType.output))
         return io.NodeOutput("\n".join(files), audio, abc,
                              # Title and artist are passed on even when the FLAC is not rewritten.
                              info.get("TITLE", ""), info.get("ARTIST", ""),
-                             ui={**ui.SavedAudios(saved).as_dict(), SAVED_ABC: [abc]})
+                             # "files" declares the .abc like core Save Text does, so hosts that keep
+                             # declared outputs, such as Comfy on Civitai, keep it too.
+                             ui={**ui.SavedAudios(saved).as_dict(), "files": scores, SAVED_ABC: [abc]})
 
 
 if getattr(PromptServer, "instance", None) is not None:
