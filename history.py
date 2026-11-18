@@ -21,7 +21,7 @@ import struct
 from fractions import Fraction
 from pathlib import Path
 
-from .saved_score import workflow_abc
+from .saved_score import tag_abc, workflow_abc
 
 FIELD = re.compile(r"^([A-Za-z]):(.*)$")
 INLINE_FIELD = re.compile(r"\[([A-Za-z]):([^\]]*)\]")
@@ -105,6 +105,12 @@ def embedded_workflow(tags):
     return workflow if isinstance(workflow, dict) else None
 
 
+def embedded_abc(tags):
+    """The score a FLAC carries: the one in its workflow, else its YUE2_ABC comment."""
+    abc = workflow_abc(embedded_workflow(tags))
+    return abc if abc is not None else tag_abc(tags)
+
+
 def read_song(flac):
     """Duration, comments and score of a saved song; ValueError when it has no score.
 
@@ -114,7 +120,7 @@ def read_song(flac):
     seconds, tags = flac_info(flac)
     sidecar = flac.with_suffix(".abc")
     file_abc = sidecar.read_text(encoding="utf-8", errors="replace") if sidecar.is_file() else None
-    embedded = workflow_abc(embedded_workflow(tags))
+    embedded = embedded_abc(tags)
     if embedded is not None:
         abc, source = embedded, "embedded"
     elif file_abc is not None:
@@ -551,7 +557,7 @@ def embedded_song(path):
         _, tags = flac_info(path)
     except ValueError:
         raise ValueError(f"{name} is not a FLAC file.") from None
-    abc = workflow_abc(embedded_workflow(tags))
+    abc = embedded_abc(tags)
     if abc is None:
         raise ValueError(f"{name} has no embedded YuE2-Kit score.")
     return tags, abc

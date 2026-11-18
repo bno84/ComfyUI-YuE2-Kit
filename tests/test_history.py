@@ -215,6 +215,19 @@ class SongTests(unittest.TestCase):
         lonely.with_suffix(".abc").write_text(SCORE, encoding="utf-8")
         self.assertEqual(index.list(self.root)["total"], 3)
 
+    def test_the_score_comment_stands_in_for_a_missing_workflow(self):
+        flac = self.root / "audio/yue2/tagged.flac"
+        flac.write_bytes(flac_bytes(tags={"prompt": "{}", "YUE2_ABC": SCORE}))
+        self.assertEqual(history.embedded_song(flac)[1], SCORE)
+        detail = history.song_detail(self.root, "audio/yue2/tagged.flac")
+        self.assertEqual((detail["abc"], detail["score_source"]), (SCORE, "embedded"))
+
+    def test_the_workflow_score_comes_before_the_comment(self):
+        workflow = {"nodes": [{"id": 11, "type": "bno84.SaveYuE2Bundle", "properties": {"yue2_abc": SCORE}}]}
+        tags = {"workflow": json.dumps(workflow), "yue2_abc": HEADER + "z16|\n"}
+        self.assertEqual(history.embedded_abc(tags), SCORE)
+        self.assertIsNone(history.embedded_abc({"yue2_abc": "  "}))
+
     def test_an_embedded_song_needs_its_own_score(self):
         flac = self.embed("song_00001", SCORE)
         tags, abc = history.embedded_song(flac)
