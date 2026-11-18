@@ -64,6 +64,8 @@ also selects the instrumental AR LoRA. Use **full** score mode and
 
 **NAR LoRA:** an optional acoustic adapter. Start at strength **1.0**; select
 **(none)** or strength **0** to disable it. Use the ComfyUI export.
+The recommended file is listed even when not installed, and the template links
+its download, so ComfyUI can offer it and Comfy on Civitai can fetch it.
 
 **Score playback:** add [GeneralUser GS](https://github.com/mrbumpy409/GeneralUser-GS)
 or another General MIDI `.sf2` to `models/soundfonts/`. Notation works without a
