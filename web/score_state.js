@@ -4,7 +4,7 @@ export const SCORE_DEFAULTS = {
   opening_generate: false, opening_bars: 8, opening_hint: "intro", opening_candidates: 4,
   anchor_use: false, anchor_abc: "", anchor_start: 1, anchor_end: 0,
   continue_generate: true, mode: "full", temperature: 0.7, top_p: 0.9,
-  top_k: 30, repetition_penalty: 1.005, penalty_window: 100, opening_tokens: 768, continuation_tokens: 8192,
+  top_k: 30, repetition_penalty: 1.005, penalty_window: 100, opening_tokens: 768, continuation_tokens: 4096,
 };
 
 export function readValues(node) {

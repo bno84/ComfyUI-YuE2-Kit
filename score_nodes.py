@@ -323,7 +323,7 @@ def score_inputs():
         io.Float.Input("repetition_penalty", default=1.005, min=0.001, max=100, step=0.001, display_name="Repetition penalty"),
         io.Int.Input("penalty_window", default=100, min=1, max=1000000, display_name="Penalty window"),
         io.Int.Input("opening_tokens", default=768, min=score.OPENING_TOKENS_MIN, max=20000, display_name="Opening token budget"),
-        io.Int.Input("continuation_tokens", default=8192, min=0, max=20000, display_name="Continuation token budget"),
+        io.Int.Input("continuation_tokens", default=4096, min=0, max=20000, display_name="Continuation token budget"),
         # The encoder file, never a loaded model: only the browser's transcription job loads it.
         io.AnyType.Input("sheetsage2", optional=True, lazy=True,
                          tooltip="SheetSage2 file from Models. Used when audio is dropped on the node.")]
@@ -371,7 +371,7 @@ class YuE2AdvancedScore(io.ComfyNode):
         sampling = score.sampling_from(plan.get("sampling", {}))
         fixed = score.resolve_header(plan, anchor)
         settings = dict(spec=score.header_spec(plan, anchor), fixed=fixed, sampling=sampling,
-                        budget=plan["continuation"]["max_tokens"] or 8192)
+                        budget=plan["continuation"]["max_tokens"] or 4096)
         if anchor is None:
             if settings["spec"]:
                 settings["label"] = plan["opening"]["label"]
@@ -388,7 +388,7 @@ class YuE2AdvancedScore(io.ComfyNode):
             abc, data = join_stage(anchor_abc, opening, data,
                                    tempo=fixed["Q"] if not plan["opening"]["bars"] and plan["header"]["tempo"]["policy"] == "locked" else "")
             if plan["continuation"]["enabled"]:
-                settings = dict(budget=plan["continuation"]["max_tokens"] or 8192, sampling=sampling, fixed=fixed)
+                settings = dict(budget=plan["continuation"]["max_tokens"] or 4096, sampling=sampling, fixed=fixed)
                 abc, data = continue_stage(**shared, seed=score.derive_seed(seed, "continuation"),
                                            abc=abc, data=data, settings=settings)
         facts = dict(source=plan["source"]["kind"],

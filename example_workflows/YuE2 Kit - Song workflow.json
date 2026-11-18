@@ -1036,7 +1036,7 @@
         1.005,
         100,
         768,
-        8192
+        4096
       ],
       "widgets_values_named": {
         "header_mode": "generated",
@@ -1060,7 +1060,7 @@
         "repetition_penalty": 1.005,
         "penalty_window": 100,
         "opening_tokens": 768,
-        "continuation_tokens": 8192
+        "continuation_tokens": 4096
       }
     },
     {

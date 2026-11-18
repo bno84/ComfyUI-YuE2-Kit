@@ -21,7 +21,7 @@ def default_plan(source=False):
     return dict(version=VERSION, source=dict(kind="none", abc=""),
                 anchor=dict(start=0, end=None),
                 opening=dict(bars=0, label="intro", attempts=4, max_tokens=0),
-                continuation=dict(enabled=True, max_tokens=8192),
+                continuation=dict(enabled=True, max_tokens=4096),
                 header={name: dict(policy="reference" if source else "generated", value=value)
                         for name, value in (("tempo", 120), ("meter", "4/4"), ("key", "C"))})
 
@@ -35,7 +35,7 @@ WIDGET_DEFAULTS = dict(header_mode="generated", header_tempo=120, header_meter="
     opening_generate=False, opening_bars=8, opening_hint="intro", opening_candidates=4,
     anchor_use=False, anchor_abc="", anchor_start=1, anchor_end=0,
     continue_generate=True, mode="full", temperature=0.7, top_p=0.9,
-    top_k=30, repetition_penalty=1.005, penalty_window=100, opening_tokens=768, continuation_tokens=8192)
+    top_k=30, repetition_penalty=1.005, penalty_window=100, opening_tokens=768, continuation_tokens=4096)
 
 
 def widgets_to_plan(values):
