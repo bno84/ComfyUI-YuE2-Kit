@@ -132,7 +132,7 @@
       ],
       "flags": {},
       "order": 1,
-      "mode": 0,
+      "mode": 4,
       "inputs": [],
       "outputs": [
         {
@@ -311,7 +311,7 @@
       ],
       "size": [
         400,
-        230
+        268
       ],
       "flags": {},
       "order": 2,
@@ -321,10 +321,10 @@
       "title": "Embedded song demo \u00b7 usage",
       "properties": {},
       "widgets_values": [
-        "Embed a YuE2-Kit FLAC's settings in this workflow, here to add a visualizer video afterwards.\n\n1. Choose or upload the **FLAC**. The node stores the prompt, workflow and score it embeds, so the video's embedded workflow carries them too.\n2. Pick a **still image**, then run.\n\nThe FLAC needs an embedded score, which Final outputs \u00b7 ABC + FLAC writes. The example group shows the stored score; title and artist come from the song's FLAC player info settings."
+        "Embed a YuE2-Kit FLAC's settings in this workflow, here to add a visualizer video afterwards.\n\n1. Choose or upload the **FLAC**. The node stores the prompt, workflow and score it embeds, so the video's embedded workflow carries them too.\n2. Run. The video uses the kit artwork; for your own still, select **Still image**, press Ctrl+B to un-bypass it, and choose one.\n\nThe FLAC needs an embedded score, which Final outputs \u00b7 ABC + FLAC writes. The example group shows the stored score; title and artist come from the song's FLAC player info settings.\n\n## Comfy on Civitai\n\n\u26a0\ufe0f **Embed YuE2 Kit song** can't read a song there yet: Civitai doesn't accept FLAC uploads, and the song's settings live in the FLAC. Use this node in your own ComfyUI. To reuse a Civitai song's score, paste its downloaded `.abc` into the Score node."
       ],
       "widgets_values_named": {
-        "text": "Embed a YuE2-Kit FLAC's settings in this workflow, here to add a visualizer video afterwards.\n\n1. Choose or upload the **FLAC**. The node stores the prompt, workflow and score it embeds, so the video's embedded workflow carries them too.\n2. Pick a **still image**, then run.\n\nThe FLAC needs an embedded score, which Final outputs \u00b7 ABC + FLAC writes. The example group shows the stored score; title and artist come from the song's FLAC player info settings."
+        "text": "Embed a YuE2-Kit FLAC's settings in this workflow, here to add a visualizer video afterwards.\n\n1. Choose or upload the **FLAC**. The node stores the prompt, workflow and score it embeds, so the video's embedded workflow carries them too.\n2. Run. The video uses the kit artwork; for your own still, select **Still image**, press Ctrl+B to un-bypass it, and choose one.\n\nThe FLAC needs an embedded score, which Final outputs \u00b7 ABC + FLAC writes. The example group shows the stored score; title and artist come from the song's FLAC player info settings.\n\n## Comfy on Civitai\n\n\u26a0\ufe0f **Embed YuE2 Kit song** can't read a song there yet: Civitai doesn't accept FLAC uploads, and the song's settings live in the FLAC. Use this node in your own ComfyUI. To reuse a Civitai song's score, paste its downloaded `.abc` into the Score node."
       },
       "color": "#232",
       "bgcolor": "#353"
