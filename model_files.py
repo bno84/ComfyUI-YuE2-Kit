@@ -8,7 +8,7 @@ That template is the only place these details are written.
 Kept free of ComfyUI imports so it can be tested on its own.
 """
 
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 
 DETAILS = "bno84.model"
 
@@ -18,14 +18,27 @@ def filename(name):
     return PurePosixPath(name.replace("\\", "/")).name
 
 
+def host_file(name):
+    """A model file a host placed for this run, given by absolute path, or None.
+
+    Comfy on Civitai downloads the file a node's ``models`` link names and
+    replaces the node's value with its path, e.g.
+    ``/mnt/resources/RamDisk/urn:air:other:checkpoint:huggingface:…``.
+    Only existing files named by an AIR (``urn:air:``) count, so a prompt
+    cannot point a loader at any other file on disk.
+    """
+    path = Path(name)
+    return name if path.is_absolute() and path.name.startswith("urn:air:") and path.is_file() else None
+
+
 def resolve(name, available):
     """Return the installed entry for name, or None.
 
-    An exact match wins. Otherwise the first entry with the same file name in
+    A host-placed file (see ``host_file``) is used as given. Otherwise an exact match wins. Otherwise the first entry with the same file name in
     another subfolder is used, so a template's default file is found wherever
     it was saved, e.g. ``loras/x.safetensors`` for ``x.safetensors``.
     """
-    if name in available:
+    if host_file(name) or name in available:
         return name
     wanted = filename(name)
     return next((entry for entry in available if filename(entry) == wanted), None)
