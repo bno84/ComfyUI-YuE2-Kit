@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -47,6 +48,31 @@ class ResolveTests(unittest.TestCase):
     def test_missing(self):
         self.assertIsNone(model_files.resolve(LORA, []))
         self.assertIsNone(model_files.resolve(LORA, ["ar_lora_inst_v2.safetensors"]))
+
+
+class HostFileTests(unittest.TestCase):
+    """Comfy on Civitai replaces a linked file node's value with the path it downloaded to."""
+
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        root = Path(self.folder.name)
+        self.air = root / "urn:air:other:checkpoint:huggingface:Comfy-Org%2FYuE2@main%2Fcheckpoints%2Fyue2_3b_bf16.safetensors"
+        self.air.write_bytes(b"")
+        self.plain = root / CKPT
+        self.plain.write_bytes(b"")
+
+    def tearDown(self):
+        self.folder.cleanup()
+
+    def test_an_existing_air_file_is_used_as_given(self):
+        self.assertEqual(model_files.resolve(str(self.air), []), str(self.air))
+
+    def test_other_paths_are_still_looked_up_by_name(self):
+        # Any other absolute file is refused, even one with a model's name.
+        self.assertIsNone(model_files.resolve(str(self.plain), []))
+        self.assertEqual(model_files.resolve(str(self.plain), [CKPT_SUB]), CKPT_SUB)
+        self.assertIsNone(model_files.resolve(str(self.air) + ".missing", []))
+        self.assertIsNone(model_files.resolve(self.air.name, []))
 
 
 class WorkflowTests(unittest.TestCase):
