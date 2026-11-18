@@ -58,6 +58,15 @@ class MusicTagsTest(unittest.TestCase):
         self.assertEqual(flac_tags.music_tags("X:1\nK:C\nQ:1/4=99\n"), {"KEY": "C"})
 
 
+class SavedTagsTest(unittest.TestCase):
+    def test_the_score_is_always_written_beside_any_player_info(self):
+        self.assertEqual(flac_tags.saved_tags(ABC, {}), {"YUE2_ABC": ABC})
+        self.assertEqual(flac_tags.saved_tags(ABC, {"BPM": "158"}), {"BPM": "158", "YUE2_ABC": ABC})
+
+    def test_disabled_metadata_writes_no_score(self):
+        self.assertEqual(flac_tags.saved_tags(ABC, {}, metadata=False), {})
+
+
 class WriteTagsTest(unittest.TestCase):
     def setUp(self):
         self.folder = tempfile.TemporaryDirectory()
@@ -75,6 +84,13 @@ class WriteTagsTest(unittest.TestCase):
         data = self.path.read_bytes()
         self.assertTrue(data.endswith(AUDIO))
         self.assertEqual(list(Path(self.folder.name).iterdir()), [self.path])
+
+    def test_a_written_score_reads_back_without_a_workflow(self):
+        # Comfy on Civitai saves only the prompt.
+        self.path.write_bytes(flac(["prompt={}"]))
+        flac_tags.write_tags(self.path, flac_tags.saved_tags(ABC, {}))
+        _, tags = history.flac_info(self.path)
+        self.assertEqual(history.embedded_abc(tags), ABC)
 
     def test_keeps_the_file_permissions(self):
         self.path.write_bytes(flac([]))

@@ -1,4 +1,4 @@
-"""Opt-in standard Vorbis comments for saved songs, which music players show.
+"""Vorbis comments for saved songs: the kit's score, and opt-in standard ones that music players show.
 
 ComfyUI's own comments (prompt, workflow) stay as they are; these are added
 beside them. Writing them rewrites the file's metadata, not its audio.
@@ -13,6 +13,7 @@ import tempfile
 from pathlib import Path
 
 from .history import FIELD, tempo
+from .saved_score import TAG
 
 MAX_BLOCK = (1 << 24) - 1
 VORBIS_COMMENT = 4
@@ -58,6 +59,11 @@ def music_tags(abc, title="", artist="", style="", lyrics="", instrumental=False
     if key and key[0].lower() != "none":
         tags["KEY"] = key[0]
     return tags
+
+
+def saved_tags(abc, player_info, metadata=True):
+    """The comments a saved song gets: player info, and the score unless metadata is disabled."""
+    return {**player_info, TAG: abc} if metadata else dict(player_info)
 
 
 def _blocks(data):

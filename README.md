@@ -51,7 +51,8 @@ bars. **Use saved score** reuses the finished score as-is. Restore lyrics and
 style, the seed, or **Restore all** to recover the saved Score settings too.
 Older songs may lack those settings.
 
-**Embedded songs:** each saved FLAC embeds its final score with its workflow.
+**Embedded songs:** each saved FLAC embeds its final score with its workflow,
+and again in a `YUE2_ABC` comment for hosts that run without the workflow.
 Drop the FLAC into ComfyUI to see the score again, or use **Embed YuE2 Kit song**
 to carry the song's settings into other workflows. The **YuE2 Kit - Embedded
 song demo** template uses it to add a visualizer to a saved song.

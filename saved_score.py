@@ -1,4 +1,4 @@
-"""The final ABC that Save YuE2 FLAC + ABC records in the workflow it saves.
+"""The final ABC that Save YuE2 FLAC + ABC records in the workflow it saves, and in a FLAC comment.
 
 ComfyUI embeds the queued workflow in each saved file. That graph predates the
 run, so the score the run produced only reaches the save node through a link.
@@ -9,10 +9,15 @@ The queued workflow can still carry an earlier run's score from the open tab.
 It is removed when a prompt is queued, so a file saved before the save node
 runs never carries a stale score.
 
+Some hosts run the job without its workflow, such as Comfy on Civitai, whose
+worker only gets the API prompt. The save node therefore also writes the score
+as its own ``YUE2_ABC`` comment, which readers use when the workflow has none.
+
 Kept free of ComfyUI imports so it can be tested on its own.
 """
 
 PROPERTY = "yue2_abc"
+TAG = "YUE2_ABC"
 BUNDLE = "bno84.SaveYuE2Bundle"
 
 
@@ -61,6 +66,12 @@ def _bundles(workflow):
         for node in graph.get("nodes") or []:
             if isinstance(node, dict) and node.get("type") == BUNDLE:
                 yield node
+
+
+def tag_abc(tags):
+    """The score in a FLAC's ``YUE2_ABC`` comment, or None. ``tags`` has lowercase keys."""
+    abc = tags.get(TAG.lower()) if isinstance(tags, dict) else None
+    return abc if isinstance(abc, str) and abc.strip() else None
 
 
 def workflow_abc(workflow):

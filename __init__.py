@@ -14,7 +14,7 @@ from comfy_extras.nodes_audio import LoadAudio
 from comfy_extras.nodes_yue2 import YuE2GenerateABC
 from server import PromptServer
 
-from .flac_tags import music_tags, write_tags
+from .flac_tags import music_tags, saved_tags, write_tags
 from .history import (SongIndex, embedded_prompt, embedded_song, first_seed, flac_within, lyrics_style, parse_score, player_info,
                       resolve_song, score_label, slice_score, song_detail, summary, tempo)
 from .model_files import file_choices, missing_message, resolve, workflow_models
@@ -459,11 +459,13 @@ class SaveYuE2Bundle(io.ComfyNode):
         )
         info = music_tags(abc, flac_title, flac_artist, style, lyrics, instrumental, flac_instrumental_lyrics)
         player_info = info if flac_player_info and not args.disable_metadata else {}
+        # The score is in the workflow and also in its own comment, for hosts that drop the workflow.
+        tags = saved_tags(abc, player_info, metadata=not args.disable_metadata)
         files = []
         for result in saved:
             path = Path(folder_paths.get_output_directory()) / result.subfolder / result.filename
-            if player_info:
-                write_tags(path, player_info)
+            if tags:
+                write_tags(path, tags)
             score = path.with_suffix(".abc")
             # Never infer the filename by scanning for the newest audio file.
             with score.open("x", encoding="utf-8") as handle:
