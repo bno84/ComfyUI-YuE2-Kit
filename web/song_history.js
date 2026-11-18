@@ -5,6 +5,7 @@
 // FLAC embeds.
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
+import { requireRoute } from "./pack_routes.js";
 import { SCORE_DEFAULTS, readValues, setValues, normalizeValues } from "./score_state.js";
 
 import {fillStrip, barAxis, selectionOverlay, releaseStrip, sectionColor} from "./score_strip.js";
@@ -130,8 +131,8 @@ export function runSettings(prompt) {
 export async function resolvePlans(settings, fetchApi = (...args) => api.fetchApi(...args)) {
   await Promise.all(settings.planners.map(async entry => {
     try {
-      const response = await fetchApi("/yue2-kit/score/preview", {method: "POST", headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(normalizeValues(entry.values))});
+      const response = await requireRoute(await fetchApi("/yue2-kit/score/preview", {method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(normalizeValues(entry.values))}));
       const data = await response.json();
       if (!response.ok) throw Error(data.error ?? `Score preview failed (${response.status}).`);
       entry.plan = data.plan ?? null;
@@ -679,7 +680,7 @@ class SongHistoryPanel {
     const query = new URLSearchParams({ q: this.filter.value, offset, limit });
     const request = ++this.request;
     try {
-      const response = await api.fetchApi(`/yue2-kit/history?${query}`);
+      const response = await requireRoute(await api.fetchApi(`/yue2-kit/history?${query}`));
       if (!response.ok) throw new Error(`Cannot list songs (${response.status}).`);
       const found = await response.json();
       if (request !== this.request || this.destroyed) return;
@@ -774,7 +775,7 @@ class SongHistoryPanel {
     this.status = null;
     if (this.open && !this.details.has(song.path)) {
       try {
-        const response = await api.fetchApi(`/yue2-kit/history/song?${new URLSearchParams({ path: song.path })}`);
+        const response = await requireRoute(await api.fetchApi(`/yue2-kit/history/song?${new URLSearchParams({ path: song.path })}`));
         const detail = await response.json();
         if (!response.ok) throw new Error(detail.error ?? `Cannot open ${song.name} (${response.status}).`);
         detail.settings = await resolvePlans(runSettings(detail.prompt));
@@ -816,10 +817,10 @@ class SongHistoryPanel {
     const [start, end] = this.selection;
     const request = ++this.sliceRequest;
     try {
-      const response = await api.fetchApi("/yue2-kit/history/slice", {
+      const response = await requireRoute(await api.fetchApi("/yue2-kit/history/slice", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ path: detail.path, start, end }),
-      });
+      }));
       const result = await response.json();
       if (!response.ok) throw new Error(result.error ?? `Cannot slice the score (${response.status}).`);
       if (request === this.sliceRequest) this.slice = { range: [start, end], ...result };
