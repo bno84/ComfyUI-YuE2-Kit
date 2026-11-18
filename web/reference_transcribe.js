@@ -82,7 +82,9 @@ function scoreFrom(output) {
 }
 
 export function queueTranscription(api, { output, sinkId, workflow }, onStatus = () => {}, { pollInterval = 2000 } = {}) {
-  let promptId, done = false, cancelled = false, timer, checking = false, missing = 0, result;
+  // seen: ComfyUI's history or queue listed the job. Hosts that run jobs elsewhere, such as
+  // Comfy on Civitai, list neither, so only the job's own events can end it there.
+  let promptId, done = false, cancelled = false, timer, checking = false, missing = 0, seen = false, result;
   let resolve, reject;
   const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
   const listeners = new Map(), buffered = [];
@@ -101,6 +103,7 @@ export function queueTranscription(api, { output, sinkId, workflow }, onStatus =
   }
   function readHistory(entry) {
     if (!entry) return false;
+    seen = true;
     if (entry.status?.status_str === "error") {
       const failure = entry.status.messages?.find(([name]) => name === "execution_error" || name === "execution_interrupted");
       finish(new Error(failure ? transcriptionError(failure[1]) : "Transcription was interrupted."));
@@ -120,10 +123,10 @@ export function queueTranscription(api, { output, sinkId, workflow }, onStatus =
       if (!response.ok) return;
       const queue = await response.json();
       if ((queue.queue_running ?? []).some((entry) => entry[1] === promptId)) {
-        missing = 0; onStatus("Transcribing audio…");
+        seen = true; missing = 0; onStatus("Transcribing audio…");
       } else if ((queue.queue_pending ?? []).some((entry) => entry[1] === promptId)) {
-        missing = 0; onStatus("Transcription queued…");
-      } else if (++missing >= 2 && !readHistory(await history())) {
+        seen = true; missing = 0; onStatus("Transcription queued…");
+      } else if (seen && ++missing >= 2 && !readHistory(await history())) {
         finish(new Error("Transcription is no longer in the queue."));
       }
     } catch { if (!done) onStatus("Waiting for ComfyUI…"); }
@@ -141,7 +144,11 @@ export function queueTranscription(api, { output, sinkId, workflow }, onStatus =
       if (result) {
         try { finish(null, scoreFrom(result)); }
         catch (error) { finish(error); }
-      } else void refresh();
+      } else void (async () => {
+        // The result normally arrives as an executed event; history is only a fallback.
+        try { if (readHistory(await history())) return; } catch { /* no history on this host */ }
+        finish(new Error("Transcription finished without an ABC score."));
+      })();
     }
   }
   for (const name of ["execution_start", "executed", "execution_success", "execution_error", "execution_interrupted"]) {
