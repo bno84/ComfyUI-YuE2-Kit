@@ -301,7 +301,9 @@ class OptionalLoadAudio(LoadAudio):
             node_id="bno84.OptionalLoadAudio",
             display_name="Load Audio (Optional)",
             category="audio/YuE2",
-            description="Native audio loader with a (none) choice for an inactive transcription branch.",
+            description="Deprecated: drop audio on YuE2 Advanced Score to transcribe it. "
+                        "Native audio loader with a (none) choice for an inactive transcription branch.",
+            is_deprecated=True,
             inputs=source.inputs,
             outputs=[io.Audio.Output()],
         )
@@ -329,6 +331,8 @@ class ReferenceInput(io.ComfyNode):
             node_id="bno84.ReferenceInput",
             display_name="Reference input",
             category="audio/YuE2",
+            description="Deprecated: YuE2 Advanced Score takes a pasted or dropped ABC, and transcribes dropped audio.",
+            is_deprecated=True,
             inputs=[
                 io.Combo.Input("source", options=["None", "ABC", "Transcribe"], default="None"),
                 io.String.Input("abc", multiline=True, default="", dynamic_prompts=False),
@@ -386,7 +390,9 @@ class YuE2ExtendABC(io.ComfyNode):
             node_id="bno84.YuE2ExtendABC",
             display_name="YuE2 Extend ABC",
             category="model/conditioning/yue2",
-            description="Continue the supplied score with the native YuE2 planner, preserving it as an unchanged prefix. max_abc_tokens budgets new tokens, not the total score length.",
+            description="Deprecated: use Generate continuation in YuE2 Advanced Score. "
+                        "Continue the supplied score with the native YuE2 planner, preserving it as an unchanged prefix. max_abc_tokens budgets new tokens, not the total score length.",
+            is_deprecated=True,
             inputs=[io.String.Input("abc", force_input=True), *YuE2GenerateABC.define_schema().inputs],
             outputs=[io.String.Output(display_name="abc")],
         )
