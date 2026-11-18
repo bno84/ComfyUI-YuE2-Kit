@@ -51,12 +51,6 @@
       ]
     }
   },
-  "54": {
-    "class_type": "LoadImage",
-    "inputs": {
-      "image": "yue2-kit-still.png"
-    }
-  },
   "55": {
     "class_type": "AudioVisualizer",
     "inputs": {
@@ -82,10 +76,6 @@
       "aac_bitrate": 256,
       "opus_bitrate": 128,
       "crf": -1,
-      "image": [
-        "54",
-        0
-      ],
       "audio": [
         "11",
         1

@@ -2,8 +2,6 @@
 
 import asyncio
 import json
-import logging
-import shutil
 from pathlib import Path
 
 import folder_paths
@@ -558,20 +556,6 @@ class YuE2KitExtension(ComfyExtension):
         ]
 
 
-# The template's visualizer starts from this still, but LoadImage only lists
-# ComfyUI's input folder. Copy it there once; a user's file of that name stays.
-DEFAULT_STILL = Path(__file__).parent / "example_inputs" / "yue2-kit-still.png"
-
-
-def copy_default_still():
-    target = Path(folder_paths.get_input_directory()) / DEFAULT_STILL.name
-    try:
-        if not target.exists():
-            shutil.copyfile(DEFAULT_STILL, target)
-    except OSError as error:
-        logging.warning("YuE2-Kit could not copy %s to the input folder: %s", DEFAULT_STILL.name, error)
-
 
 async def comfy_entrypoint():
-    copy_default_still()
     return YuE2KitExtension()

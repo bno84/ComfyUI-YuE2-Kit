@@ -68,8 +68,9 @@ also selects the instrumental AR LoRA. Use **full** score mode and
 or another General MIDI `.sf2` to `models/soundfonts/`. Notation works without a
 soundfont.
 
-**Visualizer video:** enable it and choose a still, or use the supplied artwork.
-The image sets the video resolution.
+**Visualizer video:** enable it to use the supplied artwork. For your own still,
+un-bypass **Visualizer still** (Ctrl+B) and choose an image. The image sets the
+video resolution. Needs Audio Visualizer 0.8.0 or newer.
 
 ## API and tests
 
