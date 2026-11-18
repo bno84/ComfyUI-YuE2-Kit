@@ -219,7 +219,7 @@ export class ScorePanel {
   async transcribe(file) {
     const root = this.node.graph?.rootGraph ?? this.node.graph;
     const id = referenceExecutionId(root, this.node);
-    const {output} = await app.graphToPrompt(root);
+    const {output, workflow} = await app.graphToPrompt(root);
     const encoder = output[id]?.inputs?.sheetsage2;
     if (!encoder) throw Error("connect the SheetSage2 file from Models to transcribe audio.");
     this.node.isUploading = true;
@@ -237,7 +237,8 @@ export class ScorePanel {
     const job = buildTranscriptionPrompt(output, id, await definitions.json(), {audio: path, encoder, mode});
     const before = readValues(this.node).anchor_abc;
     // The transcriber runs under this node's ID, so ComfyUI's own progress bar shows it.
-    this.job = queueTranscription(api, job);
+    // The workflow names the SheetSage2 file's download link; Comfy on Civitai fetches files from it.
+    this.job = queueTranscription(api, {...job, workflow});
     this.open.label = this.open.name = "Cancel transcription"; this.node.setDirtyCanvas?.(true, true);
     try {
       const abc = await this.job.promise;

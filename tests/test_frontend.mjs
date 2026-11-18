@@ -12,7 +12,7 @@ const load = (sources, names, app = { registerExtension() {} }, api = {}) =>
 const state = load(["score_state.js"], "SCORE_DEFAULTS,readValues,setValues,rangeSelection,normalizeValues,applicable");
 const strip = load(["score_strip.js"], "shortLabel,sectionColor,sourceSummary");
 const history = load(["score_strip.js", "score_state.js", "song_history.js"], "scoreSource,runSettings,resolvePlans,samplingText,dragRange,rangeInfo,useInPlanner,useReference,referenceGaps,restoreReference,referenceTargets,scoreViews,showScore,SongHistoryPanel,planningText,setInput");
-const transcribe = load(["reference_transcribe.js"], "buildTranscriptionPrompt");
+const transcribe = load(["reference_transcribe.js"], "buildTranscriptionPrompt,queueTranscription");
 const lyricsStyle = load(["lyrics_style.js"], "variantInput,instrumentalPromptWarning,migrateSavedPair");
 const textbox = load(["reference_input.js", "score.js"], "bindReferenceTextbox");
 const node = (values) => ({ widgets: Object.entries(values).map(([name, value]) => ({ name, value })), inputs: [], graph: { setDirtyCanvas() {} } });
@@ -685,4 +685,46 @@ test("a download kept in the details still names the file and its source", () =>
   const missing = describeModel({ ...encoder, folder: "audio_encoders", installed: null });
   assert.equal(missing.described, true);
   assert.equal(missing.folder, "ComfyUI/models/audio_encoders/");
+});
+
+// A host that runs jobs elsewhere: ComfyUI's history and queue stay empty, only events arrive.
+function remoteHost({ history = {}, queue = { queue_running: [], queue_pending: [] } } = {}) {
+  const listeners = new Map(), queued = [];
+  return {
+    queued,
+    addEventListener(name, listener) { listeners.set(name, listener); },
+    removeEventListener(name) { listeners.delete(name); },
+    emit(name, detail) { listeners.get(name)?.({ detail }); },
+    async queuePrompt(_, body) { queued.push(body); return { prompt_id: "p1" }; },
+    async fetchApi(path) {
+      return new Response(JSON.stringify(path.startsWith("/history") ? history : queue), { status: 200 });
+    },
+  };
+}
+const tick = (ms) => new Promise((done) => setTimeout(done, ms));
+
+test("transcription waits for its events when the host lists no history or queue", async () => {
+  const api = remoteHost();
+  const job = transcribe.queueTranscription(api, { output: { a: {} }, sinkId: "sink", workflow: { nodes: [] } }, () => {}, { pollInterval: 5 });
+  await tick(40);  // several empty polls
+  api.emit("executed", { prompt_id: "p1", node: "sink", output: { text: ["X:1"] } });
+  api.emit("execution_success", { prompt_id: "p1" });
+  assert.equal(await job.promise, "X:1");
+  assert.deepEqual(api.queued[0], { output: { a: {} }, workflow: { nodes: [] } });
+});
+
+test("transcription without a result fails once it reports success", async () => {
+  const api = remoteHost();
+  const job = transcribe.queueTranscription(api, { output: {}, sinkId: "sink" }, () => {}, { pollInterval: 5 });
+  await tick(10);
+  api.emit("execution_success", { prompt_id: "p1" });
+  await assert.rejects(job.promise, /finished without an ABC score/);
+});
+
+test("a job ComfyUI listed and then lost still fails", async () => {
+  const api = remoteHost({ queue: { queue_running: [[0, "p1"]], queue_pending: [] } });
+  const job = transcribe.queueTranscription(api, { output: {}, sinkId: "sink" }, () => {}, { pollInterval: 5 });
+  await tick(10);
+  api.fetchApi = async (path) => new Response(JSON.stringify(path.startsWith("/history") ? {} : { queue_running: [], queue_pending: [] }));
+  await assert.rejects(job.promise, /no longer in the queue/);
 });
