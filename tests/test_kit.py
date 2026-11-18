@@ -153,7 +153,7 @@ class ModelFileTests(unittest.TestCase):
         self.assertEqual(model_files.resolve(lora, ["other", f"loras/{lora}"]), f"loras/{lora}")
         self.assertIsNone(model_files.resolve(lora, []))
         template = json.loads((ROOT / "example_workflows" / "YuE2 Kit - Song workflow.json").read_text(encoding="utf-8"))
-        self.assertEqual({m["label"] for m in model_files.workflow_models(template)}, {"YuE2 3B", "SheetSage2", "Instrumental LoRA"})
+        self.assertEqual({m["label"] for m in model_files.workflow_models(template)}, {"YuE2 3B", "SheetSage2", "Instrumental LoRA", "NAR LoRA"})
 
     def test_optional_lora_bypass_and_native_load(self):
         folders = types.SimpleNamespace(get_filename_list=Mock(return_value=["sub/test.safetensors"]),

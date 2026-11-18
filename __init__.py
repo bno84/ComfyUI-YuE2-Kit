@@ -103,7 +103,9 @@ class OptionalModelLora(io.ComfyNode):
             description="Apply a ComfyUI-format LoRA to the acoustic model. (none) or strength zero passes the model through unchanged.",
             inputs=[
                 io.Model.Input("model"),
-                io.Combo.Input("lora_name", options=["(none)", *folder_paths.get_filename_list("loras")]),
+                # The template's NAR LoRA is listed even when absent, so it can be chosen and its link used.
+                io.Combo.Input("lora_name", options=["(none)", *file_choices(
+                    "bno84.OptionalModelLora", folder_paths.get_filename_list("loras"), False, TEMPLATE_MODELS)]),
                 io.Float.Input("strength_model", default=1.0, min=-100.0, max=100.0, step=0.01),
             ],
             outputs=[io.Model.Output()],

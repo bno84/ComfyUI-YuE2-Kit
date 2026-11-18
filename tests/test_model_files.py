@@ -56,10 +56,14 @@ class WorkflowTests(unittest.TestCase):
             ("bno84.OptionalLoraFile", "loras", LORA, "Instrumental LoRA"),
         ])
 
-    def test_bundled_template_describes_its_three_files(self):
+    def test_bundled_template_describes_its_four_files(self):
         template = Path(__file__).resolve().parents[1] / "example_workflows" / "YuE2 Kit - Song workflow.json"
         models = model_files.workflow_models(json.loads(template.read_text(encoding="utf-8")))
-        self.assertEqual({m["label"] for m in models}, {"YuE2 3B", "SheetSage2", "Instrumental LoRA"})
+        self.assertEqual({m["label"] for m in models}, {"YuE2 3B", "SheetSage2", "Instrumental LoRA", "NAR LoRA"})
+        nar = next(m for m in models if m["label"] == "NAR LoRA")
+        self.assertEqual((nar["type"], nar["folder"]), ("bno84.OptionalModelLora", "loras"))
+        # The NAR LoRA is optional, so it is offered even when not installed.
+        self.assertIn(nar["filename"], model_files.file_choices("bno84.OptionalModelLora", [], False, models))
 
 
 class ChoiceTests(unittest.TestCase):

@@ -1161,7 +1161,19 @@
       "properties": {
         "Node name for S&R": "bno84.OptionalModelLora",
         "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.8.0"
+        "ver": "0.8.0",
+        "models": [
+          {
+            "name": "nar_lora_joint_v9_comfyui.safetensors",
+            "url": "https://huggingface.co/Mothersuperior/yue2-mothersuperior-realaudio-tokenizer-v4/resolve/main/nar_lora_joint_v9_comfyui.safetensors",
+            "directory": "loras"
+          }
+        ],
+        "bno84.model": {
+          "label": "NAR LoRA",
+          "license": "CC BY-NC 4.0 (non-commercial)",
+          "use": "Optional acoustic adapter. Choose it in NAR LoRA; (none) or strength 0 runs without it."
+        }
       },
       "widgets_values": [
         "(none)",
