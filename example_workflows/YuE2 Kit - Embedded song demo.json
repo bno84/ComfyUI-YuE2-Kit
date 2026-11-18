@@ -102,7 +102,7 @@
       "properties": {
         "Node name for S&R": "bno84.EmbedYuE2KitSong",
         "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.8.0"
+        "ver": "0.9.0"
       },
       "widgets_values": [
         "",
@@ -249,7 +249,7 @@
           "crf"
         ],
         "cnr_id": "comfyui-audiovisualizer",
-        "ver": "0.7.0"
+        "ver": "0.8.0"
       },
       "widgets_values": [
         true,
@@ -354,7 +354,7 @@
       "properties": {
         "Node name for S&R": "bno84.ABCPreview",
         "cnr_id": "comfyui-abcpreview",
-        "ver": "0.4.0"
+        "ver": "0.5.0"
       },
       "widgets_values": [
         "GeneralUser-GS.sf2"
@@ -394,7 +394,7 @@
       "properties": {
         "Node name for S&R": "bno84.ABCTimeline",
         "cnr_id": "comfyui-abcpreview",
-        "ver": "0.4.0"
+        "ver": "0.5.0"
       },
       "widgets_values": [],
       "widgets_values_named": {}

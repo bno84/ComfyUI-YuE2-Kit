@@ -15,9 +15,15 @@ Secrets and variables → Actions).
 
 1. Set the new version in `pyproject.toml` (`X.Y.Z`, semantic versioning).
    Commit it, e.g. `build: releases X.Y.Z`.
-2. Push `main`: `git push origin main`. Wait for CI to pass on that exact
+2. Set every template node's `ver` to the version it was released with: this
+   pack's new version for its own nodes, and for Audio Visualizer and ABC
+   Preview the releases CI tests against (`AUDIOVISUALIZER_REF`,
+   `ABCPREVIEW_REF`). ComfyUI only updates `ver` when a node is saved, so it
+   falls behind otherwise. `tests/test_template_versions.py` checks this.
+   Commit it with the version.
+3. Push `main`: `git push origin main`. Wait for CI to pass on that exact
    commit before tagging. If another commit is added, wait for its CI too.
-3. Create a signed, annotated tag on the tested commit. Its message becomes
+4. Create a signed, annotated tag on the tested commit. Its message becomes
    the Registry changelog:
 
    ```bash
@@ -26,7 +32,7 @@ Secrets and variables → Actions).
    Longer notes for the Registry's Updates section."
    ```
 
-4. Push only the tag: `git push origin vX.Y.Z`. The tag workflow repeats
+5. Push only the tag: `git push origin vX.Y.Z`. The tag workflow repeats
    the checks and publishes only after they pass.
 
 ## What CI checks before publishing

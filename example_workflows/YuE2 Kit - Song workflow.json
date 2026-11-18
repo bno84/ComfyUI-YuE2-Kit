@@ -75,7 +75,7 @@
       "properties": {
         "Node name for S&R": "bno84.LyricsStyle",
         "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.8.0"
+        "ver": "0.9.0"
       },
       "widgets_values": [
         false,
@@ -600,7 +600,7 @@
       "properties": {
         "Node name for S&R": "bno84.SaveYuE2Bundle",
         "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.8.0"
+        "ver": "0.9.0"
       },
       "widgets_values": [
         "audio/yue2/song",
@@ -647,7 +647,7 @@
       "properties": {
         "Node name for S&R": "bno84.ABCPreview",
         "cnr_id": "comfyui-abcpreview",
-        "ver": "0.4.0"
+        "ver": "0.5.0"
       },
       "widgets_values": [
         "GeneralUser-GS.sf2"
@@ -675,7 +675,7 @@
       "properties": {
         "Node name for S&R": "bno84.ModelStatus",
         "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.8.0"
+        "ver": "0.9.0"
       },
       "widgets_values": [],
       "widgets_values_named": {},
@@ -835,7 +835,7 @@
           "crf"
         ],
         "cnr_id": "comfyui-audiovisualizer",
-        "ver": "0.7.0"
+        "ver": "0.8.0"
       },
       "widgets_values": [
         false,
@@ -907,7 +907,7 @@
       "properties": {
         "Node name for S&R": "bno84.SongHistory",
         "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.8.0"
+        "ver": "0.9.0"
       },
       "widgets_values": [],
       "widgets_values_named": {},
@@ -1012,7 +1012,7 @@
       "properties": {
         "Node name for S&R": "bno84.YuE2AdvancedScore",
         "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.8.0"
+        "ver": "0.9.0"
       },
       "widgets_values": [
         "generated",
@@ -1161,7 +1161,7 @@
       "properties": {
         "Node name for S&R": "bno84.OptionalModelLora",
         "cnr_id": "comfyui-yue2-kit",
-        "ver": "0.8.0",
+        "ver": "0.9.0",
         "models": [
           {
             "name": "nar_lora_joint_v9_comfyui.safetensors",
@@ -1296,7 +1296,7 @@
       "properties": {
         "Node name for S&R": "bno84.ABCTimeline",
         "cnr_id": "comfyui-abcpreview",
-        "ver": "0.4.0"
+        "ver": "0.5.0"
       },
       "widgets_values": [],
       "widgets_values_named": {}
@@ -1801,7 +1801,7 @@
             "properties": {
               "Node name for S&R": "bno84.CheckpointFile",
               "cnr_id": "comfyui-yue2-kit",
-              "ver": "0.8.0",
+              "ver": "0.9.0",
               "models": [
                 {
                   "name": "yue2_3b_bf16.safetensors",
@@ -1915,7 +1915,7 @@
             "properties": {
               "Node name for S&R": "bno84.OptionalAudioEncoderFile",
               "cnr_id": "comfyui-yue2-kit",
-              "ver": "0.8.0",
+              "ver": "0.9.0",
               "bno84.model": {
                 "label": "SheetSage2",
                 "use": "Optional transcription model, used when audio is dropped on Score. Ordinary runs use the stored ABC.",
@@ -1968,7 +1968,7 @@
             "properties": {
               "Node name for S&R": "bno84.OptionalLoraFile",
               "cnr_id": "comfyui-yue2-kit",
-              "ver": "0.8.0",
+              "ver": "0.9.0",
               "models": [
                 {
                   "name": "ar_lora_inst_v3abc_comfyui.safetensors",
