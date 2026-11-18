@@ -62,6 +62,25 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual({m["label"] for m in models}, {"YuE2 3B", "SheetSage2", "Instrumental LoRA"})
 
 
+class HostLinkTests(unittest.TestCase):
+    def test_a_download_kept_in_the_details_still_describes_the_file(self):
+        node = {"type": "bno84.OptionalAudioEncoderFile", "properties": {"bno84.model": {
+            "label": "SheetSage2", "download": {"name": "s.safetensors", "url": "https://example.org/s", "directory": "audio_encoders"}}}}
+        self.assertEqual(model_files.workflow_models({"nodes": [node]}), [{
+            "type": "bno84.OptionalAudioEncoderFile", "folder": "audio_encoders", "filename": "s.safetensors",
+            "url": "https://example.org/s", "label": "SheetSage2"}])
+
+    def test_templates_offer_hosts_no_audio_encoder_link(self):
+        # Comfy on Civitai fails every run that names a linked audio encoder, used or not (probe 30).
+        for template in (Path(__file__).resolve().parents[1] / "example_workflows").glob("*.json"):
+            workflow = json.loads(template.read_text(encoding="utf-8"))
+            for graph in [workflow, *workflow.get("definitions", {}).get("subgraphs", [])]:
+                for node in graph["nodes"]:
+                    for model in (node.get("properties") or {}).get("models") or []:
+                        with self.subTest(template=template.name, node=node.get("type")):
+                            self.assertNotEqual(model.get("directory"), "audio_encoders")
+
+
 class ChoiceTests(unittest.TestCase):
     def choices(self, node_type, available, required):
         return model_files.file_choices(node_type, available, required, MODELS)
