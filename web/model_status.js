@@ -24,7 +24,8 @@ export function sourcePage(url) {
 // node's title, properties and selected name, plus the server's lookup.
 export function describeModel({ title, properties, selected, folder, installed }) {
   const details = properties?.[DETAILS] ?? {};
-  const model = properties?.models?.[0];
+  // Some downloads sit in the details instead, so hosts such as Comfy on Civitai don't fetch them.
+  const model = properties?.models?.[0] ?? details.download;
   const base = { label: details.label ?? title, use: details.use ?? "" };
   if (!model || baseName(selected) !== model.name) {
     // Not the described default: do not attach its source or license.
@@ -45,7 +46,8 @@ const CIVITAI_UNSUPPORTED = new Set(["audio_encoders"]);
 // Plain data for a host without the kit's routes. host: "civitai" or "other".
 export function describeHosted({ title, properties, selected }, host) {
   const details = properties?.[DETAILS] ?? {};
-  const model = properties?.models?.[0];
+  // Some downloads sit in the details instead, so hosts such as Comfy on Civitai don't fetch them.
+  const model = properties?.models?.[0] ?? details.download;
   const base = { label: details.label ?? title, use: details.use ?? "", file: selected };
   if (!model || baseName(selected) !== model.name) {
     if (host !== "civitai") return { ...base, state: "listed" };

@@ -32,17 +32,26 @@ def resolve(name, available):
 
 
 def workflow_models(workflow):
-    """The default model each described file node names, including inside subgraphs."""
+    """The default model each described file node names, including inside subgraphs.
+
+    The download normally comes from ComfyUI's ``models`` entry. A file a host
+    must not fetch keeps it in ``bno84.model``'s ``download`` instead: Comfy on
+    Civitai fetches every linked file whose name a node's value matches, and an
+    audio encoder it can't fetch fails the whole run, even unused.
+    """
     graphs = [workflow, *workflow.get("definitions", {}).get("subgraphs", [])]
     models = []
     for graph in graphs:
         for node in graph["nodes"]:
             properties = node.get("properties") or {}
-            if DETAILS in properties and properties.get("models"):
-                model = properties["models"][0]
+            details = properties.get(DETAILS)
+            if not isinstance(details, dict):
+                continue
+            model = (properties.get("models") or [details.get("download")])[0]
+            if model:
                 models.append({
                     "type": node["type"], "folder": model["directory"], "filename": model["name"],
-                    "url": model["url"], **properties[DETAILS],
+                    "url": model["url"], **{k: v for k, v in details.items() if k != "download"},
                 })
     return models
 

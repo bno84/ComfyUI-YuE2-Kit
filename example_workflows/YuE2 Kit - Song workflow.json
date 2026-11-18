@@ -1904,17 +1904,15 @@
               "Node name for S&R": "bno84.OptionalAudioEncoderFile",
               "cnr_id": "comfyui-yue2-kit",
               "ver": "0.8.0",
-              "models": [
-                {
+              "bno84.model": {
+                "label": "SheetSage2",
+                "use": "Optional transcription model, used when audio is dropped on Score. Ordinary runs use the stored ABC.",
+                "license": "CC BY-NC 4.0 (non-commercial)",
+                "download": {
                   "name": "sheetsage2_bf16.safetensors",
                   "url": "https://huggingface.co/Comfy-Org/YuE2/resolve/main/audio_encoders/sheetsage2_bf16.safetensors",
                   "directory": "audio_encoders"
                 }
-              ],
-              "bno84.model": {
-                "label": "SheetSage2",
-                "use": "Optional transcription model, used when audio is dropped on Score. Ordinary runs use the stored ABC.",
-                "license": "CC BY-NC 4.0 (non-commercial)"
               }
             },
             "widgets_values": [

@@ -674,3 +674,15 @@ test("without the kit's routes, model status lists each file and where it comes 
   assert.deepEqual(Object.keys(describeHosted({ ...ckpt, selected: "mine.safetensors" }, "other")).sort(), ["file", "label", "state", "use"]);
   assert.match(hostedIntro("other"), /installed files can't be checked/);
 });
+
+test("a download kept in the details still names the file and its source", () => {
+  const { describeHosted, describeModel } = load(["model_status.js"], "describeHosted,describeModel");
+  const encoder = { title: "File", selected: "sheetsage2_bf16.safetensors", properties: { "bno84.model": {
+    label: "SheetSage2", download: { name: "sheetsage2_bf16.safetensors", directory: "audio_encoders",
+      url: "https://huggingface.co/Comfy-Org/YuE2/resolve/main/audio_encoders/sheetsage2_bf16.safetensors" } } } };
+  assert.equal(describeHosted(encoder, "civitai").state, "unsupported");
+  assert.deepEqual(describeHosted(encoder, "other").link, { href: "https://huggingface.co/Comfy-Org/YuE2", text: "Comfy-Org/YuE2" });
+  const missing = describeModel({ ...encoder, folder: "audio_encoders", installed: null });
+  assert.equal(missing.described, true);
+  assert.equal(missing.folder, "ComfyUI/models/audio_encoders/");
+});
