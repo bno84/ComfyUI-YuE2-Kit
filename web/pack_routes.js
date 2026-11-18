@@ -6,26 +6,34 @@
 // The same file is kept in each bno84 pack that has server routes; only PACK differs.
 const PACK = "YuE2-Kit";
 
+// host is "civitai" when Comfy on Civitai said so, otherwise "other".
 export class RouteUnavailable extends Error {
-  constructor() {
+  constructor(host = "other") {
     const reason = `it needs the ${PACK} server routes`;
     super(`Not available on this host: ${reason}.`);
     this.name = "RouteUnavailable";
     this.reason = reason;
+    this.host = host;
   }
 }
 
-// The pack's own handlers report errors as JSON, never as a plain 404.
-export async function routeUnavailable(response) {
+// "civitai", "other", or null when the route answered. The pack's own
+// handlers report errors as JSON, never as a plain 404.
+export async function unavailableHost(response) {
   if (response?.status === 501) {
     const body = await response.clone().json().catch(() => null);
-    return body?.error?.type === "backend_route_unavailable";
+    return body?.error?.type === "backend_route_unavailable" ? "civitai" : null;
   }
-  return response?.status === 404 && !(response.headers?.get("content-type") ?? "").includes("json");
+  return response?.status === 404 && !(response.headers?.get("content-type") ?? "").includes("json") ? "other" : null;
+}
+
+export async function routeUnavailable(response) {
+  return (await unavailableHost(response)) !== null;
 }
 
 // Use as `await requireRoute(await api.fetchApi(path, options))`.
 export async function requireRoute(response) {
-  if (await routeUnavailable(response)) throw new RouteUnavailable();
+  const host = await unavailableHost(response);
+  if (host) throw new RouteUnavailable(host);
   return response;
 }

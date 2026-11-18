@@ -617,7 +617,9 @@ const CIVITAI_501 = () => new Response(JSON.stringify({
 const UNAVAILABLE = "Not available on this host: it needs the YuE2-Kit server routes.";
 
 test("pack routes count as unavailable on a host's 501 or a plain 404", async () => {
-  const { routeUnavailable } = load([], "routeUnavailable");
+  const { routeUnavailable, unavailableHost } = load([], "routeUnavailable,unavailableHost");
+  assert.equal(await unavailableHost(CIVITAI_501()), "civitai");
+  assert.equal(await unavailableHost(new Response("404: Not Found", { status: 404 })), "other");
   const json = (body, status) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
   assert.equal(await routeUnavailable(CIVITAI_501()), true);
   assert.equal(await routeUnavailable(new Response("404: Not Found", { status: 404 })), true);
@@ -639,9 +641,36 @@ test("without the kit's routes, Song history and model status say so", async () 
   const { ModelStatusPanel } = load(["model_status.js"], "ModelStatusPanel",
     { registerExtension() {}, graphToPrompt: async () => ({ output: {} }) }, { fetchApi });
   const status = Object.assign(Object.create(ModelStatusPanel.prototype),
-    { node: { graph: {} }, list: { replaceChildren() {} }, note: {} });
+    { node: { graph: {} }, list: { replaceChildren() {} }, note: {}, intro: {}, button: {} });
   await status.refresh(false);
-  assert.equal(status.note.textContent, `Cannot show model status. ${UNAVAILABLE}`);
-  // Graph changes do not ask again; the Check again button forces a request.
+  assert.equal(status.note.textContent, "No model file nodes in this workflow.");
+  assert.match(status.intro.textContent, /Comfy on Civitai downloads the linked files for each run/);
+  assert.equal(status.button.hidden, true);
+  // Graph changes do not ask again.
   assert.notEqual(status.key, undefined);
+});
+
+test("without the kit's routes, model status lists each file and where it comes from", () => {
+  const { describeHosted, hostedIntro } = load(["model_status.js"], "describeHosted,hostedIntro");
+  const node = (directory, name, url, selected = name) => ({
+    title: "File", selected,
+    properties: { models: [{ name, url, directory }], "bno84.model": { label: "YuE2 3B", use: "Needed for every song.", license: "CC BY-NC 4.0" } },
+  });
+  const ckpt = node("checkpoints", "yue2_3b_bf16.safetensors", "https://huggingface.co/Comfy-Org/YuE2/resolve/main/checkpoints/yue2_3b_bf16.safetensors");
+  assert.deepEqual(describeHosted(ckpt, "civitai"), {
+    label: "YuE2 3B", use: "Needed for every song.", file: "yue2_3b_bf16.safetensors", state: "downloaded",
+    link: { href: "https://huggingface.co/Comfy-Org/YuE2", text: "Comfy-Org/YuE2" }, license: "CC BY-NC 4.0",
+  });
+  // Elsewhere nothing is downloaded for the run; the file and its source are only listed.
+  assert.equal(describeHosted(ckpt, "other").state, "listed");
+  assert.equal(describeHosted({ ...ckpt, selected: "yue2/yue2_3b_bf16.safetensors" }, "civitai").state, "downloaded");
+  const encoder = node("audio_encoders", "sheetsage2_bf16.safetensors", "https://huggingface.co/Comfy-Org/YuE2/resolve/main/audio_encoders/sheetsage2_bf16.safetensors");
+  assert.equal(describeHosted(encoder, "civitai").state, "unsupported");
+  assert.equal(describeHosted(encoder, "other").state, "listed");
+  // Another file has no link, so the host must already have it.
+  const other = describeHosted({ ...ckpt, selected: "yue2_3b_int8_convrot.safetensors" }, "civitai");
+  assert.deepEqual([other.state, other.file, other.linked, other.link], ["unlinked", "yue2_3b_int8_convrot.safetensors", "yue2_3b_bf16.safetensors", undefined]);
+  assert.match(other.use, /model picker/);
+  assert.deepEqual(Object.keys(describeHosted({ ...ckpt, selected: "mine.safetensors" }, "other")).sort(), ["file", "label", "state", "use"]);
+  assert.match(hostedIntro("other"), /installed files can't be checked/);
 });

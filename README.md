@@ -73,8 +73,11 @@ The image sets the video resolution.
 
 **Hosts without the kit's server routes:** some hosts run workflows and serve
 the kit's web files, but not the routes it registers on the server; Comfy on
-Civitai is one. Workflows still run there. Model status, the Score preview,
-Song history, and Embed YuE2 Kit song need those routes, and say so instead.
+Civitai is one. Workflows still run there. The Score preview, Song history,
+and Embed YuE2 Kit song need those routes, and say so instead. Model files
+lists the workflow's files and their sources but can't check what is
+installed; on Comfy on Civitai it notes that linked files are downloaded for
+each run.
 
 ## API and tests
 
